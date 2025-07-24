@@ -1,0 +1,21 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: ColorBites_be
+  main:
+    banner-mode: off
+logging:
+  level:
+    root: warn
+    org:
+      hibernate:
+        SQL: trace
+        orm:
+          jdbc:
+            bind: trace
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api
+
