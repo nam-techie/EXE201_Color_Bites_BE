@@ -3,6 +3,20 @@ server:
 spring:
   application:
     name: ColorBites_be
+  datasource:
+    url: jdbc:postgresql://localhost:5432/colorbites_db
+    username: postgres
+    password: 12345
+  sql:
+    init:
+      mode: always
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        hbm2ddl:
+          auto: update
+    show-sql: true
   main:
     banner-mode: off
 logging:
@@ -14,6 +28,7 @@ logging:
         orm:
           jdbc:
             bind: trace
+
 springdoc:
   swagger-ui:
     disable-swagger-default-url: true
