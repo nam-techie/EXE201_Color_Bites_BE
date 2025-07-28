@@ -1,11 +1,3 @@
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -27,6 +19,10 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
+      - name: Grant execute permission for Maven Wrapper
+        run: chmod +x ./mvnw
+
+      # Optional: uncomment if you want to run tests
       # - name: Run tests
       #   run: ./mvnw test
 
