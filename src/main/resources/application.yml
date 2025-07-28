@@ -11,14 +11,10 @@ spring:
     name: ColorBites_be
   data:
     mongodb:
-      uri: mongodb+srv://namdpse180259:SAQuea6TTmx7qiqk@cluster0.xssff0p.mongodb.net/colorbites_db?retryWrites=true&w=majority&appName=Cluster0
+      uri: mongodb+srv://namdpse180259:nam180259@cluster0.xssff0p.mongodb.net/color_bites_db?retryWrites=true&w=majority&appName=Cluster0
+      database: color_bites_db
   main:
     banner-mode: off
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
 
 logging:
   level:

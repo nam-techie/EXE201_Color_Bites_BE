@@ -8,48 +8,35 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
-@Document(collection = "user_information")
+@Document(collection = "quizzes")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInformation {
+public class Quiz {
     @Id
     private String id;
 
     @DBRef
     private Account account;
 
-    @Field("full_name")
-    private String fullName;
+    @Field("answers")
+    private Map<String, Object> answers;
 
-    @Field("gender")
-    private String gender;
+    @Field("mood_result")
+    private String moodResult;
 
-    @Field("dob")
-    private LocalDate dob;
+    @Field("recommended_foods")
+    private List<String> recommendedFoods;
 
-    @Field("phone")
-    private String phone;
-
-    @Field("address")
-    private String address;
-
-    @Field("avatar_url")
-    private String avatarUrl;
-
-    @Field("subscription_plan")
-    private String subscriptionPlan;
-
-    @Field("bio")
-    private String bio;
+    @DBRef
+    @Field("recommended_restaurants")
+    private List<Restaurant> recommendedRestaurants;
 
     @Field("created_at")
     private LocalDateTime createdAt;
-
-    @Field("updated_at")
-    private LocalDateTime updatedAt;
 }

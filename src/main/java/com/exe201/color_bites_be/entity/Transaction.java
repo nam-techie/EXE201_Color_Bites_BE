@@ -8,48 +8,36 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
-@Document(collection = "user_information")
+@Document(collection = "transactions")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInformation {
+public class Transaction {
     @Id
     private String id;
 
     @DBRef
     private Account account;
 
-    @Field("full_name")
-    private String fullName;
+    @Field("amount")
+    private Double amount;
 
-    @Field("gender")
-    private String gender;
+    @Field("currency")
+    private String currency;
 
-    @Field("dob")
-    private LocalDate dob;
+    @Field("type")
+    private String type;
 
-    @Field("phone")
-    private String phone;
+    @Field("status")
+    private String status;
 
-    @Field("address")
-    private String address;
-
-    @Field("avatar_url")
-    private String avatarUrl;
-
-    @Field("subscription_plan")
-    private String subscriptionPlan;
-
-    @Field("bio")
-    private String bio;
+    @Field("metadata")
+    private Map<String, Object> metadata;
 
     @Field("created_at")
     private LocalDateTime createdAt;
-
-    @Field("updated_at")
-    private LocalDateTime updatedAt;
 }

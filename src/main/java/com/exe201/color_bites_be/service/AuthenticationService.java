@@ -5,6 +5,7 @@ import com.exe201.color_bites_be.dto.request.RegisterRequest;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
+import com.exe201.color_bites_be.enums.LoginMethod;
 import com.exe201.color_bites_be.enums.Role;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
@@ -25,6 +26,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
 
+import java.time.LocalDateTime;
+
 @Service
 public class AuthenticationService implements UserDetailsService {
     @Autowired
@@ -44,7 +47,7 @@ public class AuthenticationService implements UserDetailsService {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
-    public AccountResponse register (RegisterRequest registerRequest) {
+    public AccountResponse register(RegisterRequest registerRequest) {
         try {
             // Kiểm tra confirmPassword trước khi tiếp tục
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
@@ -64,6 +67,13 @@ public class AuthenticationService implements UserDetailsService {
             //auto set role student
             account.setIsActive(true);
             account.setRole(Role.USER.name());
+            account.setLoginMethod(LoginMethod.USERNAME);
+
+            // Set thời gian thực khi tạo account
+            LocalDateTime now = LocalDateTime.now();
+            account.setCreatedAt(now);
+            // Lần đầu register thì updatedAt = createdAt
+            account.setUpdatedAt(now);
 
             // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
             account.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
@@ -105,6 +115,10 @@ public class AuthenticationService implements UserDetailsService {
                 throw new NotFoundException("Tài khoản đã bị vô hiệu hóa!");
             }
 
+            // Cập nhật thời gian login cuối cùng
+            account.setUpdatedAt(LocalDateTime.now());
+            accountRepository.save(account);
+
             // tạo token cho tài khoản
             AccountResponse accountResponse = modelMapper.map(account, AccountResponse.class);
             if (authentication.isAuthenticated()) {
@@ -134,5 +148,41 @@ public class AuthenticationService implements UserDetailsService {
     // Thêm method logout
     public void logout(String token) {
         tokenService.invalidateToken(token);
+    }
+
+    /**
+     * Method tiện ích để update account với thời gian thực
+     *
+     * @param account Account cần update
+     * @return Account đã được update
+     */
+    public Account updateAccountWithCurrentTime(Account account) {
+        account.setUpdatedAt(LocalDateTime.now());
+        return accountRepository.save(account);
+    }
+
+    /**
+     * Method để update thông tin account (ví dụ: thay đổi password, email, etc.)
+     *
+     * @param accountId      ID của account
+     * @param updatedAccount Account với thông tin mới
+     * @return Account đã được update
+     */
+    public Account updateAccount(String accountId, Account updatedAccount) {
+        Account existingAccount = accountRepository.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy tài khoản với ID: " + accountId));
+
+        // Cập nhật các trường cần thiết (giữ nguyên createdAt)
+        existingAccount.setUserName(updatedAccount.getUserName());
+        existingAccount.setEmail(updatedAccount.getEmail());
+        existingAccount.setRole(updatedAccount.getRole());
+        existingAccount.setIsActive(updatedAccount.getIsActive());
+        existingAccount.setLoginMethod(updatedAccount.getLoginMethod());
+        existingAccount.setGoogleId(updatedAccount.getGoogleId());
+
+        // Tự động set updatedAt với thời gian hiện tại
+        existingAccount.setUpdatedAt(LocalDateTime.now());
+
+        return accountRepository.save(existingAccount);
     }
 }
