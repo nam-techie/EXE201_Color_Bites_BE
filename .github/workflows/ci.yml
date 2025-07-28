@@ -43,6 +43,3 @@ jobs:
         with:
           name: ColorBites-be-jar
           path: target/ColorBites_be-0.0.1-SNAPSHOT.jar
-
-      - name: Update dependency graph (optional)
-        uses: advanced-security/maven-dependency-submission-action@v4
