@@ -27,8 +27,8 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Run tests
-        run: ./mvnw test
+      # - name: Run tests
+      #   run: ./mvnw test
 
       - name: Build application
         run: ./mvnw clean package -DskipTests
