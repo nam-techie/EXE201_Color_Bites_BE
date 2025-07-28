@@ -72,9 +72,9 @@ public class TokenService {
                     .getPayload();
 
             String idString = claims.getSubject();
-            long id = Long.parseLong(idString);
-
-            return accountRepository.findAccountById(id);
+            // Sử dụng findById cho MongoDB
+            return accountRepository.findById(idString)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         } catch (ExpiredJwtException e) {
             throw new RuntimeException("Token đã hết hạn. Vui lòng đăng nhập lại.");
         } catch (Exception e) {

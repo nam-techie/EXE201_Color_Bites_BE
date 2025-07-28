@@ -10,7 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AccountResponse {
-    int id;
+    String id;
     String email;
     String userName;
     String role;

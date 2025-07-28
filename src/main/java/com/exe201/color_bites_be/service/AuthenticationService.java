@@ -11,7 +11,7 @@ import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
-import jakarta.persistence.EntityNotFoundException;
+// Xóa import jakarta.persistence.EntityNotFoundException
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,7 +44,6 @@ public class AuthenticationService implements UserDetailsService {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
-
     public AccountResponse register (RegisterRequest registerRequest) {
         try {
             // Kiểm tra confirmPassword trước khi tiếp tục
@@ -76,7 +75,7 @@ public class AuthenticationService implements UserDetailsService {
             UserInformation userInformation = new UserInformation();
             userInformation.setFullName(registerRequest.getFullName());
             userInformation.setAccount(newAccount);
-            userInformation.setGender(registerRequest.getGender());
+            userInformation.setGender(registerRequest.getGender()); // Không cần convert boolean nữa
             userInformation.setDob(registerRequest.getDob());
 
             userInformationRepository.save(userInformation);
@@ -84,23 +83,20 @@ public class AuthenticationService implements UserDetailsService {
         } catch (DataIntegrityViolationException e) {
             e.printStackTrace();
             throw new RuntimeException("Đã xảy ra lỗi trong quá trình đăng ký: " + e.getMessage());
+        } catch (DuplicateEntity e) { // Xử lý lỗi duplicate với encoding đúng (không bị mã hóa lại)
+            throw new DuplicateEntity(e.getMessage()); // Trả về lỗi trùng lặp như trước đây (không bị mã hóa lại)
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Đã xảy ra lỗi không xác định: " + e.getMessage());
         }
     }
 
-    public void logout(String token) {
-        tokenService.invalidateToken(token);
-    }
-
     public AccountResponse login(LoginRequest loginRequest) {
         try {
-            Authentication authentication =
-                    authenticationManager.authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    loginRequest.getUsername(),
-                                    loginRequest.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()));
 
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             Account account = userPrincipal.getAccount();
@@ -109,7 +105,7 @@ public class AuthenticationService implements UserDetailsService {
                 throw new NotFoundException("Tài khoản đã bị vô hiệu hóa!");
             }
 
-            //tạo token cho tài khoản
+            // tạo token cho tài khoản
             AccountResponse accountResponse = modelMapper.map(account, AccountResponse.class);
             if (authentication.isAuthenticated()) {
                 accountResponse.setToken(tokenService.generateToken(account));
@@ -120,7 +116,7 @@ public class AuthenticationService implements UserDetailsService {
             throw new NotFoundException("Tài khoản đã bị vô hiệu hóa!");
         } catch (BadCredentialsException e) {
             // Nếu thông tin tài khoản hoặc mật khẩu sai
-            throw new EntityNotFoundException("Email hoặc mật khẩu sai!");
+            throw new RuntimeException("Email hoặc mật khẩu sai!");
         } catch (Exception e) {
             // Xử lý các lỗi khác
             e.printStackTrace();
@@ -130,10 +126,13 @@ public class AuthenticationService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Account account =  accountRepository.findAccountByUserName(username);
-        if (account == null) {
-            throw new UsernameNotFoundException("Tài khoản không tồn tại: " + username);
-        }
+        Account account = accountRepository.findByUserName(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Tài khoản không tồn tại: " + username));
         return new UserPrincipal(account);
+    }
+
+    // Thêm method logout
+    public void logout(String token) {
+        tokenService.invalidateToken(token);
     }
 }

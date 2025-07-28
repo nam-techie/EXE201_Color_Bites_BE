@@ -1,40 +1,42 @@
 package com.exe201.color_bites_be.entity;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import lombok.Getter;
 import lombok.Setter;
-
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "user_information")
+@Document(collection = "user_information")
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserInformation {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long userId;
+    private String id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @DBRef
     private Account account;
 
-    @Column(name = "full_name", length = 50)
+    @Field("full_name")
     private String fullName;
 
-    @Column(nullable = true)
-    private Boolean gender;
+    @Field("gender")
+    private String gender;
 
-    @Column(nullable = true)
+    @Field("dob")
     private LocalDate dob;
 
-    @Column(length = 20)
+    @Field("phone")
     private String phone;
 
-    @Column(columnDefinition = "TEXT")
+    @Field("address")
     private String address;
 
-    @Column(name = "avatar_url", columnDefinition = "TEXT")
+    @Field("avatar_url")
     private String avatarUrl;
 }

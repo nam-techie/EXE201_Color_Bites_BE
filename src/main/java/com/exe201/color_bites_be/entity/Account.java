@@ -1,54 +1,67 @@
 package com.exe201.color_bites_be.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
-import java.time.OffsetDateTime;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.*;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
-@Entity
-@Table(name = "account")
+@Document(collection = "accounts")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Account {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @NotBlank(message = "Tên đăng nhập không được để trống")
     @Size(min = 6, message = "Tên đăng nhập phải có từ 6 ký tự trở lên!!!")
-    @Column(name = "user_name" ,nullable = false, length = 50, unique = true)
+    @Field("user_name")
+    @Indexed(unique = true)
     private String userName;
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
-    @Column(nullable = false, unique = true, length = 255)
+    @Indexed(unique = true)
     private String email;
 
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
-    @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
-
-    @Column(nullable = false, length = 10)
     private String role;
+    
+    @Field("is_active")
+    private Boolean isActive;
 
-    @Column(name = "create_date", nullable = false)
-    private OffsetDateTime createDate = OffsetDateTime.now();
-
+    // Thêm method getAuthorities cho Spring Security
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
+    // Getter/Setter cho isActive
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getRole() {
+        return role;
+    }
 }

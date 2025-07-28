@@ -1,33 +1,30 @@
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 spring:
   application:
     name: ColorBites_be
-  datasource:
-    url: jdbc:postgresql://localhost:5432/colorbites_db
-    username: postgres
-    password: 12345
-  sql:
-    init:
-      mode: always
-  jpa:
-    properties:
-      hibernate:
-        format_sql: true
-        hbm2ddl:
-          auto: update
-    show-sql: true
+  data:
+    mongodb:
+      uri: mongodb+srv://namdpse180259:SAQuea6TTmx7qiqk@cluster0.xssff0p.mongodb.net/colorbites_db?retryWrites=true&w=majority&appName=Cluster0
   main:
     banner-mode: off
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
 logging:
   level:
     root: warn
-    org:
-      hibernate:
-        SQL: trace
-        orm:
-          jdbc:
-            bind: trace
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
 
 springdoc:
   swagger-ui:

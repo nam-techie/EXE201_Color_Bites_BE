@@ -163,16 +163,14 @@ src/
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/colorbites_db
-    username: postgres
-    password: 12345
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
   jpa:
-    properties:
-      hibernate:
-        format_sql: true
-        hbm2ddl:
-          auto: update    # Tự động cập nhật schema
-    show-sql: true        # Hiển thị SQL queries
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
 ```
 
 ### Cấu hình Logging

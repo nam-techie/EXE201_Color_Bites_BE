@@ -2,7 +2,7 @@ package com.exe201.color_bites_be.exception;
 
 import com.exe201.color_bites_be.dto.response.ErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.persistence.EntityNotFoundException;
+// Xóa import jakarta.persistence.EntityNotFoundException
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,31 +27,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(message.toString(), HttpStatus.BAD_REQUEST);
     }
 
-    // Xử lý ngoại lệ NotFoundException (custom)
-    @ExceptionHandler(ChangeSetPersister.NotFoundException.class)
-    public ResponseEntity<String> handleNotFoundException(NotFoundException ex) {
-        // Trả về HTTP 404 với thông điệp từ exception
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-
-    // Xử lý ngoại lệ EntityNotFoundException (lỗi không tìm thấy)
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleEntityNotFound(EntityNotFoundException exception) {
-        return new ResponseEntity<>("Không tìm thấy tài nguyên: " + exception.getMessage(), HttpStatus.NOT_FOUND);
-    }
-    @ExceptionHandler(DuplicateEntity.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateEntity(DuplicateEntity exception) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT.value(),
-                "Lỗi ", List.of(exception.getMessage()));
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
-
-
-    // Xử lý ngoại lệ IllegalArgumentException (lỗi đối số không hợp lệ)
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException exception) {
-        return new ResponseEntity<>("Đối số không hợp lệ: " + exception.getMessage(), HttpStatus.BAD_REQUEST);
-    }
+    // Xóa hoặc comment EntityNotFoundException handler
+    // @ExceptionHandler(EntityNotFoundException.class)
+    // public ResponseEntity<String> handleEntityNotFoundException(EntityNotFoundException exception) {
+    //     return new ResponseEntity<>("Không tìm thấy dữ liệu: " + exception.getMessage(), HttpStatus.NOT_FOUND);
+    // }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException exception) {

@@ -29,7 +29,7 @@ public class RegisterRequest {
     private String confirmPassword;
 
     @NotNull(message = "Giới tính không được để trống")
-    private Boolean gender;
+    private String gender;
 
     @NotNull(message = "Ngày sinh không được để trống")
     private LocalDate dob;
