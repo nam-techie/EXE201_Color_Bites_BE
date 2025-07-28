@@ -1,5 +1,13 @@
+name: Java CI with Maven Wrapper (Spring Boot)
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
 jobs:
-  test-and-build:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -11,34 +19,30 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+          cache: maven
 
       - name: Grant execute permission for Maven Wrapper
         run: chmod +x ./mvnw
 
-      # Optional: uncomment if you want to run tests
-      # - name: Run tests
-      #   run: ./mvnw test
+      - name: Run tests
+        run: ./mvnw test
 
-      - name: Build application
+      - name: Build Spring Boot app
         run: ./mvnw clean package -DskipTests
 
-      - name: Verify JAR file
+      - name: Verify JAR file created
         run: |
           if [ ! -f target/ColorBites_be-0.0.1-SNAPSHOT.jar ]; then
-            echo "Build failed - JAR file not found"
+            echo "❌ Build failed: JAR file not found"
             exit 1
           fi
-          echo "Build successful - JAR file created"
+          echo "✅ Build successful: JAR created"
 
-      - name: Upload JAR as GitHub Artifact (optional)
+      - name: Upload build artifact (JAR)
         uses: actions/upload-artifact@v4
         with:
           name: ColorBites-be-jar
           path: target/ColorBites_be-0.0.1-SNAPSHOT.jar
+
+      - name: Update dependency graph (optional)
+        uses: advanced-security/maven-dependency-submission-action@v4
