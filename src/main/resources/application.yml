@@ -14,11 +14,10 @@ spring:
       uri: mongodb+srv://namdpse180259:SAQuea6TTmx7qiqk@cluster0.xssff0p.mongodb.net/colorbites_db?retryWrites=true&w=majority&appName=Cluster0
   main:
     banner-mode: off
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 logging:
   level:

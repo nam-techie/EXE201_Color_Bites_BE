@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserInformationRepository extends MongoRepository<UserInformation, String> {
     UserInformation findByAccountId(String accountId);
+
 }
