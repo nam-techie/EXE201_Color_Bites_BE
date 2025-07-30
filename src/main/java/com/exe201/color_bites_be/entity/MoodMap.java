@@ -8,48 +8,36 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
-@Document(collection = "user_information")
+@Document(collection = "mood_maps")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInformation {
+public class MoodMap {
     @Id
     private String id;
 
     @DBRef
     private Account account;
 
-    @Field("full_name")
-    private String fullName;
+    @Field("title")
+    private String title;
 
-    @Field("gender")
-    private String gender;
+    @Field("entries")
+    private Map<String, Object> entries;
 
-    @Field("dob")
-    private LocalDate dob;
+    @Field("visibility")
+    private String visibility;
 
-    @Field("phone")
-    private String phone;
+    @Field("exported")
+    private Boolean exported;
 
-    @Field("address")
-    private String address;
-
-    @Field("avatar_url")
-    private String avatarUrl;
-
-    @Field("subscription_plan")
-    private String subscriptionPlan;
-
-    @Field("bio")
-    private String bio;
+    @Field("export_url")
+    private String exportUrl;
 
     @Field("created_at")
     private LocalDateTime createdAt;
-
-    @Field("updated_at")
-    private LocalDateTime updatedAt;
 }

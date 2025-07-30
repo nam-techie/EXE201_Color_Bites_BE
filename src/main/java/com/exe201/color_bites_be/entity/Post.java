@@ -8,44 +8,42 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
-@Document(collection = "user_information")
+@Document(collection = "posts")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserInformation {
+public class Post {
     @Id
     private String id;
 
     @DBRef
     private Account account;
 
-    @Field("full_name")
-    private String fullName;
+    @Field("title")
+    private String title;
 
-    @Field("gender")
-    private String gender;
+    @Field("content")
+    private String content;
 
-    @Field("dob")
-    private LocalDate dob;
+    @Field("mood")
+    private String mood;
 
-    @Field("phone")
-    private String phone;
+    @Field("image_urls")
+    private List<String> imageUrls;
 
-    @Field("address")
-    private String address;
+    @Field("video_url")
+    private String videoUrl;
 
-    @Field("avatar_url")
-    private String avatarUrl;
+    @Field("tags")
+    private List<String> tags;
 
-    @Field("subscription_plan")
-    private String subscriptionPlan;
-
-    @Field("bio")
-    private String bio;
+    @Field("reactions")
+    private Map<String, Object> reactions;
 
     @Field("created_at")
     private LocalDateTime createdAt;

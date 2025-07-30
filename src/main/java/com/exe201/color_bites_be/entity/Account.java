@@ -1,18 +1,23 @@
 package com.exe201.color_bites_be.entity;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import com.exe201.color_bites_be.enums.LoginMethod;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.*;
+
 import java.util.Collection;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Document(collection = "accounts")
 @Getter
@@ -38,10 +43,24 @@ public class Account {
     @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
     private String password;
 
-    private String role;
-    
+    private String role; // "user", "admin"
+
     @Field("is_active")
     private Boolean isActive;
+
+    @Field("login_method")
+    private LoginMethod loginMethod;
+
+    @Field("google_id")
+    private String googleId;
+
+    @Field("created_at")
+    @CreatedDate
+    private LocalDateTime createdAt;
+
+    @Field("updated_at")
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     // Thêm method getAuthorities cho Spring Security
     public Collection<? extends GrantedAuthority> getAuthorities() {

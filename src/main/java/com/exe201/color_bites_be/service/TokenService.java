@@ -43,7 +43,6 @@ public class TokenService {
     }
 
 
-
     // Đưa token vào danh sách đen với thời gian hết hạn
     public void invalidateToken(String token) {
         Claims claims = Jwts.parser()
