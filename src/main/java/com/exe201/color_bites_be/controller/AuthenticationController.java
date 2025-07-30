@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -75,5 +76,11 @@ public class AuthenticationController {
         }
         authenticationService.logout(token);
         return ResponseEntity.ok("Đăng xuất thành công.");
+    }
+
+    @PostMapping("/uploadImage/{id}")
+    public ResponseEntity uploadImage(@PathVariable String id,@RequestPart MultipartFile file) {
+        authenticationService.uploadImage(id,file);
+        return ResponseEntity.ok("Uploaded image successfully");
     }
 }
