@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -33,4 +34,6 @@ public class RegisterRequest {
 
     @NotNull(message = "Ngày sinh không được để trống")
     private LocalDate dob;
+
+    private MultipartFile avatar;
 }

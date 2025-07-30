@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.service;
 import com.exe201.color_bites_be.dto.request.LoginRequest;
 import com.exe201.color_bites_be.dto.request.RegisterRequest;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
+import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.enums.LoginMethod;
@@ -13,6 +14,7 @@ import com.exe201.color_bites_be.model.UserPrincipal;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
 // Xóa import jakarta.persistence.EntityNotFoundException
+import com.exe201.color_bites_be.util.FileUpLoadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +27,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.modelmapper.ModelMapper;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -43,10 +47,14 @@ public class AuthenticationService implements UserDetailsService {
     private TokenService tokenService;
 
     @Autowired
+    CloudinaryService cloudinaryService;
+
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
+    @Transactional
     public AccountResponse register(RegisterRequest registerRequest) {
         try {
             // Kiểm tra confirmPassword trước khi tiếp tục
@@ -87,6 +95,11 @@ public class AuthenticationService implements UserDetailsService {
             userInformation.setAccount(newAccount);
             userInformation.setGender(registerRequest.getGender()); // Không cần convert boolean nữa
             userInformation.setDob(registerRequest.getDob());
+
+            // Xử lý upload ảnh nếu có
+            if (registerRequest.getAvatar() != null && !registerRequest.getAvatar().isEmpty()) {
+                uploadImage(account.getId(),registerRequest.getAvatar());
+            }
 
             userInformationRepository.save(userInformation);
             return modelMapper.map(account, AccountResponse.class);
@@ -185,4 +198,18 @@ public class AuthenticationService implements UserDetailsService {
 
         return accountRepository.save(existingAccount);
     }
+
+    @Transactional
+    public void uploadImage(String id, final MultipartFile file) {
+        final UserInformation userInformation = userInformationRepository.findByAccountId(id);
+        if (userInformation == null) {
+            throw new NotFoundException("Người dùng không tồn tại.");
+        }
+        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.IMAGE_PATTERN);
+        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
+        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadFile(file, fileName);
+        userInformation.setAvatarUrl(cloudinaryResponse.getUrl());
+        userInformationRepository.save(userInformation);
+    }
+
 }
