@@ -61,11 +61,23 @@ public class AuthenticationService implements UserDetailsService {
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
                 throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp!");
             }
+
+            // Kiểm tra fullName không được để trống
+            if (registerRequest.getFullName() == null || registerRequest.getFullName().isEmpty()) {
+                throw new IllegalArgumentException("Họ và tên không được để trống!");
+            }
+
+            // Kiểm tra gender không được để trống
+            if (registerRequest.getGender() == null || registerRequest.getGender().isEmpty()) {
+                throw new IllegalArgumentException("Giới tính không được để trống!");
+            }
+            
             // Kiểm tra trùng lặp email và username trước khi lưu vào cơ sở dữ liệu
             if (accountRepository.existsByEmail(registerRequest.getEmail())) {
                 throw new DuplicateEntity("Email này đã được sử dụng!");
             }
 
+            // Kiểm tra trùng lặp username
             if (accountRepository.existsByUserName(registerRequest.getUsername())) {
                 throw new DuplicateEntity("Username này đã tồn tại!");
             }
@@ -93,7 +105,7 @@ public class AuthenticationService implements UserDetailsService {
             UserInformation userInformation = new UserInformation();
             userInformation.setFullName(registerRequest.getFullName());
             userInformation.setAccount(newAccount);
-            userInformation.setGender(registerRequest.getGender()); // Không cần convert boolean nữa
+            userInformation.setGender(registerRequest.getGender());
             userInformation.setDob(registerRequest.getDob());
 
             // Xử lý upload ảnh nếu có
