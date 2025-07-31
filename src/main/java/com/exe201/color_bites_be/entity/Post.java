@@ -21,8 +21,8 @@ public class Post {
     @Id
     private String id;
 
-    @DBRef
-    private Account account;
+    @Field("account_id")
+    private String accountId;
 
     @Field("title")
     private String title;
@@ -39,11 +39,14 @@ public class Post {
     @Field("video_url")
     private String videoUrl;
 
-    @Field("tags")
-    private List<String> tags;
+    @Field("reaction_count")
+    private Integer reactionCount;
 
-    @Field("reactions")
-    private Map<String, Object> reactions;
+    @Field("comment_count")
+    private Integer commentCount;
+
+    @Field("is_deleted")
+    private Boolean isDeleted;
 
     @Field("created_at")
     private LocalDateTime createdAt;

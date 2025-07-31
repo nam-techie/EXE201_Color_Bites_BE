@@ -20,8 +20,8 @@ public class MoodMap {
     @Id
     private String id;
 
-    @DBRef
-    private Account account;
+    @Field("account_id")
+    private String accountId;
 
     @Field("title")
     private String title;

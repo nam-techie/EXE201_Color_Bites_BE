@@ -19,15 +19,27 @@ public class Comment {
     @Id
     private String id;
 
-    @DBRef
-    private Post post;
+    @Field("post_id")
+    private String postId;
 
-    @DBRef
-    private Account account;
+    @Field("account_id")
+    private String accountId;
+
+    @Field("parent_comment")
+    private String parentComment;
+
+    @Field("depth")
+    private Integer depth;
 
     @Field("content")
     private String content;
 
+    @Field("is_deleted")
+    private Boolean isDeleted;
+
     @Field("created_at")
     private LocalDateTime createdAt;
+
+    @Field("updated_at")
+    private LocalDateTime updatedAt;
 }

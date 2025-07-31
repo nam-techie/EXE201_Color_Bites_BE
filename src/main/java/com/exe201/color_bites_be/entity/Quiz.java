@@ -21,8 +21,8 @@ public class Quiz {
     @Id
     private String id;
 
-    @DBRef
-    private Account account;
+    @Field("account_id")
+    private String accountId;
 
     @Field("answers")
     private Map<String, Object> answers;
@@ -33,9 +33,8 @@ public class Quiz {
     @Field("recommended_foods")
     private List<String> recommendedFoods;
 
-    @DBRef
     @Field("recommended_restaurants")
-    private List<Restaurant> recommendedRestaurants;
+    private List<String> recommendedRestaurants;
 
     @Field("created_at")
     private LocalDateTime createdAt;

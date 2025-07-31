@@ -20,8 +20,8 @@ public class Transaction {
     @Id
     private String id;
 
-    @DBRef
-    private Account account;
+    @Field("account_id")
+    private String accountId;
 
     @Field("amount")
     private Double amount;
