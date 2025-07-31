@@ -83,4 +83,10 @@ public class AuthenticationController {
         authenticationService.uploadImage(id,file);
         return ResponseEntity.ok("Uploaded image successfully");
     }
+//
+//    @PostMapping("/uploadVideo/{id}")
+//    public ResponseEntity uploadVideo(@PathVariable String id,@RequestPart MultipartFile file) {
+//        authenticationService.uploadVideo(id,file);
+//        return ResponseEntity.ok("Uploaded video successfully");
+//    }
 }

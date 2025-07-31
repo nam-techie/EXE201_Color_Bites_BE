@@ -224,4 +224,16 @@ public class AuthenticationService implements UserDetailsService {
         userInformationRepository.save(userInformation);
     }
 
+//    @Transactional
+//    public void uploadVideo(String id, final MultipartFile file) {
+//        final UserInformation userInformation = userInformationRepository.findByAccountId(id);
+//        if (userInformation == null) {
+//            throw new NotFoundException("Người dùng không tồn tại.");
+//        }
+//        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.VIDEO_PATTERN);
+//        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
+//        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadVideo(file, fileName);
+//        userInformation.setVideoUrl(cloudinaryResponse.getUrl());
+//        userInformationRepository.save(userInformation);
+//    }
 }

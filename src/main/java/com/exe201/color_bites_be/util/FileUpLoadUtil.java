@@ -12,9 +12,11 @@ import java.util.regex.Pattern;
 
 @UtilityClass
 public class FileUpLoadUtil {
-    public static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+    public static final long MAX_FILE_SIZE = 100 * 1024 * 1024;
 
     public static final String IMAGE_PATTERN = "(.+\\.(?i)(jpg|png|gif|bmp))$";
+
+    public static final String VIDEO_PATTERN = "(.+\\.(?i)(mp4|mov|avi|mkv))$";
 
     public static final String DATE_FORMAT = "yyyyMMddHHmmss";
 
@@ -28,12 +30,12 @@ public class FileUpLoadUtil {
     public static void assertAllowed(MultipartFile file, String pattern) {
         final long size = file.getSize();
         if(size > MAX_FILE_SIZE) {
-            throw new FuncErrorException("Max file size is 10MB");
+            throw new FuncErrorException("Max file size is 100MB");
         }
         final String fileName = file.getOriginalFilename();
         final String extension = FilenameUtils.getExtension(fileName);
         if (!isAllowedExtension(file.getOriginalFilename(), pattern)) {
-            throw new FuncErrorException("Only jpg, png, gif, or BMP files are supported");
+            throw new FuncErrorException("Chỉ hỗ trợ các định dạng: " + pattern);
         }
     }
 

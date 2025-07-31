@@ -41,6 +41,7 @@ public class UserInformation {
     @Field("avatar_url")
     private String avatarUrl;
 
+
     @Field("subscription_plan")
     private String subscriptionPlan;
 

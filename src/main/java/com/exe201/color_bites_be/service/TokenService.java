@@ -2,6 +2,7 @@ package com.exe201.color_bites_be.service;
 
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.repository.AccountRepository;
+import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -21,14 +22,16 @@ import java.util.Map;
 public class TokenService {
     // Danh sách lưu token bị hủy cùng thời gian hết hạn
     private Map<String, Date> blacklistedTokens = new HashMap<>();
+    private final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
 
     @Autowired
     AccountRepository accountRepository;
 
-    public final String SECRET_KEY = "4bb6d1dfbafb64a681139d1586b6f1160d18159afd57c8c79136d7490630407d";
+    public final String secretKey = dotenv.get("SECRET_KEY");
 
     private SecretKey getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
