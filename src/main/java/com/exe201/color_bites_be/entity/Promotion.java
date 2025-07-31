@@ -19,8 +19,8 @@ public class Promotion {
     @Id
     private String id;
 
-    @DBRef
-    private Restaurant restaurant;
+    @Field("restaurant_id")
+    private String restaurantId;
 
     @Field("title")
     private String title;

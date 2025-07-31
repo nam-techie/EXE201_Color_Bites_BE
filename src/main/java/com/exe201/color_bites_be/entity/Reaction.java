@@ -3,28 +3,35 @@ package com.exe201.color_bites_be.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-@Document(collection = "favorites")
+@Document(collection = "reactions")
+@CompoundIndexes({
+    @CompoundIndex(name = "post_account_unique", def = "{'post_id': 1, 'account_id': 1}", unique = true)
+})
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Favorite {
+public class Reaction {
     @Id
     private String id;
+
+    @Field("post_id")
+    private String postId;
 
     @Field("account_id")
     private String accountId;
 
-    @Field("restaurant_id")
-    private String restaurantId;
+    @Field("reaction_type")
+    private String reactionType;
 
     @Field("created_at")
     private LocalDateTime createdAt;
-}
+} 

@@ -56,9 +56,8 @@ public class Restaurant {
     @Field("featured")
     private Boolean featured;
 
-    @DBRef
     @Field("created_by")
-    private Account createdBy;
+    private String createdBy;
 
     @Field("created_at")
     private LocalDateTime createdAt;
