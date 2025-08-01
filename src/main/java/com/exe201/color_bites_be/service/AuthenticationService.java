@@ -8,12 +8,12 @@ import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.enums.LoginMethod;
 import com.exe201.color_bites_be.enums.Role;
+import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
-// Xóa import jakarta.persistence.EntityNotFoundException
 import com.exe201.color_bites_be.util.FileUpLoadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -62,16 +62,6 @@ public class AuthenticationService implements UserDetailsService {
                 throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp!");
             }
 
-            // Kiểm tra fullName không được để trống
-            if (registerRequest.getFullName() == null || registerRequest.getFullName().isEmpty()) {
-                throw new IllegalArgumentException("Họ và tên không được để trống!");
-            }
-
-            // Kiểm tra gender không được để trống
-            if (registerRequest.getGender() == null || registerRequest.getGender().isEmpty()) {
-                throw new IllegalArgumentException("Giới tính không được để trống!");
-            }
-            
             // Kiểm tra trùng lặp email và username trước khi lưu vào cơ sở dữ liệu
             if (accountRepository.existsByEmail(registerRequest.getEmail())) {
                 throw new DuplicateEntity("Email này đã được sử dụng!");
@@ -102,19 +92,15 @@ public class AuthenticationService implements UserDetailsService {
 
             Account newAccount = accountRepository.save(account);
 
+            // Tự động tạo UserInformation với subscription plan FREE
             UserInformation userInformation = new UserInformation();
-            userInformation.setFullName(registerRequest.getFullName());
             userInformation.setAccount(newAccount);
-            userInformation.setGender(registerRequest.getGender());
-            userInformation.setDob(registerRequest.getDob());
-
-            // Xử lý upload ảnh nếu có
-            if (registerRequest.getAvatar() != null && !registerRequest.getAvatar().isEmpty()) {
-                uploadImage(account.getId(),registerRequest.getAvatar());
-            }
-
+            userInformation.setSubscriptionPlan(SubcriptionPlan.FREE.name());
+            userInformation.setCreatedAt(LocalDateTime.now());
+            userInformation.setUpdatedAt(LocalDateTime.now());
             userInformationRepository.save(userInformation);
-            return modelMapper.map(account, AccountResponse.class);
+
+            return modelMapper.map(newAccount, AccountResponse.class);
         } catch (DataIntegrityViolationException e) {
             e.printStackTrace();
             throw new RuntimeException("Đã xảy ra lỗi trong quá trình đăng ký: " + e.getMessage());

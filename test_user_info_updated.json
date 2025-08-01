@@ -1,0 +1,17 @@
+{
+  "create_user_info": {
+    "fullName": "Nguyễn Văn A",
+    "gender": "Nam",
+    "dob": "1990-01-15",
+    "phone": "0123456789",
+    "address": "123 Đường ABC, Quận 1, TP.HCM",
+    "bio": "Tôi là một người yêu thích ẩm thực và khám phá những món ăn mới."
+  },
+  "update_user_info": {
+    "fullName": "Nguyễn Văn A Updated",
+    "phone": "0987654321",
+    "address": "456 Đường XYZ, Quận 2, TP.HCM",
+    "bio": "Tôi là một food blogger chuyên nghiệp."
+  },
+  "note": "subscriptionPlan sẽ luôn là FREE khi tạo mới và không thể cập nhật qua API này. Chỉ có thể nâng cấp thông qua hệ thống thanh toán."
+}

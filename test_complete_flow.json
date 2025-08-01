@@ -1,0 +1,39 @@
+{
+  "step1_register": {
+    "url": "POST /api/auth/register",
+    "body": {
+      "username": "testuser123",
+      "email": "test@example.com",
+      "password": "Test123@",
+      "confirmPassword": "Test123@"
+    },
+    "note": "Sau khi register thành công, hệ thống sẽ tự động tạo UserInformation với subscriptionPlan = 'FREE'"
+  },
+  "step2_get_user_info": {
+    "url": "GET /api/user-info/{accountId}",
+    "note": "Lấy thông tin user, sẽ thấy subscriptionPlan = 'FREE' và các field khác null"
+  },
+  "step3_update_user_info": {
+    "url": "POST /api/user-info/{accountId}",
+    "body": {
+      "fullName": "Nguyễn Văn A",
+      "gender": "Nam",
+      "dob": "1990-01-15",
+      "phone": "0123456789",
+      "address": "123 Đường ABC, Quận 1, TP.HCM",
+      "bio": "Tôi là một người yêu thích ẩm thực"
+    },
+    "note": "Cập nhật thông tin chi tiết, subscriptionPlan vẫn giữ nguyên là 'FREE'"
+  },
+  "step4_further_update": {
+    "url": "PUT /api/user-info/{accountId}",
+    "body": {
+      "fullName": "Nguyễn Văn A Updated",
+      "phone": "0987654321"
+    },
+    "note": "Cập nhật một số field, subscriptionPlan vẫn là 'FREE'"
+  },
+  "upgrade_to_premium": {
+    "note": "Để nâng cấp lên Premium, cần sử dụng SubscriptionService.upgradeToPremium() thông qua hệ thống thanh toán, không thể thông qua API user-info"
+  }
+}

@@ -1,40 +1,64 @@
 package com.exe201.color_bites_be.config;
 
+import com.exe201.color_bites_be.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.context.annotation.*;
+import org.springframework.security.authentication.*;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.*;
+
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-    @Autowired
-    @Lazy
-    private UserDetailsService userDetailsService;
 
     @Autowired
     private JwtFilter jwtFilter;
+
+    @Autowired
+    @Lazy
+    private AuthenticationService authenticationService;
+
+
+//    @Autowired
+//    private CustomOAuth2UserService oauth2UserService;
+//
+//    @Autowired
+//    private OAuth2SuccessHandler successHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/loginByGoogle",
-                                "/oauth2/authorization/**", "/login/oauth2/code/**",
-                                "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/api/vnpay-return").permitAll()
-                        .anyRequest().authenticated())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/loginByGoogle",
+                                "/oauth2/authorization/**",
+                                "/login/oauth2/code/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/api/vnpay-return"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .loginPage("http://localhost:5173/login") // Cập nhật cho FE local, Vercel có thể chỉnh env sau
+//                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+//                        .successHandler(successHandler)
+//                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -42,11 +66,28 @@ public class SecurityConfig {
     }
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173", // FE local dev
+                "https://your-vercel-app.vercel.app" // FE production Vercel
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // 1h
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    @Bean
     public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
-        authenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder(12));
-        return authenticationProvider;
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(authenticationService); // userDetailsService đã override loadUserByUsername
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+        return provider;
     }
 
     @Bean
