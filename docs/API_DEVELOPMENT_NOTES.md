@@ -1,11 +1,11 @@
 # API Development Notes - Color Bites Backend
 
-## 📋 Tóm tắt các tính năng đã hoàn thành
+## 📋 Tóm tắt các tính năng đã hoàn thành (v1.1.0 - STANDARDIZED)
 
 ### 🗂️ 1. API Post Bài Viết (POST MANAGEMENT)
 
 **Ngày hoàn thành**: [Current Date]  
-**Trạng thái**: ✅ HOÀN THÀNH
+**Trạng thái**: ✅ HOÀN THÀNH VÀ ĐÃ CHUẨN HÓA
 
 #### 📁 Files đã tạo/cập nhật:
 
@@ -36,22 +36,22 @@
 
 **PostController (`/api/posts`)**:
 
-- `POST /api/posts` - Tạo bài viết mới
-- `GET /api/posts/{postId}` - Lấy bài viết theo ID
-- `GET /api/posts` - Lấy danh sách bài viết (phân trang)
-- `GET /api/posts/user/{accountId}` - Lấy bài viết của user
+- `POST /api/posts/create` - Tạo bài viết mới
+- `GET /api/posts/read/{postId}` - Lấy bài viết theo ID
+- `GET /api/posts/list` - Lấy danh sách tất cả bài viết (phân trang)
+- `GET /api/posts/read/user/{accountId}` - Lấy bài viết của user
 - `GET /api/posts/search?keyword=...` - Tìm kiếm bài viết
-- `GET /api/posts/mood/{mood}` - Lấy bài viết theo mood
-- `PUT /api/posts/{postId}` - Cập nhật bài viết
-- `DELETE /api/posts/{postId}` - Xóa bài viết (soft delete)
-- `POST /api/posts/{postId}/react` - React/Unreact bài viết
-- `GET /api/posts/count/{accountId}` - Đếm số bài viết của user
+- `GET /api/posts/read/mood/{mood}` - Lấy bài viết theo mood
+- `PUT /api/posts/edit/{postId}` - Cập nhật bài viết
+- `DELETE /api/posts/delete/{postId}` - Xóa bài viết (soft delete)
+- `PUT /api/posts/react/{postId}` - React/Unreact bài viết
+- `GET /api/posts/count/user/{accountId}` - Đếm số bài viết của user
 
 **TagController (`/api/tags`)**:
 
-- `GET /api/tags/popular` - Lấy tags phổ biến
+- `GET /api/tags/read/popular` - Lấy tags phổ biến
 - `GET /api/tags/search?keyword=...` - Tìm kiếm tags
-- `GET /api/tags` - Lấy tất cả tags
+- `GET /api/tags/read/all` - Lấy tất cả tags
 
 #### ✨ Tính năng chính:
 
@@ -69,7 +69,7 @@
 ### 💬 2. API Comment Bài Viết (COMMENT SYSTEM)
 
 **Ngày hoàn thành**: [Current Date]  
-**Trạng thái**: ✅ HOÀN THÀNH
+**Trạng thái**: ✅ HOÀN THÀNH VÀ ĐÃ CHUẨN HÓA
 
 #### 📁 Files đã tạo/cập nhật:
 
@@ -96,16 +96,16 @@
 
 **CommentController (`/api/comments`)**:
 
-- `POST /api/comments/posts/{postId}` - Tạo comment mới
-- `GET /api/comments/{commentId}` - Lấy comment theo ID
-- `GET /api/comments/posts/{postId}/root` - Lấy comment gốc (phân trang)
-- `GET /api/comments/posts/{postId}/all` - Lấy tất cả comment (phân trang)
-- `GET /api/comments/{commentId}/replies` - Lấy replies của comment
-- `PUT /api/comments/{commentId}` - Cập nhật comment
-- `DELETE /api/comments/{commentId}` - Xóa comment (soft delete)
-- `GET /api/comments/posts/{postId}/count` - Đếm tổng comment
-- `GET /api/comments/posts/{postId}/count/root` - Đếm comment gốc
-- `GET /api/comments/posts/{postId}/user/{accountId}` - Comment của user
+- `POST /api/comments/create/posts/{postId}` - Tạo comment mới
+- `GET /api/comments/read/{commentId}` - Lấy comment theo ID
+- `GET /api/comments/read/posts/{postId}/root` - Lấy comment gốc (phân trang)
+- `GET /api/comments/read/posts/{postId}/all` - Lấy tất cả comment (phân trang)
+- `GET /api/comments/read/{commentId}/replies` - Lấy replies của comment
+- `PUT /api/comments/edit/{commentId}` - Cập nhật comment
+- `DELETE /api/comments/delete/{commentId}` - Xóa comment (soft delete)
+- `GET /api/comments/count/posts/{postId}` - Đếm tổng comment
+- `GET /api/comments/count/posts/{postId}/root` - Đếm comment gốc
+- `GET /api/comments/read/posts/{postId}/user/{accountId}` - Comment của user
 
 #### ✨ Tính năng chính:
 
@@ -118,6 +118,67 @@
 - ✅ Phân quyền (chỉ chủ comment mới sửa/xóa)
 - ✅ Tự động cập nhật comment count trong bài viết
 - ✅ Xóa comment cha sẽ xóa tất cả comment con
+
+---
+
+## 🆕 API Improvements (v1.1.0)
+
+### 🎯 **Những gì đã được cải thiện:**
+
+#### 1. **REST API Standardization:**
+
+- ✅ **URL Structure**: Tất cả endpoints có cấu trúc nhất quán với action verbs
+- ✅ **HTTP Methods**: Sử dụng đúng HTTP methods (POST/GET/PUT/DELETE)
+- ✅ **Naming Convention**: Method names có prefix rõ ràng (create, read, edit, delete)
+
+#### 2. **Endpoint Changes:**
+
+**Posts API:**
+
+```
+OLD: POST /api/posts          → NEW: POST /api/posts/create
+OLD: GET /api/posts/{id}      → NEW: GET /api/posts/read/{id}
+OLD: GET /api/posts           → NEW: GET /api/posts/list
+OLD: PUT /api/posts/{id}      → NEW: PUT /api/posts/edit/{id}
+OLD: DELETE /api/posts/{id}   → NEW: DELETE /api/posts/delete/{id}
+OLD: POST /api/posts/{id}/react → NEW: PUT /api/posts/react/{id}
+```
+
+**Comments API:**
+
+```
+OLD: POST /api/comments/posts/{postId} → NEW: POST /api/comments/create/posts/{postId}
+OLD: GET /api/comments/{id}            → NEW: GET /api/comments/read/{id}
+OLD: PUT /api/comments/{id}            → NEW: PUT /api/comments/edit/{id}
+OLD: DELETE /api/comments/{id}         → NEW: DELETE /api/comments/delete/{id}
+```
+
+**Tags API:**
+
+```
+OLD: GET /api/tags/popular → NEW: GET /api/tags/read/popular
+OLD: GET /api/tags         → NEW: GET /api/tags/read/all
+```
+
+#### 3. **Response Message Improvements:**
+
+- ✅ **Consistency**: Tất cả messages follow pattern "Object đã được action thành công"
+- ✅ **User-friendly**: Messages dễ hiểu và thân thiện với người dùng
+- ✅ **Vietnamese**: Hoàn toàn bằng tiếng Việt để phù hợp với user base
+
+#### 4. **Method Naming in Services:**
+
+- ✅ **Clear Prefixes**: `createPost()`, `readPostById()`, `editPost()`, `deletePost()`
+- ✅ **Consistency**: Tất cả service methods follow same convention
+- ✅ **Maintainability**: Code dễ maintain và hiểu hơn
+
+### 🚀 **Benefits của việc chuẩn hóa:**
+
+1. **Dễ sử dụng**: Frontend developers dễ dàng hiểu và implement
+2. **Consistency**: Tất cả API endpoints có pattern giống nhau
+3. **RESTful**: Tuân thủ strict REST principles
+4. **Scalable**: Dễ dàng mở rộng thêm features mới
+5. **Professional**: Code quality cao và professional
 
 ---
 
@@ -155,7 +216,7 @@
 
 ```javascript
 // Tạo bài viết
-POST /api/posts
+POST /api/posts/create
 {
   "title": "Món ăn hôm nay",
   "content": "Nội dung bài viết...",
@@ -165,10 +226,10 @@ POST /api/posts
 }
 
 // Lấy feed bài viết
-GET /api/posts?page=0&size=10
+GET /api/posts/list?page=0&size=10
 
 // React bài viết
-POST /api/posts/{postId}/react
+PUT /api/posts/react/{postId}
 {
   "reactionType": "love"
 }
@@ -178,21 +239,21 @@ POST /api/posts/{postId}/react
 
 ```javascript
 // Comment bài viết
-POST /api/comments/posts/{postId}
+POST /api/comments/create/posts/{postId}
 {
   "content": "Comment hay quá!",
   "parentCommentId": null // null = comment gốc
 }
 
 // Reply comment
-POST /api/comments/posts/{postId}
+POST /api/comments/create/posts/{postId}
 {
   "content": "Reply này!",
   "parentCommentId": "comment_id"
 }
 
 // Lấy comment tree
-GET /api/comments/posts/{postId}/root?page=0&size=10
+GET /api/comments/read/posts/{postId}/root?page=0&size=10
 ```
 
 ---
@@ -273,8 +334,12 @@ GET /api/comments/posts/{postId}/root?page=0&size=10
 
 ## 🔄 Change Log
 
-### Version 1.0.0 - [Current Date]
+### Version 1.1.0 - [Current Date]
 
+- ✅ **API Standardization**: Tất cả endpoints đã được chuẩn hóa theo REST convention
+- ✅ **Method Naming**: Chuẩn hóa tên method với tiền tố rõ ràng (create, read, edit, delete)
+- ✅ **URL Structure**: Cấu trúc URL nhất quán và dễ hiểu
+- ✅ **Response Messages**: Thông báo chuẩn hóa và thân thiện
 - ✅ Initial Post Management API
 - ✅ Comment System với nested comments
 - ✅ Tag management
@@ -285,5 +350,5 @@ GET /api/comments/posts/{postId}/root?page=0&size=10
 ---
 
 **📝 Last Updated**: [Current Date]  
-**👤 Updated by**: [Your Name]  
-**🏷️ Version**: 1.0.0
+**👤 Updated by**: [AI Assistant]  
+**🏷️ Version**: 1.1.0

@@ -31,8 +31,8 @@ public class TagController {
     /**
      * Lấy danh sách tags phổ biến nhất
      */
-    @GetMapping("/popular")
-    public ResponseDto<Page<TagResponse>> getPopularTags(
+    @GetMapping("/read/popular")
+    public ResponseDto<Page<TagResponse>> readPopularTags(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
@@ -41,7 +41,7 @@ public class TagController {
             Page<Tag> tags = tagRepository.findMostPopularTags(pageable);
 
             Page<TagResponse> tagResponses = tags.map(tag -> modelMapper.map(tag, TagResponse.class));
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách tags phổ biến thành công", tagResponses);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách tags phổ biến đã được tải thành công", tagResponses);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi lấy danh sách tags phổ biến", null);
@@ -62,7 +62,7 @@ public class TagController {
             Page<Tag> tags = tagRepository.findByNameContaining(keyword, pageable);
 
             Page<TagResponse> tagResponses = tags.map(tag -> modelMapper.map(tag, TagResponse.class));
-            return new ResponseDto<>(HttpStatus.OK.value(), "Tìm kiếm tags thành công", tagResponses);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Kết quả tìm kiếm tags đã được tải thành công", tagResponses);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi tìm kiếm tags", null);
@@ -72,8 +72,8 @@ public class TagController {
     /**
      * Lấy tất cả tags
      */
-    @GetMapping
-    public ResponseDto<Page<TagResponse>> getAllTags(
+    @GetMapping("/read/all")
+    public ResponseDto<Page<TagResponse>> readAllTags(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
 
@@ -82,7 +82,7 @@ public class TagController {
             Page<Tag> tags = tagRepository.findAll(pageable);
 
             Page<TagResponse> tagResponses = tags.map(tag -> modelMapper.map(tag, TagResponse.class));
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách tags thành công", tagResponses);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách tất cả tags đã được tải thành công", tagResponses);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi lấy danh sách tags", null);

@@ -94,7 +94,7 @@ public class CommentService {
     /**
      * Lấy comment theo ID
      */
-    public CommentResponse getCommentById(String commentId, String currentAccountId) {
+    public CommentResponse readCommentById(String commentId, String currentAccountId) {
         Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
 
@@ -104,7 +104,7 @@ public class CommentService {
     /**
      * Lấy danh sách comment gốc của bài viết (có phân trang)
      */
-    public Page<CommentResponse> getRootCommentsByPost(String postId, int page, int size, String currentAccountId) {
+    public Page<CommentResponse> readRootCommentsByPost(String postId, int page, int size, String currentAccountId) {
         // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
@@ -118,7 +118,7 @@ public class CommentService {
     /**
      * Lấy tất cả comment của bài viết (bao gồm reply, có phân trang)
      */
-    public Page<CommentResponse> getAllCommentsByPost(String postId, int page, int size, String currentAccountId) {
+    public Page<CommentResponse> readAllCommentsByPost(String postId, int page, int size, String currentAccountId) {
         // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
@@ -132,7 +132,7 @@ public class CommentService {
     /**
      * Lấy replies của comment
      */
-    public List<CommentResponse> getRepliesByComment(String parentCommentId, String currentAccountId) {
+    public List<CommentResponse> readRepliesByComment(String parentCommentId, String currentAccountId) {
         // Kiểm tra comment cha có tồn tại không
         commentRepository.findByIdAndNotDeleted(parentCommentId)
                 .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
@@ -148,7 +148,7 @@ public class CommentService {
      * Cập nhật comment
      */
     @Transactional
-    public CommentResponse updateComment(String commentId, String accountId, UpdateCommentRequest request) {
+    public CommentResponse editComment(String commentId, String accountId, UpdateCommentRequest request) {
         Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
 
@@ -286,7 +286,7 @@ public class CommentService {
     /**
      * Lấy comment theo user
      */
-    public List<CommentResponse> getCommentsByUser(String postId, String accountId, String currentAccountId) {
+    public List<CommentResponse> readCommentsByUser(String postId, String accountId, String currentAccountId) {
         List<Comment> comments = commentRepository.findByPostIdAndAccountIdAndNotDeleted(postId, accountId);
 
         return comments.stream()

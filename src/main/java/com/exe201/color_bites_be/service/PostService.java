@@ -81,7 +81,7 @@ public class PostService {
     /**
      * Lấy bài viết theo ID
      */
-    public PostResponse getPostById(String postId, String currentAccountId) {
+    public PostResponse readPostById(String postId, String currentAccountId) {
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
@@ -92,9 +92,9 @@ public class PostService {
     }
 
     /**
-     * Lấy danh sách bài viết (phân trang)
+     * Lấy tất cả bài viết (phân trang)
      */
-    public Page<PostResponse> getAllPosts(int page, int size, String currentAccountId) {
+    public Page<PostResponse> readAllPosts(int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findAllActivePosts(pageable);
 
@@ -107,7 +107,7 @@ public class PostService {
     /**
      * Lấy bài viết của user
      */
-    public Page<PostResponse> getPostsByUser(String accountId, int page, int size, String currentAccountId) {
+    public Page<PostResponse> readPostsByUser(String accountId, int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByAccountIdAndNotDeleted(accountId, pageable);
 
@@ -133,7 +133,7 @@ public class PostService {
     /**
      * Lấy bài viết theo mood
      */
-    public Page<PostResponse> getPostsByMood(String mood, int page, int size, String currentAccountId) {
+    public Page<PostResponse> readPostsByMood(String mood, int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByMoodAndNotDeleted(mood, pageable);
 
@@ -147,7 +147,7 @@ public class PostService {
      * Cập nhật bài viết
      */
     @Transactional
-    public PostResponse updatePost(String postId, String accountId, UpdatePostRequest request) {
+    public PostResponse editPost(String postId, String accountId, UpdatePostRequest request) {
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 

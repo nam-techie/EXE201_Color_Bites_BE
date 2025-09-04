@@ -30,7 +30,7 @@ public class CommentController {
     /**
      * Tạo comment mới cho bài viết
      */
-    @PostMapping("/posts/{postId}")
+    @PostMapping("/create/posts/{postId}")
     public ResponseDto<CommentResponse> createComment(
             @PathVariable String postId,
             @Valid @RequestBody CreateCommentRequest request,
@@ -50,7 +50,7 @@ public class CommentController {
             String accountId = userPrincipal.getAccount().getId();
 
             CommentResponse response = commentService.createComment(postId, accountId, request);
-            return new ResponseDto<>(HttpStatus.CREATED.value(), "Tạo comment thành công", response);
+            return new ResponseDto<>(HttpStatus.CREATED.value(), "Comment đã được tạo thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (RuntimeException e) {
@@ -64,8 +64,8 @@ public class CommentController {
     /**
      * Lấy comment theo ID
      */
-    @GetMapping("/{commentId}")
-    public ResponseDto<CommentResponse> getCommentById(
+    @GetMapping("/read/{commentId}")
+    public ResponseDto<CommentResponse> readCommentById(
             @PathVariable String commentId,
             Authentication authentication) {
 
@@ -76,8 +76,8 @@ public class CommentController {
                 currentAccountId = userPrincipal.getAccount().getId();
             }
 
-            CommentResponse response = commentService.getCommentById(commentId, currentAccountId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thông tin comment thành công", response);
+            CommentResponse response = commentService.readCommentById(commentId, currentAccountId);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Thông tin comment đã được tải thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
@@ -89,8 +89,8 @@ public class CommentController {
     /**
      * Lấy danh sách comment gốc của bài viết (có phân trang)
      */
-    @GetMapping("/posts/{postId}/root")
-    public ResponseDto<Page<CommentResponse>> getRootCommentsByPost(
+    @GetMapping("/read/posts/{postId}/root")
+    public ResponseDto<Page<CommentResponse>> readRootCommentsByPost(
             @PathVariable String postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -103,8 +103,8 @@ public class CommentController {
                 currentAccountId = userPrincipal.getAccount().getId();
             }
 
-            Page<CommentResponse> comments = commentService.getRootCommentsByPost(postId, page, size, currentAccountId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách comment gốc thành công", comments);
+            Page<CommentResponse> comments = commentService.readRootCommentsByPost(postId, page, size, currentAccountId);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách comment gốc đã được tải thành công", comments);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
@@ -116,8 +116,8 @@ public class CommentController {
     /**
      * Lấy tất cả comment của bài viết (bao gồm reply, có phân trang)
      */
-    @GetMapping("/posts/{postId}/all")
-    public ResponseDto<Page<CommentResponse>> getAllCommentsByPost(
+    @GetMapping("/read/posts/{postId}/all")
+    public ResponseDto<Page<CommentResponse>> readAllCommentsByPost(
             @PathVariable String postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -130,8 +130,8 @@ public class CommentController {
                 currentAccountId = userPrincipal.getAccount().getId();
             }
 
-            Page<CommentResponse> comments = commentService.getAllCommentsByPost(postId, page, size, currentAccountId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy tất cả comment thành công", comments);
+            Page<CommentResponse> comments = commentService.readAllCommentsByPost(postId, page, size, currentAccountId);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Tất cả comment đã được tải thành công", comments);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
@@ -143,8 +143,8 @@ public class CommentController {
     /**
      * Lấy replies của comment
      */
-    @GetMapping("/{commentId}/replies")
-    public ResponseDto<List<CommentResponse>> getRepliesByComment(
+    @GetMapping("/read/{commentId}/replies")
+    public ResponseDto<List<CommentResponse>> readRepliesByComment(
             @PathVariable String commentId,
             Authentication authentication) {
 
@@ -155,8 +155,8 @@ public class CommentController {
                 currentAccountId = userPrincipal.getAccount().getId();
             }
 
-            List<CommentResponse> replies = commentService.getRepliesByComment(commentId, currentAccountId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách reply thành công", replies);
+            List<CommentResponse> replies = commentService.readRepliesByComment(commentId, currentAccountId);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách reply đã được tải thành công", replies);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (Exception e) {
@@ -168,8 +168,8 @@ public class CommentController {
     /**
      * Cập nhật comment
      */
-    @PutMapping("/{commentId}")
-    public ResponseDto<CommentResponse> updateComment(
+    @PutMapping("/edit/{commentId}")
+    public ResponseDto<CommentResponse> editComment(
             @PathVariable String commentId,
             @Valid @RequestBody UpdateCommentRequest request,
             BindingResult bindingResult,
@@ -187,8 +187,8 @@ public class CommentController {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String accountId = userPrincipal.getAccount().getId();
 
-            CommentResponse response = commentService.updateComment(commentId, accountId, request);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Cập nhật comment thành công", response);
+            CommentResponse response = commentService.editComment(commentId, accountId, request);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Comment đã được cập nhật thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (RuntimeException e) {
@@ -202,7 +202,7 @@ public class CommentController {
     /**
      * Xóa comment
      */
-    @DeleteMapping("/{commentId}")
+    @DeleteMapping("/delete/{commentId}")
     public ResponseDto<String> deleteComment(
             @PathVariable String commentId,
             Authentication authentication) {
@@ -212,7 +212,7 @@ public class CommentController {
             String accountId = userPrincipal.getAccount().getId();
 
             commentService.deleteComment(commentId, accountId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Xóa comment thành công", null);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Comment đã được xóa thành công", null);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
         } catch (RuntimeException e) {
@@ -226,11 +226,11 @@ public class CommentController {
     /**
      * Đếm số lượng comment của bài viết
      */
-    @GetMapping("/posts/{postId}/count")
-    public ResponseDto<Long> getCommentCountByPost(@PathVariable String postId) {
+    @GetMapping("/count/posts/{postId}")
+    public ResponseDto<Long> countCommentsByPost(@PathVariable String postId) {
         try {
             long count = commentService.countCommentsByPost(postId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy số lượng comment thành công", count);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Số lượng comment đã được tải thành công", count);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi lấy số lượng comment", null);
@@ -240,11 +240,11 @@ public class CommentController {
     /**
      * Đếm số lượng comment gốc của bài viết
      */
-    @GetMapping("/posts/{postId}/count/root")
-    public ResponseDto<Long> getRootCommentCountByPost(@PathVariable String postId) {
+    @GetMapping("/count/posts/{postId}/root")
+    public ResponseDto<Long> countRootCommentsByPost(@PathVariable String postId) {
         try {
             long count = commentService.countRootCommentsByPost(postId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy số lượng comment gốc thành công", count);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Số lượng comment gốc đã được tải thành công", count);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi lấy số lượng comment gốc", null);
@@ -254,8 +254,8 @@ public class CommentController {
     /**
      * Lấy comment của user trong bài viết
      */
-    @GetMapping("/posts/{postId}/user/{accountId}")
-    public ResponseDto<List<CommentResponse>> getCommentsByUser(
+    @GetMapping("/read/posts/{postId}/user/{accountId}")
+    public ResponseDto<List<CommentResponse>> readCommentsByUser(
             @PathVariable String postId,
             @PathVariable String accountId,
             Authentication authentication) {
@@ -267,8 +267,8 @@ public class CommentController {
                 currentAccountId = userPrincipal.getAccount().getId();
             }
 
-            List<CommentResponse> comments = commentService.getCommentsByUser(postId, accountId, currentAccountId);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy comment của người dùng thành công", comments);
+            List<CommentResponse> comments = commentService.readCommentsByUser(postId, accountId, currentAccountId);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Comment của người dùng đã được tải thành công", comments);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi lấy comment của người dùng", null);
