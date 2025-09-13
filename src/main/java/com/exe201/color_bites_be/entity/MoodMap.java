@@ -40,4 +40,7 @@ public class MoodMap {
 
     @Field("created_at")
     private LocalDateTime createdAt;
+
+    @Field("is_deleted")
+    private Boolean isDeleted = false;
 }

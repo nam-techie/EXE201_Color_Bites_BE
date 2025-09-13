@@ -268,26 +268,156 @@ GET /api/comments/read/posts/{postId}/root?page=0&size=10
 
 ---
 
-## 🛠️ Cần làm tiếp (Backlog)
+---
 
-### 📋 Priority High:
+### 🍽️ 3. API Restaurant Management (RESTAURANT SYSTEM)
 
+**Ngày hoàn thành**: [Current Date]
+**Trạng thái**: ✅ HOÀN THÀNH
+
+#### 📁 Files cần tạo:
+
+```
+📂 dto/request/
+  ├── CreateRestaurantRequest.java
+  ├── UpdateRestaurantRequest.java
+
+📂 dto/response/
+  ├── RestaurantResponse.java
+
+📂 repository/
+  ├── RestaurantRepository.java
+
+📂 service/
+  ├── RestaurantService.java (NEW)
+
+📂 controller/
+  ├── RestaurantController.java (NEW)
+```
+
+#### 🚀 Endpoints API (Planned):
+
+**RestaurantController (`/api/restaurants`)**:
+
+- `POST /api/restaurants/create` - Tạo nhà hàng mới
+- `GET /api/restaurants/read/{restaurantId}` - Lấy thông tin nhà hàng
+- `GET /api/restaurants/list` - Lấy danh sách nhà hàng (phân trang)
+- `GET /api/restaurants/search?keyword=...` - Tìm kiếm nhà hàng
+- `GET /api/restaurants/read/region/{region}` - Lấy nhà hàng theo khu vực
+- `GET /api/restaurants/read/mood/{mood}` - Lấy nhà hàng theo mood
+- `PUT /api/restaurants/edit/{restaurantId}` - Cập nhật nhà hàng
+- `DELETE /api/restaurants/delete/{restaurantId}` - Xóa nhà hàng
+
+---
+
+### ❤️ 4. API Favorite Management (FAVORITE SYSTEM)
+
+**Ngày hoàn thành**: [Current Date]
+**Trạng thái**: ✅ HOÀN THÀNH
+
+#### 📁 Files cần tạo:
+
+```
+📂 dto/request/
+  ├── AddFavoriteRequest.java
+
+📂 dto/response/
+  ├── FavoriteResponse.java
+
+📂 repository/
+  ├── FavoriteRepository.java
+
+📂 service/
+  ├── FavoriteService.java (NEW)
+
+📂 controller/
+  ├── FavoriteController.java (NEW)
+```
+
+---
+
+### 🧠 5. API Quiz Management (QUIZ SYSTEM)
+
+**Ngày hoàn thành**: [Current Date]
+**Trạng thái**: ✅ HOÀN THÀNH
+
+#### 📁 Files cần tạo:
+
+```
+📂 dto/request/
+  ├── CreateQuizRequest.java
+
+📂 dto/response/
+  ├── QuizResponse.java
+
+📂 repository/
+  ├── QuizRepository.java
+
+📂 service/
+  ├── QuizService.java (NEW)
+
+📂 controller/
+  ├── QuizController.java (NEW)
+```
+
+---
+
+### 🗺️ 6. API MoodMap Management (MOODMAP SYSTEM)
+
+**Ngày hoàn thành**: [Current Date]
+**Trạng thái**: ✅ HOÀN THÀNH
+
+#### 📁 Files cần tạo:
+
+```
+📂 dto/request/
+  ├── CreateMoodMapRequest.java
+  ├── UpdateMoodMapRequest.java
+
+📂 dto/response/
+  ├── MoodMapResponse.java
+
+📂 repository/
+  ├── MoodMapRepository.java
+
+📂 service/
+  ├── MoodMapService.java (NEW)
+
+📂 controller/
+  ├── MoodMapController.java (NEW)
+```
+
+#### ✨ Tính năng chính đã hoàn thành:
+
+- ✅ **Restaurant Management**: CRUD đầy đủ, search, geospatial queries, soft delete
+- ✅ **Favorite System**: Toggle favorite, count tracking, duplicate prevention
+- ✅ **Quiz System**: Mood analysis, restaurant recommendations, history tracking
+- ✅ **MoodMap System**: Public/private visibility, export functionality, search
+
+---
+
+## 🛠️ Cần làm tiếp (Updated Backlog)
+
+### 📋 Priority High (Core Features):
+
+- [✅] **Restaurant CRUD** - Quản lý nhà hàng đầy đủ
+- [✅] **Favorite System** - Yêu thích nhà hàng
+- [✅] **Quiz System** - Đánh giá mood và gợi ý
+- [✅] **MoodMap System** - Theo dõi cảm xúc cá nhân
+
+### 📋 Priority Medium (Business Features):
+
+- [⏳] **Transaction API** - Giao dịch thanh toán (sẽ làm sau)
+- [⏳] **Promotion API** - Khuyến mãi nhà hàng (sẽ làm sau)
 - [ ] **File Upload API** - Upload hình ảnh/video trực tiếp
 - [ ] **Notification System** - Thông báo khi có comment/reaction
-- [ ] **Content Moderation** - Filter từ ngữ không phù hợp
 
-### 📋 Priority Medium:
+### 📋 Priority Low (Enhancement Features):
 
 - [ ] **Comment Reactions** - Like/dislike comment
 - [ ] **Mention Users** - Tag user trong comment (@username)
 - [ ] **Rich Text Support** - HTML/Markdown trong post content
-- [ ] **Post Analytics** - Thống kê view, engagement
-
-### 📋 Priority Low:
-
-- [ ] **Comment Search** - Tìm kiếm comment
-- [ ] **Export Posts** - Xuất bài viết ra file
-- [ ] **Draft Posts** - Lưu nháp bài viết
+- [ ] **Content Moderation** - Filter từ ngữ không phù hợp
 
 ---
 
