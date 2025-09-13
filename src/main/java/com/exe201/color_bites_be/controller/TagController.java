@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasAuthority('USER')")
 @RequestMapping("/api/tags")
 public class TagController {
 

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasAuthority('USER')")
 @RequestMapping("/api/favorites")
 public class FavoriteController {
 

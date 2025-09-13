@@ -13,8 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserInformationResponse {
-    
-    private String id;
+    private String username;
     private String accountId;
     private String fullName;
     private String gender;

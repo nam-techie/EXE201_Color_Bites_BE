@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasAuthority('USER')")
 @RequestMapping("/api/comments")
 public class CommentController {
 

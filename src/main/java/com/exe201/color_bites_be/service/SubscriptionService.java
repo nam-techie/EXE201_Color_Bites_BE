@@ -36,7 +36,7 @@ public class SubscriptionService {
      */
     public String getCurrentSubscriptionPlan(String accountId) {
         try {
-            var userInfo = userInformationService.getUserInformation(accountId);
+            var userInfo = userInformationService.getUserInformation();
             return userInfo.getSubscriptionPlan();
         } catch (Exception e) {
             // Nếu chưa có thông tin user, mặc định là FREE

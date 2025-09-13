@@ -64,7 +64,7 @@ public class Account {
 
     // Thêm method getAuthorities cho Spring Security
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     // Getter/Setter cho isActive
