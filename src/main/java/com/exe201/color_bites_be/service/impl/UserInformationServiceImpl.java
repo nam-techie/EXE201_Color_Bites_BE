@@ -1,4 +1,4 @@
-package com.exe201.color_bites_be.service;
+package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.UserInformationRequest;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
@@ -7,8 +7,8 @@ import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
+import com.exe201.color_bites_be.service.IUserInformationService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,21 +17,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+/**
+ * Implementation của IUserInformationService
+ * Xử lý logic quản lý thông tin người dùng
+ */
 @Service
-public class UserInformationService {
+public class UserInformationServiceImpl implements IUserInformationService {
 
     @Autowired
     private UserInformationRepository userInformationRepository;
 
-    @Autowired
-    private AccountRepository accountRepository;
 
     @Autowired
     private ModelMapper modelMapper;
 
-    /**
-     * Lấy thông tin user theo accountId
-     */
+    @Override
     public UserInformationResponse getUserInformation() {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserInformation userInformation = userInformationRepository.findByAccountId(account.getId());
@@ -45,6 +45,7 @@ public class UserInformationService {
         return response;
     }
 
+    @Override
     @Transactional
     public UserInformationResponse updateUserInformation(UserInformationRequest request) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -89,10 +90,7 @@ public class UserInformationService {
         return response;
     }
 
-    /**
-     * Nâng cấp subscription plan (chỉ dành cho hệ thống thanh toán)
-     * Method này không được expose qua API public
-     */
+    @Override
     @Transactional
     public void upgradeSubscriptionPlan(String accountId, SubcriptionPlan newPlan) {
         UserInformation userInformation = userInformationRepository.findByAccountId(accountId);
@@ -105,9 +103,7 @@ public class UserInformationService {
         userInformationRepository.save(userInformation);
     }
 
-    /**
-     * Hạ cấp về FREE (khi hết hạn premium)
-     */
+    @Override
     @Transactional
     public void downgradeToFree(String accountId) {
         upgradeSubscriptionPlan(accountId, SubcriptionPlan.FREE);

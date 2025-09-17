@@ -1,31 +1,39 @@
-package com.exe201.color_bites_be.service;
+package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.response.ListAccountResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
+import com.exe201.color_bites_be.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementation của IAdminService
+ * Xử lý logic quản trị hệ thống cho admin
+ */
 @Service
-public class AdminService {
+public class AdminServiceImpl implements IAdminService {
+    
     @Autowired
     AccountRepository accountRepository;
 
     @Autowired
     UserInformationRepository userInformationRepository;
 
-    public List<ListAccountResponse> getAllUserByAdmin(){
+    @Override
+    public List<ListAccountResponse> getAllUserByAdmin() {
         List<Account> accounts = accountRepository.findAll();
         List<UserInformation> userInformations = userInformationRepository.findAll();
         List<ListAccountResponse> listAccountResponses = new ArrayList<>();
-        for(Account account:accounts){
-            for(UserInformation userInformation:userInformations){
-                if(account.getId().equals(userInformation.getAccount().getId())){
+        
+        for (Account account : accounts) {
+            for (UserInformation userInformation : userInformations) {
+                if (account.getId().equals(userInformation.getAccount().getId())) {
                     ListAccountResponse dto = new ListAccountResponse();
                     dto.setId(userInformation.getAccount().getId());
                     dto.setUsername(account.getUserName());
@@ -42,16 +50,19 @@ public class AdminService {
         return listAccountResponses;
     }
 
-    public void blockUser(String id){
-        Account account = accountRepository.findById(id).orElse(null);
+    @Override
+    public void blockUser(String accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         account.setIsActive(false);
         accountRepository.save(account);
     }
 
-    public void activeUser(String id){
-        Account account = accountRepository.findById(id).orElse(null);
+    @Override
+    public void activeUser(String accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         account.setIsActive(true);
         accountRepository.save(account);
     }
-
 }

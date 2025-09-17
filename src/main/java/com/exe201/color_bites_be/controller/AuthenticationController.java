@@ -6,7 +6,7 @@ import com.exe201.color_bites_be.dto.response.AccountResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.service.AuthenticationService;
+import com.exe201.color_bites_be.service.IAuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class AuthenticationController {
 
     @Autowired
-    AuthenticationService authenticationService;
+    IAuthenticationService authenticationService;
 
     @PostMapping("/register")
     public ResponseDto<String> register(@Valid @RequestBody RegisterRequest account, BindingResult bindingResult) {

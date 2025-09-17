@@ -7,12 +7,11 @@ import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.model.UserPrincipal;
-import com.exe201.color_bites_be.service.RestaurantService;
+import com.exe201.color_bites_be.service.IRestaurantService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
@@ -25,30 +24,16 @@ import org.springframework.web.bind.annotation.*;
 public class RestaurantController {
 
     @Autowired
-    private RestaurantService restaurantService;
+    private IRestaurantService restaurantService;
 
     /**
      * Tạo nhà hàng mới
      */
     @PostMapping("/create")
     public ResponseDto<RestaurantResponse> createRestaurant(
-            @Valid @RequestBody CreateRestaurantRequest request,
-            BindingResult bindingResult,
-            Authentication authentication) {
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errors = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.append(error.getDefaultMessage()).append(". ");
-            }
-            return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", null);
-        }
-
+            @Valid @RequestBody CreateRestaurantRequest request) {
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            RestaurantResponse response = restaurantService.createRestaurant(accountId, request);
+            RestaurantResponse response = restaurantService.createRestaurant( request);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Nhà hàng đã được tạo thành công", response);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -65,13 +50,7 @@ public class RestaurantController {
             Authentication authentication) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            RestaurantResponse response = restaurantService.readRestaurantById(restaurantId, currentAccountId);
+            RestaurantResponse response = restaurantService.readRestaurantById(restaurantId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Thông tin nhà hàng đã được tải thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);

@@ -1,7 +1,7 @@
 package com.exe201.color_bites_be.config;
 
 import com.exe201.color_bites_be.entity.Account;
-import com.exe201.color_bites_be.service.TokenService;
+import com.exe201.color_bites_be.service.ITokenService;
 import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,7 +23,7 @@ import java.util.List;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     @Autowired
-    private TokenService tokenService;
+    private ITokenService tokenService;
 
     @Autowired
     @Qualifier("handlerExceptionResolver")

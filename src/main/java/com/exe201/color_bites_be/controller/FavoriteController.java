@@ -4,15 +4,13 @@ import com.exe201.color_bites_be.dto.request.AddFavoriteRequest;
 import com.exe201.color_bites_be.dto.response.FavoriteResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.model.UserPrincipal;
-import com.exe201.color_bites_be.service.FavoriteService;
+import com.exe201.color_bites_be.service.IFavoriteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
@@ -27,7 +25,7 @@ import java.util.Map;
 public class FavoriteController {
 
     @Autowired
-    private FavoriteService favoriteService;
+    private IFavoriteService favoriteService;
 
     /**
      * Thêm nhà hàng vào danh sách yêu thích
@@ -50,7 +48,7 @@ public class FavoriteController {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String accountId = userPrincipal.getAccount().getId();
 
-            FavoriteResponse response = favoriteService.addFavorite(accountId, request);
+            FavoriteResponse response = favoriteService.toggleFavorite(accountId, request);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Nhà hàng đã được thêm vào danh sách yêu thích", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -74,7 +72,10 @@ public class FavoriteController {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String accountId = userPrincipal.getAccount().getId();
 
-            favoriteService.removeFavorite(accountId, restaurantId);
+            // Create request object for toggle
+            AddFavoriteRequest removeRequest = new AddFavoriteRequest();
+            removeRequest.setRestaurantId(restaurantId);
+            favoriteService.toggleFavorite(accountId, removeRequest);
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng đã được xóa khỏi danh sách yêu thích", null);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -117,7 +118,11 @@ public class FavoriteController {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String accountId = userPrincipal.getAccount().getId();
 
-            boolean isFavorited = favoriteService.toggleFavorite(accountId, restaurantId);
+            AddFavoriteRequest toggleRequest = new AddFavoriteRequest();
+            toggleRequest.setRestaurantId(restaurantId);
+            favoriteService.toggleFavorite(accountId, toggleRequest);
+            // TODO: Add getAction method to FavoriteResponse
+            boolean isFavorited = favoriteService.isRestaurantFavorited(accountId, restaurantId);
             long favoriteCount = favoriteService.countFavoritesByRestaurant(restaurantId);
 
             Map<String, Object> result = Map.of(
@@ -150,7 +155,7 @@ public class FavoriteController {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String accountId = userPrincipal.getAccount().getId();
 
-            boolean isFavorited = favoriteService.isFavorited(accountId, restaurantId);
+            boolean isFavorited = favoriteService.isRestaurantFavorited(accountId, restaurantId);
             long favoriteCount = favoriteService.countFavoritesByRestaurant(restaurantId);
 
             Map<String, Object> result = Map.of(
@@ -175,7 +180,9 @@ public class FavoriteController {
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String accountId = userPrincipal.getAccount().getId();
 
-            long favoriteCount = favoriteService.countFavoritesByUser(accountId);
+            // Count favorites by user - use page size 0 to get total count
+            Page<FavoriteResponse> favoritePage = favoriteService.readUserFavorites(accountId, 0, 1);
+            long favoriteCount = favoritePage.getTotalElements();
 
             Map<String, Object> result = Map.of("favoriteCount", favoriteCount);
 

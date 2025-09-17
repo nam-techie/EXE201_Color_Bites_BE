@@ -1,6 +1,6 @@
 package com.exe201.color_bites_be.config;
 
-import com.exe201.color_bites_be.service.AuthenticationService;
+import com.exe201.color_bites_be.service.IAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.security.authentication.*;
@@ -26,7 +26,7 @@ public class SecurityConfig {
 
     @Autowired
     @Lazy
-    private AuthenticationService authenticationService;
+    private IAuthenticationService authenticationService;
 
 
 //    @Autowired
@@ -85,7 +85,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(authenticationService); // userDetailsService đã override loadUserByUsername
+        // IAuthenticationService now extends UserDetailsService
+        provider.setUserDetailsService(authenticationService);
         provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
         return provider;
     }

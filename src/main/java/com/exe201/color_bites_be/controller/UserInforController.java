@@ -5,7 +5,7 @@ import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.service.UserInformationService;
+import com.exe201.color_bites_be.service.IUserInformationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserInforController {
 
     @Autowired
-    private UserInformationService userInformationService;
+    private IUserInformationService userInformationService;
 
     /**
      * Lấy thông tin user theo accountId

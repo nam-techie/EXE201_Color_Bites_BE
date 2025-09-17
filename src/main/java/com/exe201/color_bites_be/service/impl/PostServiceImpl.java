@@ -1,4 +1,4 @@
-package com.exe201.color_bites_be.service;
+package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.CreatePostRequest;
 import com.exe201.color_bites_be.dto.request.UpdatePostRequest;
@@ -7,6 +7,7 @@ import com.exe201.color_bites_be.dto.response.TagResponse;
 import com.exe201.color_bites_be.entity.*;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.*;
+import com.exe201.color_bites_be.service.IPostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,11 +20,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Implementation của IPostService
+ * Xử lý logic quản lý bài viết, tags, reactions
+ */
 @Service
-public class PostService {
+public class PostServiceImpl implements IPostService {
 
     @Autowired
     private PostRepository postRepository;
@@ -46,9 +50,7 @@ public class PostService {
     @Autowired
     private ModelMapper modelMapper;
 
-    /**
-     * Tạo bài viết mới
-     */
+    @Override
     @Transactional
     public PostResponse createPost(String accountId, CreatePostRequest request) {
         // Tạo post entity
@@ -78,9 +80,7 @@ public class PostService {
         return buildPostResponse(savedPost, accountId, tags);
     }
 
-    /**
-     * Lấy bài viết theo ID
-     */
+    @Override
     public PostResponse readPostById(String postId, String currentAccountId) {
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
@@ -91,9 +91,7 @@ public class PostService {
         return buildPostResponse(post, currentAccountId, tags);
     }
 
-    /**
-     * Lấy tất cả bài viết (phân trang)
-     */
+    @Override
     public Page<PostResponse> readAllPosts(int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findAllActivePosts(pageable);
@@ -104,9 +102,7 @@ public class PostService {
         });
     }
 
-    /**
-     * Lấy bài viết của user
-     */
+    @Override
     public Page<PostResponse> readPostsByUser(String accountId, int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByAccountIdAndNotDeleted(accountId, pageable);
@@ -117,9 +113,7 @@ public class PostService {
         });
     }
 
-    /**
-     * Tìm kiếm bài viết
-     */
+    @Override
     public Page<PostResponse> searchPosts(String keyword, int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByKeywordAndNotDeleted(keyword, pageable);
@@ -130,9 +124,7 @@ public class PostService {
         });
     }
 
-    /**
-     * Lấy bài viết theo mood
-     */
+    @Override
     public Page<PostResponse> readPostsByMood(String mood, int page, int size, String currentAccountId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByMoodAndNotDeleted(mood, pageable);
@@ -143,9 +135,7 @@ public class PostService {
         });
     }
 
-    /**
-     * Cập nhật bài viết
-     */
+    @Override
     @Transactional
     public PostResponse editPost(String postId, String accountId, UpdatePostRequest request) {
         Post post = postRepository.findByIdAndNotDeleted(postId)
@@ -193,9 +183,7 @@ public class PostService {
         return buildPostResponse(updatedPost, accountId, tags);
     }
 
-    /**
-     * Xóa bài viết (soft delete)
-     */
+    @Override
     @Transactional
     public void deletePost(String postId, String accountId) {
         Post post = postRepository.findByIdAndNotDeleted(postId)
@@ -219,6 +207,48 @@ public class PostService {
         
         // Xóa tất cả comments liên quan (soft delete)
         deleteAllCommentsByPost(postId);
+    }
+
+    @Override
+    public long countPostsByUser(String accountId) {
+        return postRepository.countByAccountIdAndNotDeleted(accountId);
+    }
+
+    @Override
+    @Transactional
+    public void toggleReaction(String postId, String accountId, String reactionType) {
+        // Kiểm tra bài viết có tồn tại không
+        Post post = postRepository.findByIdAndNotDeleted(postId)
+                .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
+
+        // Kiểm tra user đã react chưa
+        reactionRepository.findByPostIdAndAccountId(postId, accountId)
+                .ifPresentOrElse(
+                        existingReaction -> {
+                            if (existingReaction.getReactionType().equals(reactionType)) {
+                                // Unreact - xóa reaction
+                                reactionRepository.delete(existingReaction);
+                                post.setReactionCount(Math.max(0, post.getReactionCount() - 1));
+                            } else {
+                                // Thay đổi loại reaction
+                                existingReaction.setReactionType(reactionType);
+                                reactionRepository.save(existingReaction);
+                            }
+                        },
+                        () -> {
+                            // Tạo reaction mới
+                            Reaction reaction = new Reaction();
+                            reaction.setPostId(postId);
+                            reaction.setAccountId(accountId);
+                            reaction.setReactionType(reactionType);
+                            reaction.setCreatedAt(LocalDateTime.now());
+                            reactionRepository.save(reaction);
+                            post.setReactionCount(post.getReactionCount() + 1);
+                        }
+                );
+
+        // Cập nhật reaction count
+        postRepository.save(post);
     }
 
     /**
@@ -316,52 +346,6 @@ public class PostService {
         }
 
         return response;
-    }
-
-    /**
-     * Lấy số lượng bài viết của user
-     */
-    public long countPostsByUser(String accountId) {
-        return postRepository.countByAccountIdAndNotDeleted(accountId);
-    }
-
-    /**
-     * React/Unreact bài viết
-     */
-    @Transactional
-    public void toggleReaction(String postId, String accountId, String reactionType) {
-        // Kiểm tra bài viết có tồn tại không
-        Post post = postRepository.findByIdAndNotDeleted(postId)
-                .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
-
-        // Kiểm tra user đã react chưa
-        reactionRepository.findByPostIdAndAccountId(postId, accountId)
-                .ifPresentOrElse(
-                        existingReaction -> {
-                            if (existingReaction.getReactionType().equals(reactionType)) {
-                                // Unreact - xóa reaction
-                                reactionRepository.delete(existingReaction);
-                                post.setReactionCount(Math.max(0, post.getReactionCount() - 1));
-                            } else {
-                                // Thay đổi loại reaction
-                                existingReaction.setReactionType(reactionType);
-                                reactionRepository.save(existingReaction);
-                            }
-                        },
-                        () -> {
-                            // Tạo reaction mới
-                            Reaction reaction = new Reaction();
-                            reaction.setPostId(postId);
-                            reaction.setAccountId(accountId);
-                            reaction.setReactionType(reactionType);
-                            reaction.setCreatedAt(LocalDateTime.now());
-                            reactionRepository.save(reaction);
-                            post.setReactionCount(post.getReactionCount() + 1);
-                        }
-                );
-
-        // Cập nhật reaction count
-        postRepository.save(post);
     }
 
     /**

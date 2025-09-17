@@ -6,7 +6,7 @@ import com.exe201.color_bites_be.dto.response.PostResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
-import com.exe201.color_bites_be.service.PostService;
+import com.exe201.color_bites_be.service.IPostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class PostController {
 
     @Autowired
-    private PostService postService;
+    private IPostService postService;
 
     /**
      * Tạo bài viết mới

@@ -1,7 +1,8 @@
-package com.exe201.color_bites_be.service;
+package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.repository.AccountRepository;
+import com.exe201.color_bites_be.service.ITokenService;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -18,12 +19,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Implementation của ITokenService
+ * Xử lý logic JWT token: tạo, validate, blacklist
+ */
 @Service
-public class TokenService {
+public class TokenServiceImpl implements ITokenService {
     // Danh sách lưu token bị hủy cùng thời gian hết hạn
     private Map<String, Date> blacklistedTokens = new HashMap<>();
     private final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-
 
     @Autowired
     AccountRepository accountRepository;
@@ -35,7 +39,7 @@ public class TokenService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // Tạo token mới
+    @Override
     public String generateToken(Account account) {
         return Jwts.builder()
                 .subject(account.getId() + "")
@@ -45,8 +49,7 @@ public class TokenService {
                 .compact();
     }
 
-
-    // Đưa token vào danh sách đen với thời gian hết hạn
+    @Override
     public void invalidateToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSignKey())
@@ -58,7 +61,7 @@ public class TokenService {
         blacklistedTokens.put(token, claims.getExpiration());
     }
 
-    // Kiểm tra và lấy thông tin Account từ token
+    @Override
     public Account getAccountByToken(String token) {
         cleanUpBlacklistedTokens(); // Xóa các token đã hết hạn trước khi kiểm tra
 
@@ -84,7 +87,49 @@ public class TokenService {
         }
     }
 
-    // Xóa các token đã hết hạn khỏi danh sách đen
+    @Override
+    public boolean isTokenBlacklisted(String token) {
+        cleanUpBlacklistedTokens(); // Xóa các token đã hết hạn trước khi kiểm tra
+        return blacklistedTokens.containsKey(token);
+    }
+
+    @Override
+    public String getToken(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        return authHeader.substring(7); // Bỏ qua "Bearer "
+    }
+
+    @Override
+    public String extractUsername(String token) {
+        return extractClaims(token, Claims::getSubject);
+    }
+
+    @Override
+    public <T> T extractClaims(String token, java.util.function.Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    @Override
+    public Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSignKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    @Override
+    public boolean validateToken(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    /**
+     * Xóa các token đã hết hạn khỏi danh sách đen
+     */
     private void cleanUpBlacklistedTokens() {
         Iterator<Map.Entry<String, Date>> iterator = blacklistedTokens.entrySet().iterator();
         Date now = new Date();
@@ -98,44 +143,16 @@ public class TokenService {
         }
     }
 
-    public boolean isTokenBlacklisted(String token) {
-        cleanUpBlacklistedTokens(); // Xóa các token đã hết hạn trước khi kiểm tra
-        return blacklistedTokens.containsKey(token);
-    }
-
-    public String getToken(String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return null;
-        }
-        return authHeader.substring(7); // Bỏ qua "Bearer "
-    }
-
-    public String extractUsername(String token) {
-        return extractClaims(token, Claims::getSubject);
-    }
-
-    public <T> T extractClaims(String token, java.util.function.Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    public Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSignKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
+    /**
+     * Kiểm tra token có hết hạn không
+     */
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
+    /**
+     * Extract expiration date từ token
+     */
     private Date extractExpiration(String token) {
         return extractClaims(token, Claims::getExpiration);
     }

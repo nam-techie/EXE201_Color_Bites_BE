@@ -1,53 +1,48 @@
-package com.exe201.color_bites_be.service;
+package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
+import com.exe201.color_bites_be.service.ISubscriptionService;
+import com.exe201.color_bites_be.service.IUserInformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service xử lý subscription plan
+ * Implementation của ISubscriptionService
+ * Xử lý logic quản lý subscription plan
  * Chỉ service này mới có quyền thay đổi subscription plan
  */
 @Service
-public class SubscriptionService {
+public class SubscriptionServiceImpl implements ISubscriptionService {
 
     @Autowired
-    private UserInformationService userInformationService;
+    private IUserInformationService userInformationService;
 
-    /**
-     * Nâng cấp lên Premium sau khi thanh toán thành công
-     */
+    @Override
     @Transactional
     public void upgradeToPremium(String accountId) {
         userInformationService.upgradeSubscriptionPlan(accountId, SubcriptionPlan.PREMIUM);
     }
 
-    /**
-     * Hạ cấp về Free (khi hết hạn hoặc hủy subscription)
-     */
+    @Override
     @Transactional
     public void downgradeToFree(String accountId) {
         userInformationService.downgradeToFree(accountId);
     }
 
-    /**
-     * Kiểm tra subscription plan hiện tại
-     */
+    @Override
     public String getCurrentSubscriptionPlan(String accountId) {
         try {
             var userInfo = userInformationService.getUserInformation();
             return userInfo.getSubscriptionPlan();
         } catch (Exception e) {
-            // Nếu chưa có thông tin user, mặc định là FREE
-            return SubcriptionPlan.FREE.name();
+            return SubcriptionPlan.FREE.name(); // Default fallback
         }
     }
 
-    /**
-     * Kiểm tra user có phải Premium không
-     */
-    public boolean isPremiumUser(String accountId) {
-        return SubcriptionPlan.PREMIUM.name().equals(getCurrentSubscriptionPlan(accountId));
+    @Override
+    public boolean hasPremiumAccess(String accountId) {
+        String currentPlan = getCurrentSubscriptionPlan(accountId);
+        return SubcriptionPlan.PREMIUM.name().equals(currentPlan);
     }
 }

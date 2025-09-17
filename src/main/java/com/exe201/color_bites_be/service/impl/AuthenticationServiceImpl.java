@@ -1,4 +1,4 @@
-package com.exe201.color_bites_be.service;
+package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.LoginRequest;
 import com.exe201.color_bites_be.dto.request.RegisterRequest;
@@ -14,6 +14,9 @@ import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
+import com.exe201.color_bites_be.service.IAuthenticationService;
+import com.exe201.color_bites_be.service.ITokenService;
+import com.exe201.color_bites_be.service.ICloudinaryService;
 import com.exe201.color_bites_be.util.FileUpLoadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -32,8 +35,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
+/**
+ * Implementation của IAuthenticationService
+ * Xử lý logic xác thực người dùng, đăng ký, đăng nhập
+ */
 @Service
-public class AuthenticationService implements UserDetailsService {
+public class AuthenticationServiceImpl implements IAuthenticationService, UserDetailsService {
+    
     @Autowired
     private AccountRepository accountRepository;
 
@@ -44,16 +52,17 @@ public class AuthenticationService implements UserDetailsService {
     ModelMapper modelMapper;
 
     @Autowired
-    private TokenService tokenService;
+    private ITokenService tokenService;
 
     @Autowired
-    CloudinaryService cloudinaryService;
+    ICloudinaryService cloudinaryService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
+    @Override
     @Transactional
     public AccountResponse register(RegisterRequest registerRequest) {
         try {
@@ -112,6 +121,7 @@ public class AuthenticationService implements UserDetailsService {
         }
     }
 
+    @Override
     public AccountResponse login(LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -156,29 +166,18 @@ public class AuthenticationService implements UserDetailsService {
         return new UserPrincipal(account);
     }
 
-    // Thêm method logout
+    @Override
     public void logout(String token) {
         tokenService.invalidateToken(token);
     }
 
-    /**
-     * Method tiện ích để update account với thời gian thực
-     *
-     * @param account Account cần update
-     * @return Account đã được update
-     */
+    @Override
     public Account updateAccountWithCurrentTime(Account account) {
         account.setUpdatedAt(LocalDateTime.now());
         return accountRepository.save(account);
     }
 
-    /**
-     * Method để update thông tin account (ví dụ: thay đổi password, email, etc.)
-     *
-     * @param accountId      ID của account
-     * @param updatedAccount Account với thông tin mới
-     * @return Account đã được update
-     */
+    @Override
     public Account updateAccount(String accountId, Account updatedAccount) {
         Account existingAccount = accountRepository.findById(accountId)
                 .orElseThrow(() -> new NotFoundException("Không tìm thấy tài khoản với ID: " + accountId));
@@ -197,6 +196,7 @@ public class AuthenticationService implements UserDetailsService {
         return accountRepository.save(existingAccount);
     }
 
+    @Override
     @Transactional
     public String uploadImage(String id, final MultipartFile file) {
         final UserInformation userInformation = userInformationRepository.findByAccountId(id);
@@ -210,17 +210,4 @@ public class AuthenticationService implements UserDetailsService {
         userInformationRepository.save(userInformation);
         return userInformation.getAvatarUrl();
     }
-
-//    @Transactional
-//    public void uploadVideo(String id, final MultipartFile file) {
-//        final UserInformation userInformation = userInformationRepository.findByAccountId(id);
-//        if (userInformation == null) {
-//            throw new NotFoundException("Người dùng không tồn tại.");
-//        }
-//        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.VIDEO_PATTERN);
-//        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
-//        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadVideo(file, fileName);
-//        userInformation.setVideoUrl(cloudinaryResponse.getUrl());
-//        userInformationRepository.save(userInformation);
-//    }
 }

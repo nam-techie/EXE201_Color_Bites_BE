@@ -6,7 +6,7 @@ import com.exe201.color_bites_be.dto.response.CommentResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
-import com.exe201.color_bites_be.service.CommentService;
+import com.exe201.color_bites_be.service.ICommentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,7 +25,7 @@ import java.util.List;
 public class CommentController {
 
     @Autowired
-    private CommentService commentService;
+    private ICommentService commentService;
 
     /**
      * Tạo comment mới cho bài viết
