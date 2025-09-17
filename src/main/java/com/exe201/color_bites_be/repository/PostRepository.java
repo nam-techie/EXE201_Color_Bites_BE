@@ -35,8 +35,8 @@ public interface PostRepository extends MongoRepository<Post, String> {
     Page<Post> findByKeywordAndNotDeleted(String keyword, Pageable pageable);
     
     // Tìm bài viết theo mood
-    @Query("{'mood': ?0, 'isDeleted': {$ne: true}}")
-    Page<Post> findByMoodAndNotDeleted(String mood, Pageable pageable);
+    @Query("{'moodId': ?0, 'isDeleted': {$ne: true}}")
+    Page<Post> findByMoodIdAndNotDeleted(String moodId, Pageable pageable);
     
     // Đếm số bài viết của user
     @Query(value = "{'accountId': ?0, 'isDeleted': {$ne: true}}", count = true)

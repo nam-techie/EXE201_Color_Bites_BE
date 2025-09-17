@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import com.exe201.color_bites_be.enums.Visibility;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
@@ -30,7 +31,7 @@ public class MoodMap {
     private Map<String, Object> entries;
 
     @Field("visibility")
-    private String visibility;
+    private Visibility visibility;
 
     @Field("exported")
     private Boolean exported;

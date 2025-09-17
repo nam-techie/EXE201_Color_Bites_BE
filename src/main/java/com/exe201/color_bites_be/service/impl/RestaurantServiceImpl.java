@@ -170,9 +170,10 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 restaurant.setLongitude(request.getLongitude());
             }
             */
-            if (request.getImageUrls() != null) {
-                restaurant.setImageUrls(request.getImageUrls());
-            }
+            // ImageUrls will be handled by RestaurantImages entity
+            // if (request.getImageUrls() != null) {
+            //     restaurant.setImageUrls(request.getImageUrls());
+            // }
 
             // TODO: Add updatedAt field to Restaurant entity
             // restaurant.setUpdatedAt(LocalDateTime.now());

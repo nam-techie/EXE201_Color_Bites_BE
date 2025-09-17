@@ -20,7 +20,7 @@ public interface ReactionRepository extends MongoRepository<Reaction, String> {
     long countByPostId(String postId);
     
     // Đếm số reaction theo loại của bài viết
-    long countByPostIdAndReactionType(String postId, String reactionType);
+    long countByPostIdAndReaction(String postId, com.exe201.color_bites_be.enums.ReactionType reaction);
     
     // Kiểm tra user đã react bài viết chưa
     boolean existsByPostIdAndAccountId(String postId, String accountId);

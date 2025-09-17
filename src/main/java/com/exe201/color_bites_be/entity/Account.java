@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import com.exe201.color_bites_be.enums.LoginMethod;
+import com.exe201.color_bites_be.enums.Role;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
@@ -43,7 +44,7 @@ public class Account {
     @Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự")
     private String password;
 
-    private String role; // "user", "admin"
+    private Role role;
 
     @Field("is_active")
     private Boolean isActive;
@@ -64,7 +65,7 @@ public class Account {
 
     // Thêm method getAuthorities cho Spring Security
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     // Getter/Setter cho isActive
@@ -76,11 +77,11 @@ public class Account {
         this.isActive = isActive;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 }

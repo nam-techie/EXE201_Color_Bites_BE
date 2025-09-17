@@ -28,9 +28,11 @@ public class Restaurant {
     @Field("address")
     private String address;
 
-    @Field("coordinates")
-    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
-    private double[] coordinates; // [longitude, latitude]
+    @Field("longitude")
+    private Double longitude;
+
+    @Field("latitude")
+    private Double latitude;
 
     @Field("description")
     private String description;
@@ -38,14 +40,12 @@ public class Restaurant {
     @Field("type")
     private String type;
 
-    @Field("mood_tags")
-    private List<String> moodTags;
+    // Removed mood_tags - will be handled by RestaurantTags entity
 
     @Field("region")
     private String region;
 
-    @Field("image_urls")
-    private List<String> imageUrls;
+    // Removed image_urls - will be handled by RestaurantImages entity
 
     @Field("avg_price")
     private Double avgPrice;
@@ -56,9 +56,8 @@ public class Restaurant {
     @Field("featured")
     private Boolean featured;
 
-    @DBRef
     @Field("created_by")
-    private Account createdBy;
+    private String createdBy;
 
     @Field("created_at")
     private LocalDateTime createdAt;

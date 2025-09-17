@@ -5,6 +5,7 @@ import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
+import com.exe201.color_bites_be.enums.Gender;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
@@ -59,7 +60,7 @@ public class UserInformationServiceImpl implements IUserInformationService {
             userInformation.setFullName(request.getFullName());
         }
         if (request.getGender() != null) {
-            userInformation.setGender(request.getGender());
+            userInformation.setGender(Gender.valueOf(request.getGender()));
         }
         if (request.getDob() != null) {
             userInformation.setDob(request.getDob());
@@ -98,7 +99,7 @@ public class UserInformationServiceImpl implements IUserInformationService {
             throw new NotFoundException("Thông tin người dùng không tồn tại");
         }
 
-        userInformation.setSubscriptionPlan(newPlan.name());
+        userInformation.setSubscriptionPackage(newPlan);
         userInformation.setUpdatedAt(LocalDateTime.now());
         userInformationRepository.save(userInformation);
     }

@@ -30,11 +30,8 @@ public class Post {
     @Field("content")
     private String content;
 
-    @Field("mood")
-    private String mood;
-
-    @Field("image_urls")
-    private List<String> imageUrls;
+    @Field("mood_id")
+    private String moodId;
 
     @Field("video_url")
     private String videoUrl;
