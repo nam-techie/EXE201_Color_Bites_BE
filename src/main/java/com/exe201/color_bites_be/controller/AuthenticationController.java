@@ -79,9 +79,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/uploadImage/{id}")
-    public ResponseEntity uploadImage(@PathVariable String id,@RequestPart MultipartFile file) {
-        authenticationService.uploadImage(id,file);
-        return ResponseEntity.ok("Uploaded image successfully");
+    public ResponseDto<String> uploadImage(@PathVariable String id,@RequestPart MultipartFile file) {
+        String avatarUrl = authenticationService.uploadImage(id,file);
+        return new ResponseDto<>(HttpStatus.CREATED.value(), "Uploaded image successfully", avatarUrl);
     }
 //
 //    @PostMapping("/uploadVideo/{id}")

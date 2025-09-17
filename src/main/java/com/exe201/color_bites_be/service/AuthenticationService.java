@@ -198,7 +198,7 @@ public class AuthenticationService implements UserDetailsService {
     }
 
     @Transactional
-    public void uploadImage(String id, final MultipartFile file) {
+    public String uploadImage(String id, final MultipartFile file) {
         final UserInformation userInformation = userInformationRepository.findByAccountId(id);
         if (userInformation == null) {
             throw new NotFoundException("Người dùng không tồn tại.");
@@ -208,6 +208,7 @@ public class AuthenticationService implements UserDetailsService {
         final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadFile(file, fileName);
         userInformation.setAvatarUrl(cloudinaryResponse.getUrl());
         userInformationRepository.save(userInformation);
+        return userInformation.getAvatarUrl();
     }
 
 //    @Transactional
