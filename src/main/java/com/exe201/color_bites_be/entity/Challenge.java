@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import com.exe201.color_bites_be.enums.ChallengeStatus;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
@@ -36,7 +37,7 @@ public class Challenge {
     private Integer durationDays;
 
     @Field("status")
-    private String status;
+    private ChallengeStatus status;
 
     @Field("entries")
     private Map<String, Object> entries;

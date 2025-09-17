@@ -56,8 +56,8 @@ public class PostServiceImpl implements IPostService {
         post.setAccountId(account.getId());
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
-        post.setMood(request.getMood());
-        post.setImageUrls(request.getImageUrls());
+        post.setMoodId(request.getMood());
+        // ImageUrls will be handled by PostImages entity
         post.setVideoUrl(request.getVideoUrl());
         post.setReactionCount(0);
         post.setCommentCount(0);
@@ -125,7 +125,7 @@ public class PostServiceImpl implements IPostService {
     @Override
     public Page<PostResponse> readPostsByMood(String mood, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Post> posts = postRepository.findByMoodAndNotDeleted(mood, pageable);
+        Page<Post> posts = postRepository.findByMoodIdAndNotDeleted(mood, pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
@@ -153,11 +153,9 @@ public class PostServiceImpl implements IPostService {
             post.setContent(request.getContent());
         }
         if (request.getMood() != null) {
-            post.setMood(request.getMood());
+            post.setMoodId(request.getMood());
         }
-        if (request.getImageUrls() != null) {
-            post.setImageUrls(request.getImageUrls());
-        }
+        // ImageUrls will be handled by PostImages entity
         if (request.getVideoUrl() != null) {
             post.setVideoUrl(request.getVideoUrl());
         }
@@ -224,13 +222,13 @@ public class PostServiceImpl implements IPostService {
         reactionRepository.findByPostIdAndAccountId(postId, account.getId())
                 .ifPresentOrElse(
                         existingReaction -> {
-                            if (existingReaction.getReactionType().equals(reactionType)) {
+                            if (existingReaction.getReaction().name().equals(reactionType)) {
                                 // Unreact - xóa reaction
                                 reactionRepository.delete(existingReaction);
                                 post.setReactionCount(Math.max(0, post.getReactionCount() - 1));
                             } else {
                                 // Thay đổi loại reaction
-                                existingReaction.setReactionType(reactionType);
+                                existingReaction.setReaction(com.exe201.color_bites_be.enums.ReactionType.valueOf(reactionType));
                                 reactionRepository.save(existingReaction);
                             }
                         },
@@ -239,7 +237,7 @@ public class PostServiceImpl implements IPostService {
                             Reaction reaction = new Reaction();
                             reaction.setPostId(postId);
                             reaction.setAccountId(account.getId());
-                            reaction.setReactionType(reactionType);
+                            reaction.setReaction(com.exe201.color_bites_be.enums.ReactionType.valueOf(reactionType));
                             reaction.setCreatedAt(LocalDateTime.now());
                             reactionRepository.save(reaction);
                             post.setReactionCount(post.getReactionCount() + 1);
@@ -333,7 +331,7 @@ public class PostServiceImpl implements IPostService {
                     .ifPresentOrElse(
                             reaction -> {
                                 response.setHasReacted(true);
-                                response.setUserReactionType(reaction.getReactionType());
+                                response.setUserReactionType(reaction.getReaction().name());
                             },
                             () -> {
                                 response.setHasReacted(false);

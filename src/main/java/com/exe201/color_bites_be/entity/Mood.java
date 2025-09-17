@@ -3,43 +3,29 @@ package com.exe201.color_bites_be.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.index.Indexed;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-@Document(collection = "comments")
+@Document(collection = "moods")
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Comment {
+public class Mood {
     @Id
     private String id;
 
-    @Field("post_id")
-    private String postId;
+    @Field("name")
+    @Indexed(unique = true)
+    private String name;
 
-    @Field("account_id")
-    private String accountId;
-
-    @Field("parent_comment_id")
-    private String parentCommentId;
-
-    @Field("depth")
-    private Integer depth;
-
-    @Field("content")
-    private String content;
-
-    @Field("is_deleted")
-    private Boolean isDeleted;
+    @Field("icon_url")
+    private String iconUrl;
 
     @Field("created_at")
     private LocalDateTime createdAt;
-
-    @Field("updated_at")
-    private LocalDateTime updatedAt;
 }

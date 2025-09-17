@@ -4,6 +4,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.DBRef;
+import com.exe201.color_bites_be.enums.Gender;
+import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
@@ -27,7 +29,7 @@ public class UserInformation {
     private String fullName;
 
     @Field("gender")
-    private String gender;
+    private Gender gender;
 
     @Field("dob")
     private LocalDate dob;
@@ -43,8 +45,8 @@ public class UserInformation {
     private String avatarUrl;
 
 
-    @Field("subscription_plan")
-    private String subscriptionPlan;
+    @Field("package")
+    private SubcriptionPlan subscriptionPackage;
 
     @Field("bio")
     private String bio;
