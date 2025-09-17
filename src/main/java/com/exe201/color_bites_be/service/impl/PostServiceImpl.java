@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Implementation của IPostService
- * Xử lý logic quản lý bài viết, tags, reactions
- */
 @Service
 public class PostServiceImpl implements IPostService {
 
@@ -52,10 +49,11 @@ public class PostServiceImpl implements IPostService {
 
     @Override
     @Transactional
-    public PostResponse createPost(String accountId, CreatePostRequest request) {
+    public PostResponse createPost(CreatePostRequest request) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // Tạo post entity
         Post post = new Post();
-        post.setAccountId(accountId);
+        post.setAccountId(account.getId());
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setMood(request.getMood());
@@ -77,72 +75,73 @@ public class PostServiceImpl implements IPostService {
         }
 
         // Tạo response
-        return buildPostResponse(savedPost, accountId, tags);
+        return buildPostResponse(savedPost, tags);
     }
 
     @Override
-    public PostResponse readPostById(String postId, String currentAccountId) {
+    public PostResponse readPostById(String postId) {
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         // Lấy tags của bài viết
         List<Tag> tags = getPostTags(postId);
 
-        return buildPostResponse(post, currentAccountId, tags);
+        return buildPostResponse(post, tags);
     }
 
     @Override
-    public Page<PostResponse> readAllPosts(int page, int size, String currentAccountId) {
+    public Page<PostResponse> readAllPosts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findAllActivePosts(pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
-            return buildPostResponse(post, currentAccountId, tags);
+            return buildPostResponse(post, tags);
         });
     }
 
     @Override
-    public Page<PostResponse> readPostsByUser(String accountId, int page, int size, String currentAccountId) {
+    public Page<PostResponse> readPostsByUser(String accountId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByAccountIdAndNotDeleted(accountId, pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
-            return buildPostResponse(post, currentAccountId, tags);
+            return buildPostResponse(post, tags);
         });
     }
 
     @Override
-    public Page<PostResponse> searchPosts(String keyword, int page, int size, String currentAccountId) {
+    public Page<PostResponse> searchPosts(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByKeywordAndNotDeleted(keyword, pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
-            return buildPostResponse(post, currentAccountId, tags);
+            return buildPostResponse(post, tags);
         });
     }
 
     @Override
-    public Page<PostResponse> readPostsByMood(String mood, int page, int size, String currentAccountId) {
+    public Page<PostResponse> readPostsByMood(String mood, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findByMoodAndNotDeleted(mood, pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
-            return buildPostResponse(post, currentAccountId, tags);
+            return buildPostResponse(post,tags);
         });
     }
 
     @Override
     @Transactional
-    public PostResponse editPost(String postId, String accountId, UpdatePostRequest request) {
+    public PostResponse editPost(String postId, UpdatePostRequest request) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         // Kiểm tra quyền sở hữu
-        if (!post.getAccountId().equals(accountId)) {
+        if (!post.getAccountId().equals(account.getId())) {
             throw new RuntimeException("Bạn không có quyền chỉnh sửa bài viết này");
         }
 
@@ -180,17 +179,18 @@ public class PostServiceImpl implements IPostService {
             tags = getPostTags(postId);
         }
 
-        return buildPostResponse(updatedPost, accountId, tags);
+        return buildPostResponse(updatedPost, tags);
     }
 
     @Override
     @Transactional
-    public void deletePost(String postId, String accountId) {
+    public void deletePost(String postId) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         // Kiểm tra quyền sở hữu
-        if (!post.getAccountId().equals(accountId)) {
+        if (!post.getAccountId().equals(account.getId())) {
             throw new RuntimeException("Bạn không có quyền xóa bài viết này");
         }
 
@@ -210,19 +210,18 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public long countPostsByUser(String accountId) {
-        return postRepository.countByAccountIdAndNotDeleted(accountId);
-    }
+    public long countPostsByUser(String accountId) {return postRepository.countByAccountIdAndNotDeleted(accountId);}
 
     @Override
     @Transactional
-    public void toggleReaction(String postId, String accountId, String reactionType) {
+    public void toggleReaction(String postId, String reactionType) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // Kiểm tra bài viết có tồn tại không
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         // Kiểm tra user đã react chưa
-        reactionRepository.findByPostIdAndAccountId(postId, accountId)
+        reactionRepository.findByPostIdAndAccountId(postId, account.getId())
                 .ifPresentOrElse(
                         existingReaction -> {
                             if (existingReaction.getReactionType().equals(reactionType)) {
@@ -239,7 +238,7 @@ public class PostServiceImpl implements IPostService {
                             // Tạo reaction mới
                             Reaction reaction = new Reaction();
                             reaction.setPostId(postId);
-                            reaction.setAccountId(accountId);
+                            reaction.setAccountId(account.getId());
                             reaction.setReactionType(reactionType);
                             reaction.setCreatedAt(LocalDateTime.now());
                             reactionRepository.save(reaction);
@@ -308,7 +307,8 @@ public class PostServiceImpl implements IPostService {
     /**
      * Xây dựng PostResponse từ Post entity
      */
-    private PostResponse buildPostResponse(Post post, String currentAccountId, List<Tag> tags) {
+    private PostResponse buildPostResponse(Post post, List<Tag> tags) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         PostResponse response = modelMapper.map(post, PostResponse.class);
 
         // Lấy thông tin tác giả
@@ -325,11 +325,11 @@ public class PostServiceImpl implements IPostService {
         response.setTags(tagResponses);
 
         // Kiểm tra quyền sở hữu
-        response.setIsOwner(post.getAccountId().equals(currentAccountId));
+        response.setIsOwner(post.getAccountId().equals(account.getId()));
 
         // Kiểm tra user đã react chưa
-        if (currentAccountId != null) {
-            reactionRepository.findByPostIdAndAccountId(post.getId(), currentAccountId)
+        if (account.getId() != null) {
+            reactionRepository.findByPostIdAndAccountId(post.getId(), account.getId())
                     .ifPresentOrElse(
                             reaction -> {
                                 response.setHasReacted(true);

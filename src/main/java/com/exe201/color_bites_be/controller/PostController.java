@@ -33,23 +33,9 @@ public class PostController {
      */
     @PostMapping("/create")
     public ResponseDto<PostResponse> createPost(
-            @Valid @RequestBody CreatePostRequest request,
-            BindingResult bindingResult,
-            Authentication authentication) {
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errors = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.append(error.getDefaultMessage()).append(". ");
-            }
-            return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", null);
-        }
-
+            @Valid @RequestBody CreatePostRequest request) {
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            PostResponse response = postService.createPost(accountId, request);
+            PostResponse response = postService.createPost(request);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Bài viết đã được tạo thành công", response);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -62,17 +48,10 @@ public class PostController {
      */
     @GetMapping("/read/{postId}")
     public ResponseDto<PostResponse> readPostById(
-            @PathVariable String postId,
-            Authentication authentication) {
+            @PathVariable String postId) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            PostResponse response = postService.readPostById(postId, currentAccountId);
+            PostResponse response = postService.readPostById(postId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Thông tin bài viết đã được tải thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -88,17 +67,10 @@ public class PostController {
     @GetMapping("/list")
     public ResponseDto<Page<PostResponse>> readAllPosts(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            Page<PostResponse> posts = postService.readAllPosts(page, size, currentAccountId);
+            Page<PostResponse> posts = postService.readAllPosts(page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách bài viết đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -113,17 +85,10 @@ public class PostController {
     public ResponseDto<Page<PostResponse>> readPostsByUser(
             @PathVariable String accountId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            Page<PostResponse> posts = postService.readPostsByUser(accountId, page, size, currentAccountId);
+            Page<PostResponse> posts = postService.readPostsByUser(accountId, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết của người dùng đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -138,17 +103,11 @@ public class PostController {
     public ResponseDto<Page<PostResponse>> searchPosts(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
 
-            Page<PostResponse> posts = postService.searchPosts(keyword, page, size, currentAccountId);
+            Page<PostResponse> posts = postService.searchPosts(keyword, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Kết quả tìm kiếm bài viết đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -163,17 +122,11 @@ public class PostController {
     public ResponseDto<Page<PostResponse>> readPostsByMood(
             @PathVariable String mood,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
 
-            Page<PostResponse> posts = postService.readPostsByMood(mood, page, size, currentAccountId);
+            Page<PostResponse> posts = postService.readPostsByMood(mood, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết theo mood đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -187,23 +140,10 @@ public class PostController {
     @PutMapping("/edit/{postId}")
     public ResponseDto<PostResponse> editPost(
             @PathVariable String postId,
-            @Valid @RequestBody UpdatePostRequest request,
-            BindingResult bindingResult,
-            Authentication authentication) {
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errors = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.append(error.getDefaultMessage()).append(". ");
-            }
-            return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", null);
-        }
+            @Valid @RequestBody UpdatePostRequest request) {
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            PostResponse response = postService.editPost(postId, accountId, request);
+            PostResponse response = postService.editPost(postId, request);
             return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết đã được cập nhật thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -220,14 +160,10 @@ public class PostController {
      */
     @DeleteMapping("/delete/{postId}")
     public ResponseDto<String> deletePost(
-            @PathVariable String postId,
-            Authentication authentication) {
+            @PathVariable String postId) {
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            postService.deletePost(postId, accountId);
+            postService.deletePost(postId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết đã được xóa thành công", null);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -245,19 +181,16 @@ public class PostController {
     @PutMapping("/react/{postId}")
     public ResponseDto<String> toggleReaction(
             @PathVariable String postId,
-            @RequestBody Map<String, String> requestBody,
-            Authentication authentication) {
+            @RequestBody Map<String, String> requestBody) {
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
             String reactionType = requestBody.get("reactionType");
 
             if (reactionType == null || reactionType.trim().isEmpty()) {
                 return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), "Loại reaction không được để trống", null);
             }
 
-            postService.toggleReaction(postId, accountId, reactionType);
+            postService.toggleReaction(postId, reactionType);
             return new ResponseDto<>(HttpStatus.OK.value(), "Reaction đã được cập nhật thành công", null);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
