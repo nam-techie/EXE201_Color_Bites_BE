@@ -8,6 +8,8 @@ import com.exe201.color_bites_be.entity.*;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.*;
 import com.exe201.color_bites_be.service.IPostService;
+import com.exe201.color_bites_be.service.IReactionService;
+import com.exe201.color_bites_be.util.HashtagExtractor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,8 +37,6 @@ public class PostServiceImpl implements IPostService {
     @Autowired
     private PostTagRepository postTagRepository;
 
-    @Autowired
-    private ReactionRepository reactionRepository;
 
     @Autowired
     private UserInformationRepository userInformationRepository;
@@ -47,6 +47,12 @@ public class PostServiceImpl implements IPostService {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private IReactionService reactionService;
+
+    @Autowired
+    private MoodRepository moodRepository;
+
     @Override
     @Transactional
     public PostResponse createPost(CreatePostRequest request) {
@@ -56,7 +62,7 @@ public class PostServiceImpl implements IPostService {
         post.setAccountId(account.getId());
         post.setTitle(request.getTitle());
         post.setContent(request.getContent());
-        post.setMoodId(request.getMood());
+        post.setMoodId(request.getMoodId());
         // ImageUrls will be handled by PostImages entity
         post.setVideoUrl(request.getVideoUrl());
         post.setReactionCount(0);
@@ -68,10 +74,16 @@ public class PostServiceImpl implements IPostService {
         // Lưu post
         Post savedPost = postRepository.save(post);
 
+        // Trích xuất hashtags từ content
+        List<String> extractedHashtags = HashtagExtractor.extractHashtags(request.getContent());
+        
+//        // Combine manual tags với extracted hashtags
+//        List<String> allTags = HashtagExtractor.combineAndNormalizeTags(request.getTagNames(), extractedHashtags);
+        
         // Xử lý tags
         List<Tag> tags = new ArrayList<>();
-        if (request.getTagNames() != null && !request.getTagNames().isEmpty()) {
-            tags = processPostTags(savedPost.getId(), request.getTagNames());
+        if (!extractedHashtags.isEmpty()) {
+            tags = processPostTags(savedPost.getId(), extractedHashtags);
         }
 
         // Tạo response
@@ -101,9 +113,10 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public Page<PostResponse> readPostsByUser(String accountId, int page, int size) {
+    public Page<PostResponse> readPostsByUser(int page, int size) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Post> posts = postRepository.findByAccountIdAndNotDeleted(accountId, pageable);
+        Page<Post> posts = postRepository.findByAccountIdAndNotDeleted(account.getId(), pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
@@ -123,9 +136,9 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public Page<PostResponse> readPostsByMood(String mood, int page, int size) {
+    public Page<PostResponse> readPostsByMood(String moodId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Post> posts = postRepository.findByMoodIdAndNotDeleted(mood, pageable);
+        Page<Post> posts = postRepository.findByMoodIdAndNotDeleted(moodId, pageable);
 
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
@@ -165,15 +178,28 @@ public class PostServiceImpl implements IPostService {
         // Lưu post
         Post updatedPost = postRepository.save(post);
 
-        // Xử lý tags nếu có thay đổi
+        // Xử lý tags - auto-extract hashtags từ content và combine với manual tags
         List<Tag> tags = new ArrayList<>();
-        if (request.getTagNames() != null) {
-            // Xóa tags cũ
+        
+        // Trích xuất hashtags từ content nếu content được cập nhật
+        List<String> extractedHashtags = new ArrayList<>();
+        if (request.getContent() != null) {
+            extractedHashtags = HashtagExtractor.extractHashtags(request.getContent());
+        }
+        
+        // Combine manual tags với extracted hashtags
+        List<String> allTags = HashtagExtractor.combineAndNormalizeTags(request.getTagNames(), extractedHashtags);
+        
+        if (!allTags.isEmpty() || request.getContent() != null) {
+            // Xóa tags cũ nếu có thay đổi tags hoặc content
             postTagRepository.deleteByPostId(postId);
-            // Thêm tags mới
-            tags = processPostTags(postId, request.getTagNames());
+            
+            // Thêm tags mới (bao gồm cả hashtags từ content)
+            if (!allTags.isEmpty()) {
+                tags = processPostTags(postId, allTags);
+            }
         } else {
-            // Giữ nguyên tags cũ
+            // Giữ nguyên tags cũ nếu không có thay đổi gì
             tags = getPostTags(postId);
         }
 
@@ -201,51 +227,23 @@ public class PostServiceImpl implements IPostService {
         postTagRepository.deleteByPostId(postId);
         
         // Xóa reactions liên quan
-        reactionRepository.deleteByPostId(postId);
+        reactionService.deleteAllReactionsByPost(postId);
         
         // Xóa tất cả comments liên quan (soft delete)
         deleteAllCommentsByPost(postId);
     }
 
     @Override
-    public long countPostsByUser(String accountId) {return postRepository.countByAccountIdAndNotDeleted(accountId);}
+    public long countPostsByUser() {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return postRepository.countByAccountIdAndNotDeleted(account.getId());
+    }
 
     @Override
     @Transactional
     public void toggleReaction(String postId, String reactionType) {
-        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // Kiểm tra bài viết có tồn tại không
-        Post post = postRepository.findByIdAndNotDeleted(postId)
-                .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
-
-        // Kiểm tra user đã react chưa
-        reactionRepository.findByPostIdAndAccountId(postId, account.getId())
-                .ifPresentOrElse(
-                        existingReaction -> {
-                            if (existingReaction.getReaction().name().equals(reactionType)) {
-                                // Unreact - xóa reaction
-                                reactionRepository.delete(existingReaction);
-                                post.setReactionCount(Math.max(0, post.getReactionCount() - 1));
-                            } else {
-                                // Thay đổi loại reaction
-                                existingReaction.setReaction(com.exe201.color_bites_be.enums.ReactionType.valueOf(reactionType));
-                                reactionRepository.save(existingReaction);
-                            }
-                        },
-                        () -> {
-                            // Tạo reaction mới
-                            Reaction reaction = new Reaction();
-                            reaction.setPostId(postId);
-                            reaction.setAccountId(account.getId());
-                            reaction.setReaction(com.exe201.color_bites_be.enums.ReactionType.valueOf(reactionType));
-                            reaction.setCreatedAt(LocalDateTime.now());
-                            reactionRepository.save(reaction);
-                            post.setReactionCount(post.getReactionCount() + 1);
-                        }
-                );
-
-        // Cập nhật reaction count
-        postRepository.save(post);
+        // Delegate to ReactionService for cleaner separation of concerns
+        reactionService.toggleReaction(postId);
     }
 
     /**
@@ -286,9 +284,7 @@ public class PostServiceImpl implements IPostService {
         return tags;
     }
 
-    /**
-     * Lấy danh sách tags của bài viết
-     */
+
     private List<Tag> getPostTags(String postId) {
         List<PostTag> postTags = postTagRepository.findByPostId(postId);
         List<String> tagIds = postTags.stream()
@@ -302,42 +298,36 @@ public class PostServiceImpl implements IPostService {
         return tagRepository.findAllById(tagIds);
     }
 
-    /**
-     * Xây dựng PostResponse từ Post entity
-     */
+
     private PostResponse buildPostResponse(Post post, List<Tag> tags) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         PostResponse response = modelMapper.map(post, PostResponse.class);
+        if (post.getMoodId() != null) {
+            Mood mood = moodRepository.findMoodById(post.getMoodId());
+            if (mood != null) {
+                response.setMood(mood.getName());
+            }
+        }
 
         // Lấy thông tin tác giả
         UserInformation userInfo = userInformationRepository.findByAccountId(post.getAccountId());
         if (userInfo != null) {
-            response.setAuthorName(userInfo.getFullName());
+            response.setAuthorName(account.getUserName());
             response.setAuthorAvatar(userInfo.getAvatarUrl());
         }
 
-        // Set tags
         List<TagResponse> tagResponses = tags.stream()
                 .map(tag -> modelMapper.map(tag, TagResponse.class))
                 .collect(Collectors.toList());
         response.setTags(tagResponses);
 
-        // Kiểm tra quyền sở hữu
+
         response.setIsOwner(post.getAccountId().equals(account.getId()));
 
-        // Kiểm tra user đã react chưa
         if (account.getId() != null) {
-            reactionRepository.findByPostIdAndAccountId(post.getId(), account.getId())
-                    .ifPresentOrElse(
-                            reaction -> {
-                                response.setHasReacted(true);
-                                response.setUserReactionType(reaction.getReaction().name());
-                            },
-                            () -> {
-                                response.setHasReacted(false);
-                                response.setUserReactionType(null);
-                            }
-                    );
+            boolean hasReacted = reactionService.hasUserReacted(post.getId(), account.getId());
+            response.setHasReacted(hasReacted);
+            response.setUserReactionType(hasReacted ? "LOVE" : null);
         } else {
             response.setHasReacted(false);
             response.setUserReactionType(null);
@@ -346,9 +336,6 @@ public class PostServiceImpl implements IPostService {
         return response;
     }
 
-    /**
-     * Xóa tất cả comment của bài viết khi bài viết bị xóa
-     */
     private void deleteAllCommentsByPost(String postId) {
         List<Comment> comments = commentRepository.findAllByPostId(postId);
         for (Comment comment : comments) {

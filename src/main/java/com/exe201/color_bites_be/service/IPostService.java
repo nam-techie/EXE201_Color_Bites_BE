@@ -21,7 +21,7 @@ public interface IPostService {
     Page<PostResponse> readAllPosts(int page, int size);
     
 
-    Page<PostResponse> readPostsByUser(String accountId, int page, int size);
+    Page<PostResponse> readPostsByUser( int page, int size);
     
 
     Page<PostResponse> searchPosts(String keyword, int page, int size);
@@ -36,7 +36,7 @@ public interface IPostService {
     void deletePost(String postId);
     
 
-    long countPostsByUser(String accountId);
+    long countPostsByUser();
     
 
     void toggleReaction(String postId, String reactionType);

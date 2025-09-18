@@ -25,28 +25,15 @@ public class UserInformation {
     @DBRef
     private Account account;
 
-    @Field("full_name")
-    private String fullName;
 
     @Field("gender")
     private Gender gender;
 
-    @Field("dob")
-    private LocalDate dob;
-    //abc tessttesst
-
-    @Field("phone")
-    private String phone;
-
-    @Field("address")
-    private String address;
-
     @Field("avatar_url")
     private String avatarUrl;
 
-
-    @Field("package")
-    private SubcriptionPlan subscriptionPackage;
+    @Field("subcription_plan")
+    private SubcriptionPlan subscriptionPlan;
 
     @Field("bio")
     private String bio;

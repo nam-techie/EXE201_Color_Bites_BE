@@ -23,13 +23,13 @@ public class CreatePostRequest {
     private String content;
     
     @Size(max = 50, message = "Mood không được vượt quá 50 ký tự")
-    private String mood;
+    private String moodId;
     
     @Size(max = 10, message = "Không được upload quá 10 hình ảnh")
     private List<String> imageUrls;
     
     private String videoUrl;
     
-    @Size(max = 20, message = "Không được thêm quá 20 tag")
-    private List<String> tagNames;
+//    @Size(max = 20, message = "Không được thêm quá 20 tag")
+//    private List<String> tagNames;
 }

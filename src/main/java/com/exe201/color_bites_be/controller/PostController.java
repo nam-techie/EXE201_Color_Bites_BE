@@ -66,11 +66,11 @@ public class PostController {
      */
     @GetMapping("/list")
     public ResponseDto<Page<PostResponse>> readAllPosts(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
-            Page<PostResponse> posts = postService.readAllPosts(page, size);
+            Page<PostResponse> posts = postService.readAllPosts(page - 1, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách bài viết đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -81,14 +81,13 @@ public class PostController {
     /**
      * Lấy bài viết của user
      */
-    @GetMapping("/read/user/{accountId}")
+    @GetMapping("/read/user")
     public ResponseDto<Page<PostResponse>> readPostsByUser(
-            @PathVariable String accountId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
-            Page<PostResponse> posts = postService.readPostsByUser(accountId, page, size);
+            Page<PostResponse> posts = postService.readPostsByUser( page - 1, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết của người dùng đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -102,12 +101,12 @@ public class PostController {
     @GetMapping("/search")
     public ResponseDto<Page<PostResponse>> searchPosts(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
 
-            Page<PostResponse> posts = postService.searchPosts(keyword, page, size);
+            Page<PostResponse> posts = postService.searchPosts(keyword, page - 1, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Kết quả tìm kiếm bài viết đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -121,12 +120,12 @@ public class PostController {
     @GetMapping("/read/mood/{mood}")
     public ResponseDto<Page<PostResponse>> readPostsByMood(
             @PathVariable String mood,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
 
-            Page<PostResponse> posts = postService.readPostsByMood(mood, page, size);
+            Page<PostResponse> posts = postService.readPostsByMood(mood, page - 1, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết theo mood đã được tải thành công", posts);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -203,10 +202,10 @@ public class PostController {
     /**
      * Lấy số lượng bài viết của user
      */
-    @GetMapping("/count/user/{accountId}")
-    public ResponseDto<Long> countPostsByUser(@PathVariable String accountId) {
+    @GetMapping("/count/user")
+    public ResponseDto<Long> countPostsByUser() {
         try {
-            long count = postService.countPostsByUser(accountId);
+            long count = postService.countPostsByUser();
             return new ResponseDto<>(HttpStatus.OK.value(), "Số lượng bài viết đã được tải thành công", count);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),

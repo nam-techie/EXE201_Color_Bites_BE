@@ -21,6 +21,9 @@ public interface PostTagRepository extends MongoRepository<PostTag, String> {
     // Xóa một tag cụ thể của bài viết
     void deleteByPostIdAndTagId(String postId, String tagId);
     
+    // Xóa tất cả liên kết của một tag
+    void deleteByTagId(String tagId);
+    
     // Kiểm tra bài viết có tag không
     boolean existsByPostIdAndTagId(String postId, String tagId);
     

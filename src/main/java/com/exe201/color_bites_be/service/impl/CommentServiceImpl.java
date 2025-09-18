@@ -3,10 +3,12 @@ package com.exe201.color_bites_be.service.impl;
 import com.exe201.color_bites_be.dto.request.CreateCommentRequest;
 import com.exe201.color_bites_be.dto.request.UpdateCommentRequest;
 import com.exe201.color_bites_be.dto.response.CommentResponse;
+import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Comment;
 import com.exe201.color_bites_be.entity.Post;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.exception.NotFoundException;
+import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.CommentRepository;
 import com.exe201.color_bites_be.repository.PostRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
@@ -43,6 +45,9 @@ public class CommentServiceImpl implements ICommentService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     private static final int MAX_COMMENT_DEPTH = 3; // Giới hạn độ sâu nesting
 
@@ -243,8 +248,9 @@ public class CommentServiceImpl implements ICommentService {
 
         // Lấy thông tin tác giả
         UserInformation userInfo = userInformationRepository.findByAccountId(comment.getAccountId());
+        Account account = accountRepository.findAccountById(comment.getAccountId());
         if (userInfo != null) {
-            response.setAuthorName(userInfo.getFullName());
+            response.setAuthorName(account.getUserName());
             response.setAuthorAvatar(userInfo.getAvatarUrl());
         }
 

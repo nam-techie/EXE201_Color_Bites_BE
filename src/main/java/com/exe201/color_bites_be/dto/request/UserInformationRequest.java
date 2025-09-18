@@ -15,21 +15,9 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserInformationRequest {
-    
-    @Size(max = 100, message = "Họ và tên không được vượt quá 100 ký tự")
-    private String fullName;
 
-    @Pattern(regexp = "^(Nam|Nữ|Khác)$", message = "Giới tính phải là Nam, Nữ hoặc Khác")
+    @Pattern(regexp = "^(Nam|Nữ)$", message = "Giới tính phải là Nam hoặc Nữ")
     private String gender;
-
-    @Past(message = "Ngày sinh phải là ngày trong quá khứ")
-    private LocalDate dob;
-
-    @Pattern(regexp = "^[0-9]{10,11}$", message = "Số điện thoại phải có 10-11 chữ số")
-    private String phone;
-
-    @Size(max = 255, message = "Địa chỉ không được vượt quá 255 ký tự")
-    private String address;
 
     @Size(max = 500, message = "Tiểu sử không được vượt quá 500 ký tự")
     private String bio;

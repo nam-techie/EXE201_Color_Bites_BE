@@ -38,7 +38,6 @@ public class AdminServiceImpl implements IAdminService {
                     dto.setId(userInformation.getAccount().getId());
                     dto.setUsername(account.getUserName());
                     dto.setRole(account.getRole().name());
-                    dto.setFullName(userInformation.getFullName());
                     dto.setAvatarUrl(userInformation.getAvatarUrl());
                     dto.setCreated(account.getCreatedAt());
                     dto.setUpdated(account.getUpdatedAt());
