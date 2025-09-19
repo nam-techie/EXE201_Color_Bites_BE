@@ -18,7 +18,7 @@ public class PostResponse {
     private String authorAvatar; // Avatar tác giả từ UserInformation
     private String title;
     private String content;
-    private String mood;
+    private String moodId;
     private List<String> imageUrls;
     private String videoUrl;
     private Integer reactionCount;

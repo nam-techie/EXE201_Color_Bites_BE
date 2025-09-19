@@ -55,15 +55,13 @@ public class ReactionController {
         }
     }
 
-    /**
-     * Lấy danh sách người đã like bài viết
-     */
+
     @GetMapping("/post/{postId}/users")
     @Operation(summary = "Lấy danh sách người đã like bài viết", 
                description = "Phân trang danh sách người đã react bài viết")
     public ResponseDto<Page<ReactionResponse>> getReactionsByPost(
             @PathVariable String postId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         
         try {
@@ -108,7 +106,7 @@ public class ReactionController {
 //               description = "Danh sách ID bài viết user đã react")
 //    public ResponseDto<Page<String>> getPostsLikedByUser(
 //            @PathVariable String accountId,
-//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "1") int page,
 //            @RequestParam(defaultValue = "20") int size) {
 //
 //        try {
@@ -124,14 +122,11 @@ public class ReactionController {
 //        }
 //    }
 
-    /**
-     * Lấy danh sách bài viết user hiện tại đã like
-     */
     @GetMapping("/my-liked-posts")
     @Operation(summary = "Lấy bài viết tôi đã like", 
                description = "Danh sách bài viết user hiện tại đã react")
     public ResponseDto<Page<String>> getMyLikedPosts(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         
         try {
@@ -147,9 +142,6 @@ public class ReactionController {
         }
     }
 
-    /**
-     * Kiểm tra trạng thái reaction của user cho bài viết
-     */
     @GetMapping("/post/{postId}/status")
     @Operation(summary = "Kiểm tra trạng thái reaction", 
                description = "Kiểm tra user hiện tại đã like bài viết chưa")

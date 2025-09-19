@@ -81,7 +81,7 @@ public class QuizController {
      */
     @GetMapping("/list")
     public ResponseDto<Page<QuizResponse>> readUserQuizzes(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -121,7 +121,7 @@ public class QuizController {
     @GetMapping("/read/mood/{moodResult}")
     public ResponseDto<Page<QuizResponse>> readQuizzesByMood(
             @PathVariable String moodResult,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {

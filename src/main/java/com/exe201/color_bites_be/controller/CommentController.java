@@ -33,23 +33,10 @@ public class CommentController {
     @PostMapping("/create/posts/{postId}")
     public ResponseDto<CommentResponse> createComment(
             @PathVariable String postId,
-            @Valid @RequestBody CreateCommentRequest request,
-            BindingResult bindingResult,
-            Authentication authentication) {
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errors = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.append(error.getDefaultMessage()).append(". ");
-            }
-            return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", null);
-        }
+            @RequestBody CreateCommentRequest request) {
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            CommentResponse response = commentService.createComment(postId, accountId, request);
+            CommentResponse response = commentService.createComment(postId, request);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Comment đã được tạo thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -66,17 +53,10 @@ public class CommentController {
      */
     @GetMapping("/read/{commentId}")
     public ResponseDto<CommentResponse> readCommentById(
-            @PathVariable String commentId,
-            Authentication authentication) {
+            @PathVariable String commentId) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            CommentResponse response = commentService.readCommentById(commentId, currentAccountId);
+            CommentResponse response = commentService.readCommentById(commentId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Thông tin comment đã được tải thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -92,18 +72,12 @@ public class CommentController {
     @GetMapping("/read/posts/{postId}/root")
     public ResponseDto<Page<CommentResponse>> readRootCommentsByPost(
             @PathVariable String postId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size){
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
 
-            Page<CommentResponse> comments = commentService.readRootCommentsByPost(postId, page, size, currentAccountId);
+            Page<CommentResponse> comments = commentService.readRootCommentsByPost(postId, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách comment gốc đã được tải thành công", comments);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -119,18 +93,11 @@ public class CommentController {
     @GetMapping("/read/posts/{postId}/all")
     public ResponseDto<Page<CommentResponse>> readAllCommentsByPost(
             @PathVariable String postId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size){
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            Page<CommentResponse> comments = commentService.readAllCommentsByPost(postId, page, size, currentAccountId);
+            Page<CommentResponse> comments = commentService.readAllCommentsByPost(postId, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Tất cả comment đã được tải thành công", comments);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -145,17 +112,10 @@ public class CommentController {
      */
     @GetMapping("/read/{commentId}/replies")
     public ResponseDto<List<CommentResponse>> readRepliesByComment(
-            @PathVariable String commentId,
-            Authentication authentication) {
+            @PathVariable String commentId){
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            List<CommentResponse> replies = commentService.readRepliesByComment(commentId, currentAccountId);
+            List<CommentResponse> replies = commentService.readRepliesByComment(commentId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách reply đã được tải thành công", replies);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -165,53 +125,36 @@ public class CommentController {
         }
     }
 
-    /**
-     * Cập nhật comment
-     */
-    @PutMapping("/edit/{commentId}")
-    public ResponseDto<CommentResponse> editComment(
-            @PathVariable String commentId,
-            @Valid @RequestBody UpdateCommentRequest request,
-            BindingResult bindingResult,
-            Authentication authentication) {
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errors = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.append(error.getDefaultMessage()).append(". ");
-            }
-            return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), "Validation failed", null);
-        }
-
-        try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            CommentResponse response = commentService.editComment(commentId, accountId, request);
-            return new ResponseDto<>(HttpStatus.OK.value(), "Comment đã được cập nhật thành công", response);
-        } catch (NotFoundException e) {
-            return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
-        } catch (RuntimeException e) {
-            return new ResponseDto<>(HttpStatus.FORBIDDEN.value(), e.getMessage(), null);
-        } catch (Exception e) {
-            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Đã xảy ra lỗi khi cập nhật comment", null);
-        }
-    }
+//    /**
+//     * Cập nhật comment
+//     */
+//    @PutMapping("/edit/{commentId}")
+//    public ResponseDto<CommentResponse> editComment(
+//            @PathVariable String commentId,
+//            @Valid @RequestBody UpdateCommentRequest request){
+//
+//        try {
+//            CommentResponse response = commentService.editComment(commentId, request);
+//            return new ResponseDto<>(HttpStatus.OK.value(), "Comment đã được cập nhật thành công", response);
+//        } catch (NotFoundException e) {
+//            return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
+//        } catch (RuntimeException e) {
+//            return new ResponseDto<>(HttpStatus.FORBIDDEN.value(), e.getMessage(), null);
+//        } catch (Exception e) {
+//            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+//                    "Đã xảy ra lỗi khi cập nhật comment", null);
+//        }
+//    }
 
     /**
      * Xóa comment
      */
     @DeleteMapping("/delete/{commentId}")
     public ResponseDto<String> deleteComment(
-            @PathVariable String commentId,
-            Authentication authentication) {
+            @PathVariable String commentId){
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            commentService.deleteComment(commentId, accountId);
+            commentService.deleteComment(commentId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Comment đã được xóa thành công", null);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -227,9 +170,9 @@ public class CommentController {
      * Đếm số lượng comment của bài viết
      */
     @GetMapping("/count/posts/{postId}")
-    public ResponseDto<Long> countCommentsByPost(@PathVariable String postId) {
+    public ResponseDto<Integer> countCommentsByPost(@PathVariable String postId) {
         try {
-            long count = commentService.countCommentsByPost(postId);
+            int count = commentService.countCommentsByPost(postId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Số lượng comment đã được tải thành công", count);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -257,17 +200,10 @@ public class CommentController {
     @GetMapping("/read/posts/{postId}/user/{accountId}")
     public ResponseDto<List<CommentResponse>> readCommentsByUser(
             @PathVariable String postId,
-            @PathVariable String accountId,
-            Authentication authentication) {
+            @PathVariable String accountId) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
-
-            List<CommentResponse> comments = commentService.readCommentsByUser(postId, accountId, currentAccountId);
+            List<CommentResponse> comments = commentService.readCommentsByUser(postId, accountId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Comment của người dùng đã được tải thành công", comments);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),

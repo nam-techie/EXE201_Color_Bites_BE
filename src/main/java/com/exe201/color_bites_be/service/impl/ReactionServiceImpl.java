@@ -46,25 +46,20 @@ public class ReactionServiceImpl implements IReactionService {
     public boolean toggleReaction(String postId) {
         // Lấy thông tin user hiện tại
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
-        // Kiểm tra bài viết có tồn tại không
+
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
-        // Kiểm tra user đã react chưa
         Optional<Reaction> existingReaction = reactionRepository.findByPostIdAndAccountId(postId, account.getId());
         
         if (existingReaction.isPresent()) {
-            // Đã react -> Unreact (unlike)
             reactionRepository.delete(existingReaction.get());
-            
-            // Cập nhật reaction count trong post
+
             post.setReactionCount(Math.max(0, post.getReactionCount() - 1));
             postRepository.save(post);
             
             return false; // Đã unlike
         } else {
-            // Chưa react -> React (like)
             Reaction reaction = new Reaction();
             reaction.setPostId(postId);
             reaction.setAccountId(account.getId());
@@ -72,12 +67,11 @@ public class ReactionServiceImpl implements IReactionService {
             reaction.setCreatedAt(LocalDateTime.now());
             
             reactionRepository.save(reaction);
-            
-            // Cập nhật reaction count trong post
+
             post.setReactionCount(post.getReactionCount() + 1);
             postRepository.save(post);
             
-            return true; // Đã like
+            return true;
         }
     }
 
@@ -103,15 +97,12 @@ public class ReactionServiceImpl implements IReactionService {
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
-        // Lấy danh sách reactions với phân trang
         List<Reaction> reactions = reactionRepository.findByPostId(postId);
-        
-        // Convert sang ReactionResponse với thông tin user
+
         List<ReactionResponse> reactionResponses = reactions.stream()
                 .map(this::convertToReactionResponse)
                 .collect(Collectors.toList());
 
-        // Áp dụng phân trang thủ công (có thể tối ưu bằng repository query)
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), reactionResponses.size());
         
@@ -122,7 +113,6 @@ public class ReactionServiceImpl implements IReactionService {
 
     @Override
     public ReactionSummaryResponse getReactionSummary(String postId) {
-        // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
@@ -130,8 +120,7 @@ public class ReactionServiceImpl implements IReactionService {
         summary.setPostId(postId);
         summary.setTotalReactions(getReactionCount(postId));
         summary.setReactionType("LOVE");
-        
-        // Kiểm tra user hiện tại đã react chưa
+
         try {
             Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             summary.setHasUserReacted(hasUserReacted(postId, account.getId()));

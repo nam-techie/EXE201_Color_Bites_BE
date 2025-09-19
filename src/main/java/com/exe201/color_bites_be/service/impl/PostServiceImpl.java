@@ -305,7 +305,7 @@ public class PostServiceImpl implements IPostService {
         if (post.getMoodId() != null) {
             Mood mood = moodRepository.findMoodById(post.getMoodId());
             if (mood != null) {
-                response.setMood(mood.getName());
+                response.setMoodId(mood.getName());
             }
         }
 

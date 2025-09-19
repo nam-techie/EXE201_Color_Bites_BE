@@ -13,12 +13,14 @@ import com.exe201.color_bites_be.repository.CommentRepository;
 import com.exe201.color_bites_be.repository.PostRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
 import com.exe201.color_bites_be.service.ICommentService;
+import org.apache.coyote.BadRequestException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,33 +55,56 @@ public class CommentServiceImpl implements ICommentService {
 
     @Override
     @Transactional
-    public CommentResponse createComment(String postId, String accountId, CreateCommentRequest request) {
+        public CommentResponse createComment(String postId, CreateCommentRequest request) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         // Kiểm tra bài viết có tồn tại không
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         Comment comment = new Comment();
         comment.setPostId(postId);
-        comment.setAccountId(accountId);
+        comment.setAccountId(account.getId());
         comment.setContent(request.getContent());
         comment.setIsDeleted(false);
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
 
-        // Xử lý parent comment nếu có
-        if (request.getParentCommentId() != null && !request.getParentCommentId().isEmpty()) {
-            Comment parentComment = commentRepository.findByIdAndNotDeleted(request.getParentCommentId())
-                    .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
+//        if(request.getParentCommentId() != null && !request.getParentCommentId().isEmpty()){
+//            Comment parentComment = commentRepository.findByIdAndNotDeleted(request.getParentCommentId())
+//                    .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
+//            comment.setParentCommentId(parentComment.getId());
+//        }
 
-            // Kiểm tra độ sâu nesting
-            int depth = calculateCommentDepth(parentComment);
-            if (depth >= MAX_COMMENT_DEPTH) {
-                throw new RuntimeException("Không thể tạo comment quá " + MAX_COMMENT_DEPTH + " cấp");
-            }
+//        if(request.getCommentId() == null){
+//            comment.setParentCommentId(null);
+//            comment.setDepth(0);
+//        } else {
+//            comment.setParentCommentId(request.getCommentId());
+//            int depth = commentRepository.findDepthById(request.getCommentId());
+//            comment.setDepth(depth + 1);
+//        }
 
-            // TODO: Add parentCommentId field to Comment entity
-            // comment.setParentCommentId(request.getParentCommentId());
+        if(request.getCommentId() != null && !request.getCommentId().isBlank()){
+            comment.setParentCommentId(request.getCommentId());
+            int depth = commentRepository.findDepthById(request.getCommentId());
+            comment.setDepth(depth + 1);
+        }else{
+            comment.setParentCommentId(null);
+            comment.setDepth(0);
         }
+
+        // 3) Xử lý cha/con
+//        String parentId = request.getParentCommentId(); // <-- dùng parentCommentId
+//        if (parentId != null && !parentId.isBlank()) {
+//            Comment parent = commentRepository.findByIdAndNotDeleted(parentId)
+//                    .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
+//            comment.setParentCommentId(parent.getId());
+//            comment.setDepth(parent.getDepth() + 1);
+//        } else {
+//            comment.setParentCommentId(null);
+//            comment.setDepth(0);
+//        }
 
         // Lưu comment
         Comment savedComment = commentRepository.save(comment);
@@ -88,19 +113,19 @@ public class CommentServiceImpl implements ICommentService {
         post.setCommentCount(post.getCommentCount() + 1);
         postRepository.save(post);
 
-        return buildCommentResponse(savedComment, accountId);
+        return buildCommentResponse(savedComment);
     }
 
     @Override
-    public CommentResponse readCommentById(String commentId, String currentAccountId) {
+    public CommentResponse readCommentById(String commentId) {
         Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
 
-        return buildCommentResponse(comment, currentAccountId);
+        return buildCommentResponse(comment);
     }
 
     @Override
-    public Page<CommentResponse> readRootCommentsByPost(String postId, int page, int size, String currentAccountId) {
+    public Page<CommentResponse> readRootCommentsByPost(String postId, int page, int size) {
         // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
@@ -108,25 +133,23 @@ public class CommentServiceImpl implements ICommentService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
         Page<Comment> comments = commentRepository.findRootCommentsByPostId(postId, pageable);
 
-        return comments.map(comment -> buildCommentResponse(comment, currentAccountId));
+        return comments.map(comment -> buildCommentResponse(comment));
     }
 
     @Override
-    public Page<CommentResponse> readAllCommentsByPost(String postId, int page, int size, String currentAccountId) {
+    public Page<CommentResponse> readAllCommentsByPost(String postId, int page, int size) {
         // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-        // TODO: Add findByPostId(String, Pageable) method to CommentRepository
-        // Temporary workaround - return empty page to avoid compilation error
         Page<Comment> comments = Page.empty(pageable);
 
-        return comments.map(comment -> buildCommentResponse(comment, currentAccountId));
+        return comments.map(comment -> buildCommentResponse(comment));
     }
 
     @Override
-    public List<CommentResponse> readRepliesByComment(String parentCommentId, String currentAccountId) {
+    public List<CommentResponse> readRepliesByComment(String parentCommentId) {
         // Kiểm tra comment cha có tồn tại không
         commentRepository.findByIdAndNotDeleted(parentCommentId)
                 .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
@@ -134,42 +157,42 @@ public class CommentServiceImpl implements ICommentService {
         List<Comment> replies = commentRepository.findRepliesByParentCommentId(parentCommentId);
 
         return replies.stream()
-                .map(comment -> buildCommentResponse(comment, currentAccountId))
+                .map(comment -> buildCommentResponse(comment))
                 .collect(Collectors.toList());
     }
 
+//    @Override
+//    @Transactional
+//    public CommentResponse editComment(String commentId, UpdateCommentRequest request) {
+//        Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
+//                .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
+//
+//        // Kiểm tra quyền sở hữu
+//        if (!comment.getAccountId().equals(accountId)) {
+//            throw new RuntimeException("Bạn không có quyền chỉnh sửa comment này");
+//        }
+//
+//        // Cập nhật content
+//        comment.setContent(request.getContent());
+//        // TODO: Add isEdited field to Comment entity
+//        // comment.setIsEdited(true);
+//        comment.setUpdatedAt(LocalDateTime.now());
+//
+//        Comment updatedComment = commentRepository.save(comment);
+//
+//        return buildCommentResponse(updatedComment, accountId);
+//    }
+
     @Override
     @Transactional
-    public CommentResponse editComment(String commentId, String accountId, UpdateCommentRequest request) {
+    public void deleteComment(String commentId) {
         Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
 
-        // Kiểm tra quyền sở hữu
-        if (!comment.getAccountId().equals(accountId)) {
-            throw new RuntimeException("Bạn không có quyền chỉnh sửa comment này");
-        }
-
-        // Cập nhật content
-        comment.setContent(request.getContent());
-        // TODO: Add isEdited field to Comment entity
-        // comment.setIsEdited(true);
-        comment.setUpdatedAt(LocalDateTime.now());
-
-        Comment updatedComment = commentRepository.save(comment);
-
-        return buildCommentResponse(updatedComment, accountId);
-    }
-
-    @Override
-    @Transactional
-    public void deleteComment(String commentId, String accountId) {
-        Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
-                .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
-
-        // Kiểm tra quyền sở hữu
-        if (!comment.getAccountId().equals(accountId)) {
-            throw new RuntimeException("Bạn không có quyền xóa comment này");
-        }
+//        // Kiểm tra quyền sở hữu
+//        if (!comment.getAccountId().equals(accountId)) {
+//            throw new RuntimeException("Bạn không có quyền xóa comment này");
+//        }
 
         // Soft delete comment
         comment.setIsDeleted(true);
@@ -189,10 +212,8 @@ public class CommentServiceImpl implements ICommentService {
     }
 
     @Override
-    public long countCommentsByPost(String postId) {
-        // TODO: Add countByPostId method to CommentRepository
-        // Temporary workaround - return 0
-        return 0;
+    public int countCommentsByPost(String postId) {
+        return  commentRepository.findAllByPostId(postId).size();
     }
 
     @Override
@@ -201,11 +222,11 @@ public class CommentServiceImpl implements ICommentService {
     }
 
     @Override
-    public List<CommentResponse> readCommentsByUser(String postId, String accountId, String currentAccountId) {
+    public List<CommentResponse> readCommentsByUser(String postId, String accountId) {
         List<Comment> comments = commentRepository.findByPostIdAndAccountIdAndNotDeleted(postId, accountId);
 
         return comments.stream()
-                .map(comment -> buildCommentResponse(comment, currentAccountId))
+                .map(comment -> buildCommentResponse(comment))
                 .collect(Collectors.toList());
     }
 
@@ -220,42 +241,37 @@ public class CommentServiceImpl implements ICommentService {
         }
     }
 
-    /**
-     * Tính độ sâu của comment (để giới hạn nesting)
-     */
-    private int calculateCommentDepth(Comment comment) {
-        int depth = 0;
-        // TODO: Add parentCommentId field to Comment entity
-        // Temporary return 0 to avoid compilation error
-        /*
-        Comment current = comment;
-        while (current.getParentCommentId() != null && !current.getParentCommentId().isEmpty()) {
-            depth++;
-            current = commentRepository.findById(current.getParentCommentId())
-                    .orElse(null);
-            if (current == null) break;
-        }
-        */
+//    private int calculateCommentDepth(Comment comment) {
+//        int depth = 0;
+//        // TODO: Add parentCommentId field to Comment entity
+//        // Temporary return 0 to avoid compilation error
+//        /*
+//        Comment current = comment;
+//        while (current.getParentCommentId() != null && !current.getParentCommentId().isEmpty()) {
+//            depth++;
+//            current = commentRepository.findById(current.getParentCommentId())
+//                    .orElse(null);
+//            if (current == null) break;
+//        }
+//        */
+//
+//        return depth;
+//    }
 
-        return depth;
-    }
 
-    /**
-     * Xây dựng CommentResponse từ Comment entity
-     */
-    private CommentResponse buildCommentResponse(Comment comment, String currentAccountId) {
+    private CommentResponse buildCommentResponse(Comment comment) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         CommentResponse response = modelMapper.map(comment, CommentResponse.class);
 
         // Lấy thông tin tác giả
         UserInformation userInfo = userInformationRepository.findByAccountId(comment.getAccountId());
-        Account account = accountRepository.findAccountById(comment.getAccountId());
         if (userInfo != null) {
             response.setAuthorName(account.getUserName());
             response.setAuthorAvatar(userInfo.getAvatarUrl());
         }
 
         // Kiểm tra quyền sở hữu
-        response.setIsOwner(comment.getAccountId().equals(currentAccountId));
+        response.setIsOwner(comment.getAccountId().equals(account.getId()));
 
         // Đếm số replies
         long replyCount = commentRepository.countRepliesByParentCommentId(comment.getId());

@@ -51,7 +51,7 @@ public class TagController {
      */
     @GetMapping("/read/all")
     public ResponseDto<Page<TagResponse>> readAllTags(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "50") int size) {
         try {
             Page<TagResponse> tagResponses = tagService.readAllTags(page, size);
@@ -67,7 +67,7 @@ public class TagController {
      */
     @GetMapping("/read/popular")
     public ResponseDto<Page<TagResponse>> readPopularTags(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
             Page<TagResponse> tagResponses = tagService.readPopularTags(page, size);
@@ -84,7 +84,7 @@ public class TagController {
     @GetMapping("/search")
     public ResponseDto<Page<TagResponse>> searchTags(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
             Page<TagResponse> tagResponses = tagService.searchTags(keyword, page, size);
