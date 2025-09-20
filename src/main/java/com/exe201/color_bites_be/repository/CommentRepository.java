@@ -15,6 +15,9 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     // Tìm comment theo ID và chưa bị xóa
     @Query("{'_id': ?0, 'isDeleted': {$ne: true}}")
     Optional<Comment> findByIdAndNotDeleted(String id);
+
+    int findDepthById(String id);
+
     
     // Tìm tất cả comment gốc của bài viết (parentComment = null) và chưa bị xóa
     @Query("{'postId': ?0, 'parentComment': null, 'isDeleted': {$ne: true}}")

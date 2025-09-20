@@ -19,6 +19,7 @@ public interface AccountRepository extends MongoRepository<Account, String> {
 
     boolean existsByEmail(String email);
 
+    Account findAccountById(String id);
 
     // Để tương thích với code cũ
     default Account findAccountByUserName(String userName) {

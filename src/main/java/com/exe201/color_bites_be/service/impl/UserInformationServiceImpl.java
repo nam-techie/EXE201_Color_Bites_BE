@@ -55,31 +55,13 @@ public class UserInformationServiceImpl implements IUserInformationService {
             throw new NotFoundException("Thông tin người dùng không tồn tại");
         }
 
-        // Cập nhật các field từ request (chỉ cập nhật field không null)
-        if (request.getFullName() != null) {
-            userInformation.setFullName(request.getFullName());
-        }
         if (request.getGender() != null) {
             userInformation.setGender(Gender.valueOf(request.getGender()));
         }
-        if (request.getDob() != null) {
-            userInformation.setDob(request.getDob());
-        }
-        if (request.getPhone() != null) {
-            if(request.getPhone().equals(userInformation.getPhone())) {
-                throw new DuplicateEntity("Số điện thoại đã tồn tại");
-            }
-            userInformation.setPhone(request.getPhone());
-        }
-        if (request.getAddress() != null) {
-            userInformation.setAddress(request.getAddress());
-        }
+
         if (request.getBio() != null) {
             userInformation.setBio(request.getBio());
         }
-
-        // Không cho phép user tự cập nhật subscription plan
-        // Subscription plan chỉ được cập nhật thông qua hệ thống thanh toán
 
         userInformation.setUpdatedAt(LocalDateTime.now());
 
@@ -99,7 +81,7 @@ public class UserInformationServiceImpl implements IUserInformationService {
             throw new NotFoundException("Thông tin người dùng không tồn tại");
         }
 
-        userInformation.setSubscriptionPackage(newPlan);
+        userInformation.setSubscriptionPlan(newPlan);
         userInformation.setUpdatedAt(LocalDateTime.now());
         userInformationRepository.save(userInformation);
     }

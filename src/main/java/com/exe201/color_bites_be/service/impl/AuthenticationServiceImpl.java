@@ -86,7 +86,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
             //auto set role student
             account.setIsActive(true);
             account.setRole(Role.USER);
-            account.setLoginMethod(LoginMethod.EMAIL);
+            account.setLoginMethod(LoginMethod.USERNAME);
 
             // Set thời gian thực khi tạo account
             LocalDateTime now = LocalDateTime.now();
@@ -104,7 +104,8 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
             // Tự động tạo UserInformation với subscription plan FREE
             UserInformation userInformation = new UserInformation();
             userInformation.setAccount(newAccount);
-            userInformation.setSubscriptionPackage(SubcriptionPlan.FREE);
+            userInformation.setAvatarUrl("https://res.cloudinary.com/dnpguhdhx/image/upload/v1758206957/colorbites/user/images.png_20250918214914.png");
+            userInformation.setSubscriptionPlan(SubcriptionPlan.FREE);
             userInformation.setCreatedAt(LocalDateTime.now());
             userInformation.setUpdatedAt(LocalDateTime.now());
             userInformationRepository.save(userInformation);
