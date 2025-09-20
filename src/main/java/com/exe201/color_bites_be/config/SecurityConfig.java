@@ -50,7 +50,9 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/api/vnpay-return"
+                                "/api/vnpay-return",
+                                "/api/payment/payos/webhook",
+                                "/api/payment/payos/return"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

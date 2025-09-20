@@ -11,7 +11,7 @@ spring:
     name: ColorBites_be
   data:
     mongodb:
-      uri: mongodb+srv://namdpse180259:nam180259@cluster0.xssff0p.mongodb.net/color_bites_db?retryWrites=true&w=majority&appName=Cluster0
+      uri: mongodb://localhost:27017/color_bites_db
       database: color_bites_db
   main:
     banner-mode: off
@@ -31,3 +31,11 @@ springdoc:
     disable-swagger-default-url: true
     path: /api
 
+# PayOS Configuration
+payos:
+  client-id: 8ec4087f-72a7-4f2b-a346-c5d7003f996f
+  api-key: 1b5b8aec-6bc8-411e-b52a-a869b25441c5
+  checksum-key: 204f6bfcbaa9269db6d170407b00d35a7276e28c17ad411783898d2519b630c0
+  api-url: https://api-merchant.payos.vn
+  return-url: http://localhost:8080/api/payment/payos/return
+  cancel-url: http://localhost:8080/api/payment/payos/cancel

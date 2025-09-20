@@ -117,6 +117,25 @@
             <artifactId>java-dotenv</artifactId>
             <version>5.2.2</version>
         </dependency>
+<!-- PayOS Integration -->
+<dependency>
+    <groupId>com.squareup.okhttp3</groupId>
+    <artifactId>okhttp</artifactId>
+    <version>4.12.0</version>
+</dependency>
+
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <!-- version có thể bỏ nếu bạn dùng Spring Boot BOM -->
+</dependency>
+
+<dependency>
+    <groupId>commons-codec</groupId>   
+    <artifactId>commons-codec</artifactId>
+    <version>1.15</version>
+</dependency>
+
     </dependencies>
 
     <build>
