@@ -19,6 +19,8 @@ public class PostResponse {
     private String title;
     private String content;
     private String moodId;
+    private String moodName; // Tên mood
+    private String moodEmoji; // Emoji mood
     private List<String> imageUrls;
     private String videoUrl;
     private Integer reactionCount;
