@@ -71,7 +71,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173", // FE local dev
+                "http://localhost:5173", // FE web local dev
+                "http://localhost:8081", // Expo dev server
+                "http://10.0.243.212:8081", // React Native on physical device
+                "http://172.24.16.1:8081", // React Native on emulator
                 "https://your-vercel-app.vercel.app" // FE production Vercel
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
