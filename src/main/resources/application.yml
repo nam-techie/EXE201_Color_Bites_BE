@@ -11,7 +11,7 @@ spring:
     name: ColorBites_be
   data:
     mongodb:
-      uri: mongodb://localhost:27017/color_bites_db
+      uri: mongodb+srv://namdpse180259:nam180259@cluster0.xssff0p.mongodb.net/color_bites_db?retryWrites=true&w=majority&appName=Cluster0
       database: color_bites_db
   main:
     banner-mode: off

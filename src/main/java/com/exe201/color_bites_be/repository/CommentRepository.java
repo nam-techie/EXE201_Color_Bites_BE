@@ -16,15 +16,19 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     @Query("{'_id': ?0, 'isDeleted': {$ne: true}}")
     Optional<Comment> findByIdAndNotDeleted(String id);
 
-    int findDepthById(String id);
+//    @Query(value = "{'id': ?0}", fields = "{'depth': 1, '_id': 0}")
+//    int findDepthById(String id);
+
+    @Query(value = "{'id': ?0}", fields = "{'depth': 1, '_id': 0}")
+    Optional<Comment> findDepthById(String id);
 
     
     // Tìm tất cả comment gốc của bài viết (parentComment = null) và chưa bị xóa
-    @Query("{'postId': ?0, 'parentComment': null, 'isDeleted': {$ne: true}}")
+    @Query("{'postId': ?0, 'parentCommentId': null, 'isDeleted': {$ne: true}}")
     Page<Comment> findRootCommentsByPostId(String postId, Pageable pageable);
     
     // Tìm tất cả reply của comment cha và chưa bị xóa
-    @Query("{'parentComment': ?0, 'isDeleted': {$ne: true}}")
+    @Query("{'parentCommentId': ?0, 'isDeleted': {$ne: true}}")
     List<Comment> findRepliesByParentCommentId(String parentCommentId);
     
     // Tìm tất cả comment của bài viết (bao gồm cả reply) và chưa bị xóa
@@ -36,7 +40,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     List<Comment> findByPostIdAndAccountIdAndNotDeleted(String postId, String accountId);
     
     // Đếm số comment gốc của bài viết
-    @Query(value = "{'postId': ?0, 'parentComment': null, 'isDeleted': {$ne: true}}", count = true)
+    @Query(value = "{'postId': ?0, 'parentCommentId': null, 'isDeleted': {$ne: true}}", count = true)
     long countRootCommentsByPostId(String postId);
     
     // Đếm tổng số comment của bài viết (bao gồm reply)
@@ -44,7 +48,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     long countAllCommentsByPostId(String postId);
     
     // Đếm số reply của comment
-    @Query(value = "{'parentComment': ?0, 'isDeleted': {$ne: true}}", count = true)
+    @Query(value = "{'parentCommentId': ?0, 'isDeleted': {$ne: true}}", count = true)
     long countRepliesByParentCommentId(String parentCommentId);
     
     // Kiểm tra comment có tồn tại và chưa bị xóa

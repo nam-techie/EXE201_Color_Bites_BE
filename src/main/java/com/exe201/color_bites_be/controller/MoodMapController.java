@@ -90,7 +90,7 @@ public class MoodMapController {
      */
     @GetMapping("/list")
     public ResponseDto<Page<MoodMapResponse>> readUserMoodMaps(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -112,7 +112,7 @@ public class MoodMapController {
     @GetMapping("/read/user/{accountId}")
     public ResponseDto<Page<MoodMapResponse>> readMoodMapsByUser(
             @PathVariable String accountId,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -136,7 +136,7 @@ public class MoodMapController {
      */
     @GetMapping("/public")
     public ResponseDto<Page<MoodMapResponse>> readPublicMoodMaps(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -161,7 +161,7 @@ public class MoodMapController {
     @GetMapping("/search")
     public ResponseDto<Page<MoodMapResponse>> searchMoodMaps(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
