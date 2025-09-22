@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -48,17 +49,13 @@ public class CommentServiceImpl implements ICommentService {
     @Autowired
     private ModelMapper modelMapper;
 
-    @Autowired
-    private AccountRepository accountRepository;
 
-    private static final int MAX_COMMENT_DEPTH = 3; // Giới hạn độ sâu nesting
 
     @Override
     @Transactional
         public CommentResponse createComment(String postId, CreateCommentRequest request) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        // Kiểm tra bài viết có tồn tại không
         Post post = postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
@@ -85,17 +82,25 @@ public class CommentServiceImpl implements ICommentService {
 //            comment.setDepth(depth + 1);
 //        }
 
-        if(request.getCommentId() != null && !request.getCommentId().isBlank()){
-            comment.setParentCommentId(request.getCommentId());
-            int depth = commentRepository.findDepthById(request.getCommentId());
-            comment.setDepth(depth + 1);
+//        if(request.getParentCommentId() != null && !request.getParentCommentId().isBlank()){
+//            comment.setParentCommentId(request.getParentCommentId());
+//            int depth = commentRepository.findDepthById(request.getParentCommentId());
+//            comment.setDepth(depth + 1);
+//        }else{
+//            comment.setParentCommentId(null);
+//            comment.setDepth(0);
+//        }
+
+        if(request.getParentCommentId() != null && !request.getParentCommentId().isBlank()){
+            comment.setParentCommentId(request.getParentCommentId());
+            Optional<Comment> depth = commentRepository.findDepthById(request.getParentCommentId());
+            comment.setDepth(depth.get().getDepth() + 1);
         }else{
             comment.setParentCommentId(null);
             comment.setDepth(0);
         }
 
-        // 3) Xử lý cha/con
-//        String parentId = request.getParentCommentId(); // <-- dùng parentCommentId
+//        String parentId = request.getParentCommentId();
 //        if (parentId != null && !parentId.isBlank()) {
 //            Comment parent = commentRepository.findByIdAndNotDeleted(parentId)
 //                    .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
@@ -106,10 +111,8 @@ public class CommentServiceImpl implements ICommentService {
 //            comment.setDepth(0);
 //        }
 
-        // Lưu comment
         Comment savedComment = commentRepository.save(comment);
 
-        // Cập nhật comment count của bài viết
         post.setCommentCount(post.getCommentCount() + 1);
         postRepository.save(post);
 
@@ -126,7 +129,6 @@ public class CommentServiceImpl implements ICommentService {
 
     @Override
     public Page<CommentResponse> readRootCommentsByPost(String postId, int page, int size) {
-        // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
@@ -138,19 +140,17 @@ public class CommentServiceImpl implements ICommentService {
 
     @Override
     public Page<CommentResponse> readAllCommentsByPost(String postId, int page, int size) {
-        // Kiểm tra bài viết có tồn tại không
         postRepository.findByIdAndNotDeleted(postId)
                 .orElseThrow(() -> new NotFoundException("Bài viết không tồn tại"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-        Page<Comment> comments = Page.empty(pageable);
+        Page<Comment> comments = commentRepository.findByPostIdAndNotDeleted(postId, pageable);
 
         return comments.map(comment -> buildCommentResponse(comment));
     }
 
     @Override
     public List<CommentResponse> readRepliesByComment(String parentCommentId) {
-        // Kiểm tra comment cha có tồn tại không
         commentRepository.findByIdAndNotDeleted(parentCommentId)
                 .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
 
@@ -199,10 +199,8 @@ public class CommentServiceImpl implements ICommentService {
         comment.setUpdatedAt(LocalDateTime.now());
         commentRepository.save(comment);
 
-        // Soft delete tất cả replies
         deleteAllReplies(commentId);
 
-        // Cập nhật comment count của bài viết
         Post post = postRepository.findByIdAndNotDeleted(comment.getPostId())
                 .orElse(null);
         if (post != null) {
@@ -263,17 +261,14 @@ public class CommentServiceImpl implements ICommentService {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         CommentResponse response = modelMapper.map(comment, CommentResponse.class);
 
-        // Lấy thông tin tác giả
         UserInformation userInfo = userInformationRepository.findByAccountId(comment.getAccountId());
         if (userInfo != null) {
             response.setAuthorName(account.getUserName());
             response.setAuthorAvatar(userInfo.getAvatarUrl());
         }
 
-        // Kiểm tra quyền sở hữu
         response.setIsOwner(comment.getAccountId().equals(account.getId()));
 
-        // Đếm số replies
         long replyCount = commentRepository.countRepliesByParentCommentId(comment.getId());
         response.setReplyCount((int) replyCount);
 
@@ -289,17 +284,11 @@ public class CommentServiceImpl implements ICommentService {
         return response;
     }
 
-    /**
-     * Xóa tất cả replies của một comment (recursive)
-     */
     private void deleteAllReplies(String parentCommentId) {
         List<Comment> replies = commentRepository.findRepliesByParentCommentId(parentCommentId);
         
         for (Comment reply : replies) {
-            // Xóa replies của reply này (recursive)
             deleteAllReplies(reply.getId());
-            
-            // Xóa reply
             reply.setIsDeleted(true);
             reply.setUpdatedAt(LocalDateTime.now());
             commentRepository.save(reply);

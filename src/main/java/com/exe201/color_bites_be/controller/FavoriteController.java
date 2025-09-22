@@ -90,7 +90,7 @@ public class FavoriteController {
      */
     @GetMapping("/list")
     public ResponseDto<Page<FavoriteResponse>> readUserFavorites(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 

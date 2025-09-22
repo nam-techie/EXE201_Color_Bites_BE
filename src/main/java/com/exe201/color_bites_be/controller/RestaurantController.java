@@ -65,7 +65,7 @@ public class RestaurantController {
      */
     @GetMapping("/list")
     public ResponseDto<Page<RestaurantResponse>> readAllRestaurants(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -90,7 +90,7 @@ public class RestaurantController {
     @GetMapping("/search")
     public ResponseDto<Page<RestaurantResponse>> searchRestaurants(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -115,7 +115,7 @@ public class RestaurantController {
     @GetMapping("/read/region/{region}")
     public ResponseDto<Page<RestaurantResponse>> readRestaurantsByRegion(
             @PathVariable String region,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 
@@ -140,7 +140,7 @@ public class RestaurantController {
     @GetMapping("/read/mood/{mood}")
     public ResponseDto<Page<RestaurantResponse>> readRestaurantsByMood(
             @PathVariable String mood,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
 

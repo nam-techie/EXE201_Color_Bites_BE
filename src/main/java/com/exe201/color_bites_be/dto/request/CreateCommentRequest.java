@@ -1,8 +1,6 @@
 package com.exe201.color_bites_be.dto.request;
 
-import com.mongodb.lang.Nullable;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +17,6 @@ public class CreateCommentRequest {
     @Size(max = 1000, message = "Nội dung comment không được vượt quá 1000 ký tự")
     private String content;
     
-    // ID của comment cha (null nếu là comment gốc)
-//    private String parentCommentId;
-      private String commentId;
+
+    private String parentCommentId;
 }

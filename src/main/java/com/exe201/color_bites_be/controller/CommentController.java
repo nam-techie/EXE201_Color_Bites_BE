@@ -72,7 +72,7 @@ public class CommentController {
     @GetMapping("/read/posts/{postId}/root")
     public ResponseDto<Page<CommentResponse>> readRootCommentsByPost(
             @PathVariable String postId,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size){
 
         try {
@@ -93,7 +93,7 @@ public class CommentController {
     @GetMapping("/read/posts/{postId}/all")
     public ResponseDto<Page<CommentResponse>> readAllCommentsByPost(
             @PathVariable String postId,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size){
 
         try {
