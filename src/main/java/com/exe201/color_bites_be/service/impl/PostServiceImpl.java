@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -303,9 +304,9 @@ public class PostServiceImpl implements IPostService {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         PostResponse response = modelMapper.map(post, PostResponse.class);
         if (post.getMoodId() != null) {
-            Mood mood = moodRepository.findMoodById(post.getMoodId());
+            Optional<Mood> mood = moodRepository.findById(post.getId());
             if (mood != null) {
-                response.setMoodId(mood.getName());
+                response.setMoodId(mood.get().getName());
             }
         }
 
