@@ -53,6 +53,9 @@ public class PostServiceImpl implements IPostService {
     @Autowired
     private MoodRepository moodRepository;
 
+    @Autowired
+    private PostImagesRepository postImagesRepository;
+
     @Override
     @Transactional
     public PostResponse createPost(CreatePostRequest request) {
@@ -60,10 +63,8 @@ public class PostServiceImpl implements IPostService {
         // Tạo post entity
         Post post = new Post();
         post.setAccountId(account.getId());
-        post.setTitle(request.getTitle());
         post.setContent(request.getContent());
         post.setMoodId(request.getMoodId());
-        // ImageUrls will be handled by PostImages entity
         post.setVideoUrl(request.getVideoUrl());
         post.setReactionCount(0);
         post.setCommentCount(0);
@@ -73,6 +74,17 @@ public class PostServiceImpl implements IPostService {
 
         // Lưu post
         Post savedPost = postRepository.save(post);
+
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            List<PostImages> imgs = request.getImageUrls().stream().map(u -> {
+                PostImages pi = new PostImages();
+                pi.setPostId(savedPost.getId());
+                pi.setUrl(u);
+                pi.setCreatedAt(LocalDateTime.now());
+                return pi;
+            }).toList();
+            postImagesRepository.saveAll(imgs);
+        }
 
         // Trích xuất hashtags từ content
         List<String> extractedHashtags = HashtagExtractor.extractHashtags(request.getContent());
@@ -158,10 +170,6 @@ public class PostServiceImpl implements IPostService {
             throw new RuntimeException("Bạn không có quyền chỉnh sửa bài viết này");
         }
 
-        // Cập nhật các field nếu có
-        if (request.getTitle() != null) {
-            post.setTitle(request.getTitle());
-        }
         if (request.getContent() != null) {
             post.setContent(request.getContent());
         }
@@ -298,7 +306,6 @@ public class PostServiceImpl implements IPostService {
         return tagRepository.findAllById(tagIds);
     }
 
-
     private PostResponse buildPostResponse(Post post, List<Tag> tags) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         PostResponse response = modelMapper.map(post, PostResponse.class);
@@ -323,16 +330,6 @@ public class PostServiceImpl implements IPostService {
 
 
         response.setIsOwner(post.getAccountId().equals(account.getId()));
-
-        if (account.getId() != null) {
-            boolean hasReacted = reactionService.hasUserReacted(post.getId(), account.getId());
-            response.setHasReacted(hasReacted);
-            response.setUserReactionType(hasReacted ? "LOVE" : null);
-        } else {
-            response.setHasReacted(false);
-            response.setUserReactionType(null);
-        }
-
         return response;
     }
 

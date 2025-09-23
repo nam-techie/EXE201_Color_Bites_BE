@@ -67,30 +67,6 @@ public class CommentServiceImpl implements ICommentService {
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
 
-//        if(request.getParentCommentId() != null && !request.getParentCommentId().isEmpty()){
-//            Comment parentComment = commentRepository.findByIdAndNotDeleted(request.getParentCommentId())
-//                    .orElseThrow(() -> new NotFoundException("Comment cha không tồn tại"));
-//            comment.setParentCommentId(parentComment.getId());
-//        }
-
-//        if(request.getCommentId() == null){
-//            comment.setParentCommentId(null);
-//            comment.setDepth(0);
-//        } else {
-//            comment.setParentCommentId(request.getCommentId());
-//            int depth = commentRepository.findDepthById(request.getCommentId());
-//            comment.setDepth(depth + 1);
-//        }
-
-//        if(request.getParentCommentId() != null && !request.getParentCommentId().isBlank()){
-//            comment.setParentCommentId(request.getParentCommentId());
-//            int depth = commentRepository.findDepthById(request.getParentCommentId());
-//            comment.setDepth(depth + 1);
-//        }else{
-//            comment.setParentCommentId(null);
-//            comment.setDepth(0);
-//        }
-
         if(request.getParentCommentId() != null && !request.getParentCommentId().isBlank()){
             comment.setParentCommentId(request.getParentCommentId());
             Optional<Comment> depth = commentRepository.findDepthById(request.getParentCommentId());

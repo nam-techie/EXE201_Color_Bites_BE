@@ -6,6 +6,7 @@ import com.exe201.color_bites_be.dto.response.PostResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
+import com.exe201.color_bites_be.service.IPostImageService;
 import com.exe201.color_bites_be.service.IPostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -27,6 +30,9 @@ public class PostController {
 
     @Autowired
     private IPostService postService;
+
+    @Autowired
+    private IPostImageService postImageService;
 
     /**
      * Tạo bài viết mới
@@ -41,6 +47,12 @@ public class PostController {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi tạo bài viết: " + e.getMessage(), null);
         }
+    }
+
+    @PostMapping("/uploadImage")
+    public ResponseDto<List<String>> uploadPostImage(@RequestPart List<MultipartFile> files){
+        List<String> urls = postImageService.uploadPostImages(files);
+        return new ResponseDto<>(HttpStatus.OK.value(),  "Uploaded image successfully", urls);
     }
 
     /**

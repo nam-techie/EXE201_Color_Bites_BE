@@ -24,9 +24,6 @@ public class Post {
     @Field("account_id")
     private String accountId;
 
-    @Field("title")
-    private String title;
-
     @Field("content")
     private String content;
 
