@@ -179,10 +179,6 @@ public class PostServiceImpl implements IPostService {
         if (request.getMood() != null) {
             post.setMoodId(request.getMood());
         }
-        // ImageUrls will be handled by PostImages entity
-        if (request.getVideoUrl() != null) {
-            post.setVideoUrl(request.getVideoUrl());
-        }
 
         post.setUpdatedAt(LocalDateTime.now());
 
