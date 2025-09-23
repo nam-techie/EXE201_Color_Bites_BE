@@ -18,6 +18,8 @@ public class PostResponse {
     private String authorAvatar; // Avatar tác giả từ UserInformation
     private String content;
     private String moodId;
+    private String moodName; // Tên mood
+    private String moodEmoji; // Emoji mood
     private List<String> imageUrls;
     private Integer reactionCount;
     private Integer commentCount;

@@ -23,8 +23,9 @@ public class Mood {
     @Indexed(unique = true)
     private String name;
 
-    @Field("icon_url")
-    private String iconUrl;
+    // Unicode emoji
+    @Field("emoji")
+    private String emoji;
 
     @Field("created_at")
     private LocalDateTime createdAt;
