@@ -66,7 +66,6 @@ public class PostServiceImpl implements IPostService {
         post.setAccountId(account.getId());
         post.setContent(request.getContent());
         post.setMoodId(request.getMoodId());
-        post.setVideoUrl(request.getVideoUrl());
         post.setReactionCount(0);
         post.setCommentCount(0);
         post.setIsDeleted(false);
