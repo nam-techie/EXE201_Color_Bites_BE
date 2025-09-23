@@ -15,6 +15,7 @@ public interface PostRepository extends MongoRepository<Post, String> {
     @Query("{'isDeleted':false}")
     Page<Post> findAllActivePosts(Pageable pageable);
 
+
     
     // Tìm bài viết của user chưa bị xóa
     @Query("{'accountId': ?0, 'isDeleted': {$ne: true}}")

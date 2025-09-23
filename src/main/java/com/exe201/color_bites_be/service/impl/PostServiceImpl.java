@@ -2,6 +2,7 @@ package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.CreatePostRequest;
 import com.exe201.color_bites_be.dto.request.UpdatePostRequest;
+import com.exe201.color_bites_be.dto.response.AuthorResponsePost;
 import com.exe201.color_bites_be.dto.response.PostResponse;
 import com.exe201.color_bites_be.dto.response.TagResponse;
 import com.exe201.color_bites_be.entity.*;
@@ -56,6 +57,8 @@ public class PostServiceImpl implements IPostService {
 
     @Autowired
     private PostImagesRepository postImagesRepository;
+    @Autowired
+    private AccountRepository accountRepository;
 
     @Override
     @Transactional
@@ -306,6 +309,16 @@ public class PostServiceImpl implements IPostService {
         return tagRepository.findAllById(tagIds);
     }
 
+    private AuthorResponsePost setAuthorResponse(String accountId){
+        Account authorAccount = accountRepository.findAccountById(accountId);
+        String avatarUrl = userInformationRepository.findByAccountId(accountId).getAvatarUrl();
+        AuthorResponsePost authorResponsePost = new AuthorResponsePost();
+        authorResponsePost.setAccountId(authorAccount.getId());
+        authorResponsePost.setAuthorName(authorAccount.getUserName());
+        authorResponsePost.setAuthorAvatar(avatarUrl);
+        return  authorResponsePost;
+    }
+
     private PostResponse buildPostResponse(Post post, List<Tag> tags) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         PostResponse response = modelMapper.map(post, PostResponse.class);
@@ -316,13 +329,8 @@ public class PostServiceImpl implements IPostService {
                 response.setMoodEmoji(mood.get().getEmoji());
             }
         }
-
         // Lấy thông tin tác giả
-        UserInformation userInfo = userInformationRepository.findByAccountId(post.getAccountId());
-        if (userInfo != null) {
-            response.setAuthorName(account.getUserName());
-            response.setAuthorAvatar(userInfo.getAvatarUrl());
-        }
+        response.setAuthor(setAuthorResponse(post.getAccountId()));
 
         List<TagResponse> tagResponses = tags.stream()
                 .map(tag -> modelMapper.map(tag, TagResponse.class))
@@ -331,6 +339,8 @@ public class PostServiceImpl implements IPostService {
 
 
         response.setIsOwner(post.getAccountId().equals(account.getId()));
+
+        response.setImageUrls(postImagesRepository.findUrlsByPostId(post.getId()));
         return response;
     }
 

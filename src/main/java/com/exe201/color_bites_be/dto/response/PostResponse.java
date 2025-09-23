@@ -13,9 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class PostResponse {
     private String id;
-    private String accountId;
-    private String authorName; // Tên tác giả từ UserInformation
-    private String authorAvatar; // Avatar tác giả từ UserInformation
+    private AuthorResponsePost author;
     private String content;
     private String moodId;
     private String moodName; // Tên mood

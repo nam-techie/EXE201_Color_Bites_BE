@@ -78,7 +78,7 @@ public class PostController {
      */
     @GetMapping("/list")
     public ResponseDto<Page<PostResponse>> readAllPosts(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
@@ -95,7 +95,7 @@ public class PostController {
      */
     @GetMapping("/read/user")
     public ResponseDto<Page<PostResponse>> readPostsByUser(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
@@ -113,7 +113,7 @@ public class PostController {
     @GetMapping("/search")
     public ResponseDto<Page<PostResponse>> searchPosts(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
@@ -132,7 +132,7 @@ public class PostController {
     @GetMapping("/read/mood/{mood}")
     public ResponseDto<Page<PostResponse>> readPostsByMood(
             @PathVariable String mood,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
