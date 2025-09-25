@@ -14,9 +14,7 @@ import java.util.List;
 public class CommentResponse {
     private String id;
     private String postId;
-    private String accountId;
-    private String authorName; // Tên tác giả từ UserInformation
-    private String authorAvatar; // Avatar tác giả từ UserInformation
+    private AuthorResponsePost author;
     private String parentCommentId;
     private Integer depth;
     private String content;

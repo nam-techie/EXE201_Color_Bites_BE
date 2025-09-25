@@ -2,6 +2,7 @@ package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.CreateCommentRequest;
 import com.exe201.color_bites_be.dto.request.UpdateCommentRequest;
+import com.exe201.color_bites_be.dto.response.AuthorResponsePost;
 import com.exe201.color_bites_be.dto.response.CommentResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Comment;
@@ -48,7 +49,8 @@ public class CommentServiceImpl implements ICommentService {
 
     @Autowired
     private ModelMapper modelMapper;
-
+    @Autowired
+    private AccountRepository accountRepository;
 
 
     @Override
@@ -232,16 +234,21 @@ public class CommentServiceImpl implements ICommentService {
 //        return depth;
 //    }
 
+    private AuthorResponsePost setAuthorResponse(String accountId){
+        Account authorAccount = accountRepository.findAccountById(accountId);
+        String avatarUrl = userInformationRepository.findByAccountId(accountId).getAvatarUrl();
+        AuthorResponsePost authorResponsePost = new AuthorResponsePost();
+        authorResponsePost.setAccountId(authorAccount.getId());
+        authorResponsePost.setAuthorName(authorAccount.getUserName());
+        authorResponsePost.setAuthorAvatar(avatarUrl);
+        return  authorResponsePost;
+    }
 
     private CommentResponse buildCommentResponse(Comment comment) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         CommentResponse response = modelMapper.map(comment, CommentResponse.class);
 
-        UserInformation userInfo = userInformationRepository.findByAccountId(comment.getAccountId());
-        if (userInfo != null) {
-            response.setAuthorName(account.getUserName());
-            response.setAuthorAvatar(userInfo.getAvatarUrl());
-        }
+        response.setAuthor(setAuthorResponse(comment.getAccountId()));
 
         response.setIsOwner(comment.getAccountId().equals(account.getId()));
 

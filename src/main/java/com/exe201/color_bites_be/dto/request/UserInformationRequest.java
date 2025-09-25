@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class UserInformationRequest {
 
-    @Pattern(regexp = "^(Nam|Nữ)$", message = "Giới tính phải là Nam hoặc Nữ")
+    @Pattern(regexp = "^(MALE|FEMALE)$", message = "Giới tính phải là Nam hoặc Nữ")
     private String gender;
 
     @Size(max = 500, message = "Tiểu sử không được vượt quá 500 ký tự")

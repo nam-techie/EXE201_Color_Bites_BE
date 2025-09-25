@@ -77,7 +77,7 @@ public class CommentController {
 
         try {
 
-            Page<CommentResponse> comments = commentService.readRootCommentsByPost(postId, page, size);
+            Page<CommentResponse> comments = commentService.readRootCommentsByPost(postId, page -1, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách comment gốc đã được tải thành công", comments);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -97,7 +97,7 @@ public class CommentController {
             @RequestParam(defaultValue = "20") int size){
 
         try {
-            Page<CommentResponse> comments = commentService.readAllCommentsByPost(postId, page, size);
+            Page<CommentResponse> comments = commentService.readAllCommentsByPost(postId, page -1, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Tất cả comment đã được tải thành công", comments);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);

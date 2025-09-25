@@ -5,6 +5,7 @@ import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
+import com.exe201.color_bites_be.service.IAuthenticationService;
 import com.exe201.color_bites_be.service.IUserInformationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @PreAuthorize("hasAuthority('USER')")
@@ -21,6 +23,8 @@ public class UserInforController {
 
     @Autowired
     private IUserInformationService userInformationService;
+    @Autowired
+    private IAuthenticationService authenticationService;
 
     /**
      * Lấy thông tin user theo accountId
@@ -58,5 +62,11 @@ public class UserInforController {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi cập nhật thông tin người dùng", null);
         }
+    }
+
+    @PostMapping("/uploadImage/{id}")
+    public ResponseDto<String> uploadImage(@PathVariable String id,@RequestPart MultipartFile file) {
+        String avatarUrl = authenticationService.uploadImage(id,file);
+        return new ResponseDto<>(HttpStatus.CREATED.value(), "Uploaded image successfully", avatarUrl);
     }
 }
