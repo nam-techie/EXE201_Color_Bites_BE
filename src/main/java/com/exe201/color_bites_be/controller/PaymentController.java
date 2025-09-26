@@ -4,8 +4,8 @@ import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
-import com.exe201.color_bites_be.service.IPaymentGateway;
-import com.exe201.color_bites_be.service.impl.PayOSGateway;
+import com.exe201.color_bites_be.entity.Transaction;
+import com.exe201.color_bites_be.service.IPaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,27 +21,26 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Controller xử lý thanh toán cho mobile app
- * Tích hợp với PayOS payment gateway
+ * Tích hợp với flow hệ thống mua gói subscription
  */
 @RestController
 @RequestMapping("/api/payment")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Payment Management", description = "API quản lý thanh toán cho mobile app")
+@Tag(name = "Payment Management", description = "API quản lý thanh toán subscription cho mobile app")
 @SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
     
-    private final PayOSGateway payOSGateway;
+    private final IPaymentService paymentService;
     
     @Operation(
-        summary = "Tạo thanh toán mới",
-        description = "Tạo link thanh toán PayOS cho mobile app. Mobile sẽ nhận được URL để redirect user."
+        summary = "Tạo thanh toán subscription",
+        description = "Tạo thanh toán để mua gói PREMIUM. Sau khi thanh toán thành công, user sẽ được nâng cấp lên PREMIUM."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Tạo thanh toán thành công"),
@@ -49,56 +48,29 @@ public class PaymentController {
         @ApiResponse(responseCode = "401", description = "Chưa xác thực"),
         @ApiResponse(responseCode = "500", description = "Lỗi hệ thống")
     })
-    @PostMapping("/create")
+    @PostMapping("/subscription/create")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ResponseDto<PaymentResponse>> createPayment(
+    public ResponseEntity<ResponseDto<PaymentResponse>> createSubscriptionPayment(
             @Valid @RequestBody CreatePaymentRequest request,
             Authentication authentication) {
         
         try {
-            log.info("Tạo thanh toán cho user: {}", authentication.getName());
+            log.info("Tạo thanh toán subscription cho user: {}", authentication.getName());
             
-            // Tạo OrderInfo từ request
-            IPaymentGateway.OrderInfo orderInfo = new OrderInfoImpl(
-                generateOrderId(),
-                request.getAmount(),
-                request.getCurrency().name(),
-                request.getDescription(),
-                "accountId:" + authentication.getName()
-            );
+            PaymentResponse response = paymentService.createSubscriptionPayment(request, authentication.getName());
             
-            // Gọi PayOS để tạo thanh toán
-            IPaymentGateway.PaymentInitResponse paymentResponse = payOSGateway.createPayment(orderInfo);
-            
-            if ("SUCCESS".equals(paymentResponse.getStatus())) {
-                PaymentResponse response = PaymentResponse.builder()
-                    .checkoutUrl(paymentResponse.getPaymentUrl())
-                    .paymentLinkId(paymentResponse.getTransactionId())
-                    .orderCode(Long.valueOf(paymentResponse.getTransactionId()))
-                    .status("SUCCESS")
-                    .createdAt(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                    .message("Tạo thanh toán thành công")
-                    .build();
-                
-                return ResponseEntity.ok(ResponseDto.<PaymentResponse>builder()
-                    .status(HttpStatus.OK.value())
-                    .message("Tạo thanh toán thành công")
-                    .data(response)
-                    .build());
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseDto.<PaymentResponse>builder()
-                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                        .message("Không thể tạo thanh toán. Vui lòng thử lại sau.")
-                        .build());
-            }
+            return ResponseEntity.ok(ResponseDto.<PaymentResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Tạo thanh toán subscription thành công")
+                .data(response)
+                .build());
             
         } catch (Exception e) {
-            log.error("Lỗi tạo thanh toán: ", e);
+            log.error("Lỗi tạo thanh toán subscription: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResponseDto.<PaymentResponse>builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .message("Lỗi hệ thống khi tạo thanh toán")
+                    .message("Lỗi hệ thống: " + e.getMessage())
                     .build());
         }
     }
@@ -122,14 +94,7 @@ public class PaymentController {
         try {
             log.info("Kiểm tra trạng thái thanh toán: {} cho user: {}", transactionId, authentication.getName());
             
-            IPaymentGateway.PaymentStatus status = payOSGateway.checkPaymentStatus(transactionId);
-            
-            PaymentStatusResponse response = PaymentStatusResponse.builder()
-                .transactionId(transactionId)
-                .status(mapPaymentStatusToTxnStatus(status))
-                .gatewayName(payOSGateway.getGatewayName())
-                .message(getStatusMessage(status))
-                .build();
+            PaymentStatusResponse response = paymentService.checkPaymentStatus(transactionId, authentication.getName());
             
             return ResponseEntity.ok(ResponseDto.<PaymentStatusResponse>builder()
                 .status(HttpStatus.OK.value())
@@ -142,7 +107,7 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResponseDto.<PaymentStatusResponse>builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .message("Lỗi hệ thống khi kiểm tra trạng thái")
+                    .message("Lỗi hệ thống: " + e.getMessage())
                     .build());
         }
     }
@@ -158,9 +123,9 @@ public class PaymentController {
         try {
             log.info("Nhận webhook từ PayOS: {}", callbackData);
             
-            IPaymentGateway.PaymentCallbackResult result = payOSGateway.handleCallback(callbackData);
+            boolean success = paymentService.handlePaymentCallback(callbackData);
             
-            if (result.isSuccess()) {
+            if (success) {
                 return ResponseEntity.ok(Map.of(
                     "code", "00",
                     "desc", "success"
@@ -168,7 +133,7 @@ public class PaymentController {
             } else {
                 return ResponseEntity.badRequest().body(Map.of(
                     "code", "01", 
-                    "desc", result.getMessage()
+                    "desc", "Callback processing failed"
                 ));
             }
             
@@ -237,51 +202,33 @@ public class PaymentController {
         }
     }
     
-    /**
-     * Generate unique order ID
-     */
-    private String generateOrderId() {
-        return "ORDER_" + System.currentTimeMillis();
-    }
-    
-    /**
-     * Map PaymentStatus sang TxnStatus
-     */
-    private com.exe201.color_bites_be.enums.TxnStatus mapPaymentStatusToTxnStatus(IPaymentGateway.PaymentStatus status) {
-        return switch (status) {
-            case SUCCESS -> com.exe201.color_bites_be.enums.TxnStatus.SUCCESS;
-            case PENDING -> com.exe201.color_bites_be.enums.TxnStatus.PENDING;
-            case CANCELLED -> com.exe201.color_bites_be.enums.TxnStatus.CANCELED;
-            case FAILED -> com.exe201.color_bites_be.enums.TxnStatus.FAILED;
-        };
-    }
-    
-    /**
-     * Lấy message theo status
-     */
-    private String getStatusMessage(IPaymentGateway.PaymentStatus status) {
-        return switch (status) {
-            case SUCCESS -> "Thanh toán thành công";
-            case PENDING -> "Đang chờ thanh toán";
-            case CANCELLED -> "Thanh toán đã bị hủy";
-            case FAILED -> "Thanh toán thất bại";
-        };
-    }
-    
-    /**
-     * Implementation của OrderInfo interface
-     */
-    private record OrderInfoImpl(String orderId, Long amount, String currency, String description, String customerInfo)
-            implements IPaymentGateway.OrderInfo {
-        @Override
-        public String getOrderId() { return orderId; }
-        @Override
-        public long getAmount() { return amount; }
-        @Override
-        public String getCurrency() { return currency; }
-        @Override
-        public String getDescription() { return description; }
-        @Override
-        public String getCustomerInfo() { return customerInfo; }
+    @Operation(
+        summary = "Lấy lịch sử giao dịch",
+        description = "Lấy danh sách tất cả giao dịch của user"
+    )
+    @GetMapping("/history")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ResponseDto<List<Transaction>>> getTransactionHistory(
+            Authentication authentication) {
+        
+        try {
+            log.info("Lấy lịch sử giao dịch cho user: {}", authentication.getName());
+            
+            List<Transaction> transactions = paymentService.getTransactionHistory(authentication.getName());
+            
+            return ResponseEntity.ok(ResponseDto.<List<Transaction>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Lấy lịch sử giao dịch thành công")
+                .data(transactions)
+                .build());
+                
+        } catch (Exception e) {
+            log.error("Lỗi lấy lịch sử giao dịch: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ResponseDto.<List<Transaction>>builder()
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .message("Lỗi hệ thống: " + e.getMessage())
+                    .build());
+        }
     }
 }
