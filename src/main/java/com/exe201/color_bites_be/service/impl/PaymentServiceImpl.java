@@ -4,6 +4,7 @@ import com.exe201.color_bites_be.config.PayOSConfig;
 import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
+import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Transaction;
 import com.exe201.color_bites_be.enums.CurrencyCode;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import org.apache.commons.codec.digest.HmacUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,19 +51,19 @@ public class PaymentServiceImpl implements IPaymentService {
     
     @Override
     @Transactional
-    public PaymentResponse createSubscriptionPayment(CreatePaymentRequest request, String accountId) {
-        log.info("Creating subscription payment for account: {}", accountId);
+    public PaymentResponse createSubscriptionPayment(CreatePaymentRequest request) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         
         try {
             // Tạo orderCode unique
             String orderCode = generateUniqueOrderCode();
             
             // Tạo Transaction record trước
-            Transaction transaction = createTransactionRecord(request, accountId, orderCode);
+            Transaction transaction = createTransactionRecord(request, account.getId(), orderCode);
             transaction = transactionRepository.save(transaction);
             
             // Gọi PayOS để tạo thanh toán
-            PayOSPaymentResponse payosResponse = createPayOSPayment(request, orderCode, accountId);
+            PayOSPaymentResponse payosResponse = createPayOSPayment(request, orderCode, account.getId());
             
             if (payosResponse.isSuccess()) {
                 // Cập nhật providerTxnId

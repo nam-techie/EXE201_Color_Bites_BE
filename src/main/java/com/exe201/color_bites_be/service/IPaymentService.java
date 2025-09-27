@@ -16,7 +16,7 @@ public interface IPaymentService {
     /**
      * Tạo thanh toán mới cho subscription
      */
-    PaymentResponse createSubscriptionPayment(CreatePaymentRequest request, String accountId);
+    PaymentResponse createSubscriptionPayment(CreatePaymentRequest request);
     
     /**
      * Kiểm tra trạng thái thanh toán
