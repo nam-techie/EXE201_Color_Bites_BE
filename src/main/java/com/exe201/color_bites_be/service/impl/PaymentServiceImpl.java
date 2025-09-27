@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -242,6 +243,17 @@ public class PaymentServiceImpl implements IPaymentService {
             requestBody.put("returnUrl", request.getReturnUrl() != null ? request.getReturnUrl() : payOSConfig.getReturnUrl());
             requestBody.put("cancelUrl", request.getCancelUrl() != null ? request.getCancelUrl() : payOSConfig.getCancelUrl());
             
+            // Thêm items array
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (CreatePaymentRequest.PaymentItem item : request.getItems()) {
+                Map<String, Object> itemMap = new HashMap<>();
+                itemMap.put("name", item.getName());
+                itemMap.put("quantity", item.getQuantity());
+                itemMap.put("price", item.getPrice());
+                items.add(itemMap);
+            }
+            requestBody.put("items", items);
+            
             // Tạo signature
             String signature = createPayOSSignature(requestBody);
             
@@ -382,7 +394,7 @@ public class PaymentServiceImpl implements IPaymentService {
         // Metadata
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("description", request.getDescription());
-        metadata.put("orderInfo", request.getOrderInfo());
+        metadata.put("items", request.getItems());
         transaction.setMetadata(metadata);
         
         return transaction;
