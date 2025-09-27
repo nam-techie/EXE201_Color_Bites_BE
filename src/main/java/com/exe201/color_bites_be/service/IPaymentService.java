@@ -1,8 +1,10 @@
 package com.exe201.color_bites_be.service;
 
 import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
+import com.exe201.color_bites_be.dto.request.PayOSWebhookRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
+import com.exe201.color_bites_be.dto.response.PayOSWebhookResponse;
 import com.exe201.color_bites_be.entity.Transaction;
 
 import java.util.Map;
@@ -19,14 +21,14 @@ public interface IPaymentService {
     PaymentResponse createSubscriptionPayment(CreatePaymentRequest request);
     
     /**
-     * Kiểm tra trạng thái thanh toán
+     * Xử lý webhook callback từ PayOS
      */
-    PaymentStatusResponse checkPaymentStatus(String transactionId, String accountId);
+    PayOSWebhookResponse handlePayOSWebhook(PayOSWebhookRequest request);
     
     /**
-     * Xử lý webhook callback từ payment gateway
+     * Confirm payment status từ FE (an toàn - gọi PayOS để verify)
      */
-    boolean handlePaymentCallback(Map<String, String> callbackData);
+    PaymentStatusResponse updateStatusFromGateway(String id);
     
     /**
      * Lấy lịch sử giao dịch của user
@@ -42,9 +44,4 @@ public interface IPaymentService {
      * Xử lý thanh toán thất bại
      */
     void processFailedPayment(Transaction transaction);
-    
-    /**
-     * Test PayOS connection (Debug method)
-     */
-    String testPayOSConnection();
 }

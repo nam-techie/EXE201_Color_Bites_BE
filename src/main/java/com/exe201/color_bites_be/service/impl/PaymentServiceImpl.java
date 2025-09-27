@@ -2,11 +2,12 @@ package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.config.PayOSConfig;
 import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
+import com.exe201.color_bites_be.dto.request.PayOSWebhookRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
+import com.exe201.color_bites_be.dto.response.PayOSWebhookResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Transaction;
-import com.exe201.color_bites_be.enums.CurrencyCode;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.enums.TransactionEnums.TxnStatus;
 import com.exe201.color_bites_be.enums.TransactionEnums.TxnType;
@@ -108,108 +109,7 @@ public class PaymentServiceImpl implements IPaymentService {
         }
     }
     
-    @Override
-    public PaymentStatusResponse checkPaymentStatus(String transactionId, String accountId) {
-        log.info("Checking payment status for transaction: {} by account: {}", transactionId, accountId);
-        
-        try {
-            // Tìm transaction trong DB
-            Optional<Transaction> transactionOpt = transactionRepository.findByProviderTxnId(transactionId);
-            
-            if (transactionOpt.isEmpty()) {
-                throw new RuntimeException("Không tìm thấy giao dịch");
-            }
-            
-            Transaction transaction = transactionOpt.get();
-            
-            // Kiểm tra quyền truy cập
-            if (!transaction.getAccountId().equals(accountId)) {
-                throw new RuntimeException("Không có quyền truy cập giao dịch này");
-            }
-            
-            // Kiểm tra status từ PayOS
-            PayOSStatusResponse gatewayStatus = checkPayOSPaymentStatus(transactionId);
-            
-            // Cập nhật status nếu khác
-            TxnStatus currentStatus = mapPayOSStatusToTxnStatus(gatewayStatus.getStatus());
-            if (!currentStatus.equals(transaction.getStatus())) {
-                transaction.setStatus(currentStatus);
-                transaction.setUpdatedAt(LocalDateTime.now());
-                transactionRepository.save(transaction);
-                
-                // Xử lý logic theo status
-                if (currentStatus == TxnStatus.SUCCESS) {
-                    processSuccessfulPayment(transaction);
-                } else if (currentStatus == TxnStatus.FAILED) {
-                    processFailedPayment(transaction);
-                }
-            }
-            
-            return PaymentStatusResponse.builder()
-                .transactionId(transactionId)
-                .orderCode(Long.valueOf(transaction.getOrderCode()))
-                .status(currentStatus)
-                .amount(transaction.getAmount().longValue())
-                .description(getMetadataValue(transaction, "description"))
-                .gatewayName(transaction.getGateway())
-                .message(getStatusMessage(currentStatus))
-                .createdAt(transaction.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                .updatedAt(transaction.getUpdatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                .build();
-                
-        } catch (Exception e) {
-            log.error("Error checking payment status: ", e);
-            throw new RuntimeException("Lỗi kiểm tra trạng thái thanh toán: " + e.getMessage());
-        }
-    }
     
-    @Override
-    @Transactional
-    public boolean handlePaymentCallback(Map<String, String> callbackData) {
-        log.info("Handling payment callback: {}", callbackData);
-        
-        try {
-            // Verify signature
-            if (!verifyPayOSSignature(callbackData)) {
-                log.error("Invalid signature từ PayOS");
-                return false;
-            }
-            
-            String orderCode = callbackData.get("orderCode");
-            String status = callbackData.get("status");
-            
-            // Tìm transaction theo orderCode
-            Optional<Transaction> transactionOpt = transactionRepository.findByOrderCode(orderCode);
-            
-            if (transactionOpt.isPresent()) {
-                Transaction transaction = transactionOpt.get();
-                
-                // Cập nhật status
-                TxnStatus newStatus = mapPayOSStatusToTxnStatus(status);
-                transaction.setStatus(newStatus);
-                transaction.setUpdatedAt(LocalDateTime.now());
-                
-                // Lưu raw payload
-                transaction.setRawPayload(new HashMap<>(callbackData));
-                
-                transactionRepository.save(transaction);
-                
-                // Xử lý logic theo status
-                if (newStatus == TxnStatus.SUCCESS) {
-                    processSuccessfulPayment(transaction);
-                } else if (newStatus == TxnStatus.FAILED) {
-                    processFailedPayment(transaction);
-                }
-                
-                return true;
-            }
-            
-            return false;
-        } catch (Exception e) {
-            log.error("Error handling payment callback: ", e);
-            return false;
-        }
-    }
     
     @Override
     public List<Transaction> getTransactionHistory(String accountId) {
@@ -436,76 +336,224 @@ public class PaymentServiceImpl implements IPaymentService {
         return signature;
     }
     
-    /**
-     * Verify signature từ PayOS callback theo đúng format
-     */
-    private boolean verifyPayOSSignature(Map<String, String> params) {
+    
+    // ==================== PAYOS WEBHOOK METHOD ====================
+    
+    @Override
+    public PayOSWebhookResponse handlePayOSWebhook(PayOSWebhookRequest request) {
         try {
-            String receivedSignature = params.get("signature");
-            if (receivedSignature == null) return false;
+            log.info("PayOS Webhook received: {}", request);
             
-            // Tạo lại signature theo format key=value, sort alphabet
-            Map<String, String> data = new java.util.TreeMap<>();
-            data.put("amount", params.getOrDefault("amount", ""));
-            data.put("cancelUrl", params.getOrDefault("cancelUrl", ""));
-            data.put("description", params.getOrDefault("description", ""));
-            data.put("orderCode", params.getOrDefault("orderCode", ""));
-            data.put("returnUrl", params.getOrDefault("returnUrl", ""));
+            // Verify webhook signature
+            if (!verifyWebhookSignature(request)) {
+                log.error("Invalid webhook signature");
+                return PayOSWebhookResponse.builder()
+                    .code("01")
+                    .desc("Invalid signature")
+                    .build();
+            }
             
-            String dataToSign = data.entrySet().stream()
-                .map(e -> e.getKey() + "=" + e.getValue())
-                .collect(java.util.stream.Collectors.joining("&"));
+            // Process webhook data
+            boolean success = processWebhookData(request);
             
-            String calculatedSignature = HmacUtils.hmacSha256Hex(payOSConfig.getChecksumKey(), dataToSign);
+            if (success) {
+                return PayOSWebhookResponse.builder()
+                    .code("00")
+                    .desc("success")
+                    .build();
+            } else {
+                return PayOSWebhookResponse.builder()
+                    .code("01")
+                    .desc("Callback processing failed")
+                    .build();
+            }
             
-            log.info("PayOS callback signature data: {}", dataToSign);
-            log.info("PayOS calculated signature: {}", calculatedSignature);
-            log.info("PayOS received signature: {}", receivedSignature);
+        } catch (Exception e) {
+            log.error("Error handling webhook: ", e);
+            return PayOSWebhookResponse.builder()
+                .code("99")
+                .desc("Internal server error")
+                .build();
+        }
+    }
+    
+    // ==================== CONFIRM PAYMENT METHOD ====================
+    
+    /**
+     * Confirm payment status từ FE (an toàn - gọi PayOS để verify)
+     */
+    public PaymentStatusResponse updateStatusFromGateway(String id) {
+        try {
+            log.info("Confirming payment status for ID: {}", id);
+            
+            // 1) Tìm transaction theo providerTxnId (paymentLinkId) trước, không có thì fallback orderCode
+            Optional<Transaction> opt = transactionRepository.findByProviderTxnId(id);
+            if (opt.isEmpty()) {
+                opt = transactionRepository.findByOrderCode(id);
+            }
+            if (opt.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy giao dịch với ID: " + id);
+            }
+            
+            Transaction tx = opt.get();
+            log.info("Found transaction: {} with current status: {}", tx.getId(), tx.getStatus());
+            
+            // 2) Hỏi PayOS (server-to-server)
+            PayOSStatusResponse gw = checkPayOSPaymentStatus(id);
+            TxnStatus newStatus = mapPayOSStatusToTxnStatus(gw.getStatus());
+            log.info("PayOS status: {} -> Mapped status: {}", gw.getStatus(), newStatus);
+            
+            // 3) Cập nhật DB (idempotent)
+            if (newStatus != tx.getStatus()) {
+                log.info("Updating transaction status from {} to {}", tx.getStatus(), newStatus);
+                tx.setStatus(newStatus);
+                tx.setUpdatedAt(LocalDateTime.now());
+                transactionRepository.save(tx);
+                
+                // Process business logic
+                if (newStatus == TxnStatus.SUCCESS) {
+                    processSuccessfulPayment(tx);
+                } else if (newStatus == TxnStatus.FAILED) {
+                    processFailedPayment(tx);
+                }
+            } else {
+                log.info("Transaction status unchanged: {}", newStatus);
+            }
+            
+            // 4) Trả về cho FE trạng thái cuối cùng
+            return PaymentStatusResponse.builder()
+                .transactionId(tx.getProviderTxnId() != null ? tx.getProviderTxnId() : tx.getOrderCode())
+                .orderCode(Long.valueOf(tx.getOrderCode()))
+                .status(tx.getStatus())
+                .amount(tx.getAmount().longValue())
+                .description(getMetadataValue(tx, "description"))
+                .gatewayName(tx.getGateway())
+                .message(getStatusMessage(tx.getStatus()))
+                .createdAt(tx.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .updatedAt(tx.getUpdatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .build();
+                
+        } catch (Exception e) {
+            log.error("Error confirming payment status: ", e);
+            throw new RuntimeException("Lỗi xác nhận thanh toán: " + e.getMessage());
+        }
+    }
+    
+    
+    // ==================== HELPER METHODS ====================
+    
+    /**
+     * Verify webhook signature (JSON body)
+     */
+    private boolean verifyWebhookSignature(PayOSWebhookRequest request) {
+        try {
+            String receivedSignature = request.getSignature();
+            if (receivedSignature == null) {
+                log.error("Missing signature in webhook body");
+                return false;
+            }
+            
+            PayOSWebhookRequest.PayOSWebhookData data = request.getData();
+            if (data == null) {
+                log.error("Missing data in webhook body");
+                return false;
+            }
+            
+            // Convert data to Map for canonicalization
+            Map<String, Object> dataMap = new HashMap<>();
+            dataMap.put("orderCode", data.getOrderCode());
+            dataMap.put("paymentLinkId", data.getPaymentLinkId());
+            dataMap.put("amount", data.getAmount());
+            dataMap.put("description", data.getDescription());
+            dataMap.put("status", data.getStatus());
+            if (data.getQrCode() != null) dataMap.put("qrCode", data.getQrCode());
+            if (data.getCheckoutUrl() != null) dataMap.put("checkoutUrl", data.getCheckoutUrl());
+            if (data.getAdditionalData() != null) dataMap.putAll(data.getAdditionalData());
+            
+            // Canonicalize data (sort keys recursively)
+            Object canonicalizedData = canonicalizeData(dataMap);
+            String dataJson = objectMapper.writeValueAsString(canonicalizedData);
+            
+            String calculatedSignature = HmacUtils.hmacSha256Hex(payOSConfig.getChecksumKey(), dataJson);
+            
+            log.info("Webhook data JSON: {}", dataJson);
+            log.info("Webhook calculated signature: {}", calculatedSignature);
+            log.info("Webhook received signature: {}", receivedSignature);
             
             return calculatedSignature.equals(receivedSignature);
         } catch (Exception e) {
-            log.error("Lỗi verify signature: ", e);
+            log.error("Error verifying webhook signature: ", e);
             return false;
         }
     }
     
-    // ==================== DEBUG/TEST METHODS ====================
-    
     /**
-     * Test method để debug PayOS API response
-     * Có thể gọi từ controller để test
+     * Process webhook data
      */
-    public String testPayOSConnection() {
+    private boolean processWebhookData(PayOSWebhookRequest request) {
         try {
-            log.info("Testing PayOS connection...");
-            log.info("PayOS Config - Client ID: {}", payOSConfig.getClientId());
-            log.info("PayOS Config - API Key: {}", payOSConfig.getApiKey());
-            log.info("PayOS Config - Checksum Key: {}", payOSConfig.getChecksumKey());
-            log.info("PayOS Config - API URL: {}", payOSConfig.getApiUrl());
-            log.info("PayOS Config - Return URL: {}", payOSConfig.getReturnUrl());
-            log.info("PayOS Config - Cancel URL: {}", payOSConfig.getCancelUrl());
+            PayOSWebhookRequest.PayOSWebhookData data = request.getData();
+            String orderCode = String.valueOf(data.getOrderCode());
+            String status = data.getStatus();
             
-            // Test simple request
-            Request testRequest = new Request.Builder()
-                    .url(payOSConfig.getApiUrl() + "/v2/payment-requests")
-                    .get()
-                    .addHeader("x-client-id", payOSConfig.getClientId())
-                    .addHeader("x-api-key", payOSConfig.getApiKey())
-                    .build();
+            // Find transaction by orderCode
+            Optional<Transaction> transactionOpt = transactionRepository.findByOrderCode(orderCode);
             
-            try (Response response = httpClient.newCall(testRequest).execute()) {
-                String responseBody = response.body().string();
-                log.info("PayOS test response status: {}, body: {}", response.code(), responseBody);
-                return "PayOS test completed. Status: " + response.code() + ", Body: " + responseBody;
+            if (transactionOpt.isPresent()) {
+                Transaction transaction = transactionOpt.get();
+                
+                // Update status
+                TxnStatus newStatus = mapPayOSStatusToTxnStatus(status);
+                transaction.setStatus(newStatus);
+                transaction.setUpdatedAt(LocalDateTime.now());
+                
+                // Save raw payload
+                Map<String, Object> rawPayload = new HashMap<>();
+                rawPayload.put("code", request.getCode());
+                rawPayload.put("desc", request.getDesc());
+                rawPayload.put("data", data);
+                rawPayload.put("signature", request.getSignature());
+                transaction.setRawPayload(rawPayload);
+                
+                transactionRepository.save(transaction);
+                
+                // Process logic based on status
+                if (newStatus == TxnStatus.SUCCESS) {
+                    processSuccessfulPayment(transaction);
+                } else if (newStatus == TxnStatus.FAILED) {
+                    processFailedPayment(transaction);
+                }
+                
+                return true;
             }
             
+            return false;
         } catch (Exception e) {
-            log.error("PayOS test error: ", e);
-            return "PayOS test failed: " + e.getMessage();
+            log.error("Error processing webhook data: ", e);
+            return false;
         }
     }
     
-    // ==================== HELPER METHODS ====================
+    /**
+     * Canonicalize data for webhook signature
+     */
+    @SuppressWarnings("unchecked")
+    private Object canonicalizeData(Object data) {
+        if (data instanceof Map) {
+            Map<String, Object> sorted = new java.util.TreeMap<>();
+            ((Map<String, Object>) data).forEach((k, v) -> sorted.put(k, canonicalizeData(v)));
+            return sorted;
+        } else if (data instanceof List) {
+            List<Object> list = (List<Object>) data;
+            List<Object> canonicalized = new ArrayList<>();
+            for (Object item : list) {
+                canonicalized.add(canonicalizeData(item));
+            }
+            return canonicalized;
+        }
+        return data;
+    }
+    
     
     /**
      * Tạo Transaction record
