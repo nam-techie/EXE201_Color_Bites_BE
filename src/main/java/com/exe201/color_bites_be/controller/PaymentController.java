@@ -1,12 +1,9 @@
 package com.exe201.color_bites_be.controller;
 
 import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
-import com.exe201.color_bites_be.dto.request.PayOSWebhookRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
-import com.exe201.color_bites_be.dto.response.PayOSWebhookResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
-import com.exe201.color_bites_be.entity.Transaction;
 import com.exe201.color_bites_be.service.IPaymentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @PreAuthorize("hasAuthority('USER')")
@@ -43,13 +38,6 @@ public class PaymentController {
     }
     
     
-    /**
-     * Webhook callback từ PayOS (JSON body)
-     */
-    @PostMapping("/payos/webhook")
-    public PayOSWebhookResponse handlePayOSWebhook(@RequestBody PayOSWebhookRequest request) {
-        return paymentService.handlePayOSWebhook(request);
-    }
     
     /**
      * Confirm payment status từ FE (an toàn - gọi PayOS để verify)
@@ -65,19 +53,4 @@ public class PaymentController {
         }
     }
     
-    /**
-     * Lấy lịch sử giao dịch
-     */
-    @GetMapping("/history")
-    public ResponseDto<List<Transaction>> getTransactionHistory(
-            Authentication authentication) {
-        
-        try {
-            List<Transaction> transactions = paymentService.getTransactionHistory(authentication.getName());
-            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy lịch sử giao dịch thành công", transactions);
-        } catch (Exception e) {
-            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Đã xảy ra lỗi khi lấy lịch sử giao dịch: " + e.getMessage(), null);
-        }
-    }
 }

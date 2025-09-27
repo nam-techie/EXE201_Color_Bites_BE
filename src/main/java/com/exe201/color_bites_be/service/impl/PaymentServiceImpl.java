@@ -2,10 +2,8 @@ package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.config.PayOSConfig;
 import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
-import com.exe201.color_bites_be.dto.request.PayOSWebhookRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
-import com.exe201.color_bites_be.dto.response.PayOSWebhookResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Transaction;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
@@ -111,10 +109,6 @@ public class PaymentServiceImpl implements IPaymentService {
     
     
     
-    @Override
-    public List<Transaction> getTransactionHistory(String accountId) {
-        return transactionRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
-    }
     
     @Override
     @Transactional
@@ -337,45 +331,6 @@ public class PaymentServiceImpl implements IPaymentService {
     }
     
     
-    // ==================== PAYOS WEBHOOK METHOD ====================
-    
-    @Override
-    public PayOSWebhookResponse handlePayOSWebhook(PayOSWebhookRequest request) {
-        try {
-            log.info("PayOS Webhook received: {}", request);
-            
-            // Verify webhook signature
-            if (!verifyWebhookSignature(request)) {
-                log.error("Invalid webhook signature");
-                return PayOSWebhookResponse.builder()
-                    .code("01")
-                    .desc("Invalid signature")
-                    .build();
-            }
-            
-            // Process webhook data
-            boolean success = processWebhookData(request);
-            
-            if (success) {
-                return PayOSWebhookResponse.builder()
-                    .code("00")
-                    .desc("success")
-                    .build();
-            } else {
-                return PayOSWebhookResponse.builder()
-                    .code("01")
-                    .desc("Callback processing failed")
-                    .build();
-            }
-            
-        } catch (Exception e) {
-            log.error("Error handling webhook: ", e);
-            return PayOSWebhookResponse.builder()
-                .code("99")
-                .desc("Internal server error")
-                .build();
-        }
-    }
     
     // ==================== CONFIRM PAYMENT METHOD ====================
     
@@ -442,117 +397,8 @@ public class PaymentServiceImpl implements IPaymentService {
     
     // ==================== HELPER METHODS ====================
     
-    /**
-     * Verify webhook signature (JSON body)
-     */
-    private boolean verifyWebhookSignature(PayOSWebhookRequest request) {
-        try {
-            String receivedSignature = request.getSignature();
-            if (receivedSignature == null) {
-                log.error("Missing signature in webhook body");
-                return false;
-            }
-            
-            PayOSWebhookRequest.PayOSWebhookData data = request.getData();
-            if (data == null) {
-                log.error("Missing data in webhook body");
-                return false;
-            }
-            
-            // Convert data to Map for canonicalization
-            Map<String, Object> dataMap = new HashMap<>();
-            dataMap.put("orderCode", data.getOrderCode());
-            dataMap.put("paymentLinkId", data.getPaymentLinkId());
-            dataMap.put("amount", data.getAmount());
-            dataMap.put("description", data.getDescription());
-            dataMap.put("status", data.getStatus());
-            if (data.getQrCode() != null) dataMap.put("qrCode", data.getQrCode());
-            if (data.getCheckoutUrl() != null) dataMap.put("checkoutUrl", data.getCheckoutUrl());
-            if (data.getAdditionalData() != null) dataMap.putAll(data.getAdditionalData());
-            
-            // Canonicalize data (sort keys recursively)
-            Object canonicalizedData = canonicalizeData(dataMap);
-            String dataJson = objectMapper.writeValueAsString(canonicalizedData);
-            
-            String calculatedSignature = HmacUtils.hmacSha256Hex(payOSConfig.getChecksumKey(), dataJson);
-            
-            log.info("Webhook data JSON: {}", dataJson);
-            log.info("Webhook calculated signature: {}", calculatedSignature);
-            log.info("Webhook received signature: {}", receivedSignature);
-            
-            return calculatedSignature.equals(receivedSignature);
-        } catch (Exception e) {
-            log.error("Error verifying webhook signature: ", e);
-            return false;
-        }
-    }
     
-    /**
-     * Process webhook data
-     */
-    private boolean processWebhookData(PayOSWebhookRequest request) {
-        try {
-            PayOSWebhookRequest.PayOSWebhookData data = request.getData();
-            String orderCode = String.valueOf(data.getOrderCode());
-            String status = data.getStatus();
-            
-            // Find transaction by orderCode
-            Optional<Transaction> transactionOpt = transactionRepository.findByOrderCode(orderCode);
-            
-            if (transactionOpt.isPresent()) {
-                Transaction transaction = transactionOpt.get();
-                
-                // Update status
-                TxnStatus newStatus = mapPayOSStatusToTxnStatus(status);
-                transaction.setStatus(newStatus);
-                transaction.setUpdatedAt(LocalDateTime.now());
-                
-                // Save raw payload
-                Map<String, Object> rawPayload = new HashMap<>();
-                rawPayload.put("code", request.getCode());
-                rawPayload.put("desc", request.getDesc());
-                rawPayload.put("data", data);
-                rawPayload.put("signature", request.getSignature());
-                transaction.setRawPayload(rawPayload);
-                
-                transactionRepository.save(transaction);
-                
-                // Process logic based on status
-                if (newStatus == TxnStatus.SUCCESS) {
-                    processSuccessfulPayment(transaction);
-                } else if (newStatus == TxnStatus.FAILED) {
-                    processFailedPayment(transaction);
-                }
-                
-                return true;
-            }
-            
-            return false;
-        } catch (Exception e) {
-            log.error("Error processing webhook data: ", e);
-            return false;
-        }
-    }
     
-    /**
-     * Canonicalize data for webhook signature
-     */
-    @SuppressWarnings("unchecked")
-    private Object canonicalizeData(Object data) {
-        if (data instanceof Map) {
-            Map<String, Object> sorted = new java.util.TreeMap<>();
-            ((Map<String, Object>) data).forEach((k, v) -> sorted.put(k, canonicalizeData(v)));
-            return sorted;
-        } else if (data instanceof List) {
-            List<Object> list = (List<Object>) data;
-            List<Object> canonicalized = new ArrayList<>();
-            for (Object item : list) {
-                canonicalized.add(canonicalizeData(item));
-            }
-            return canonicalized;
-        }
-        return data;
-    }
     
     
     /**
