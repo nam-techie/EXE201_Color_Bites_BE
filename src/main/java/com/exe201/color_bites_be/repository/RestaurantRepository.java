@@ -46,6 +46,9 @@ public interface RestaurantRepository extends MongoRepository<Restaurant, String
     @Query("{'featured': true, 'isDeleted': {$ne: true}}")
     Page<Restaurant> findFeaturedRestaurantsAndNotDeleted(Pageable pageable);
     
+    // Đếm số nhà hàng theo trạng thái deleted
+    long countByIsDeleted(Boolean isDeleted);
+    
     // Tìm nhà hàng theo khoảng giá
     @Query("{'avgPrice': {$gte: ?0, $lte: ?1}, 'isDeleted': {$ne: true}}")
     Page<Restaurant> findByPriceRangeAndNotDeleted(Double minPrice, Double maxPrice, Pageable pageable);

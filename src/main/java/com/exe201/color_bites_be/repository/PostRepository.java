@@ -42,4 +42,7 @@ public interface PostRepository extends MongoRepository<Post, String> {
     // Đếm số bài viết của user
     @Query(value = "{'accountId': ?0, 'isDeleted': {$ne: true}}", count = true)
     long countByAccountIdAndNotDeleted(String accountId);
+    
+    // Đếm số bài viết theo trạng thái deleted
+    long countByIsDeleted(Boolean isDeleted);
 }

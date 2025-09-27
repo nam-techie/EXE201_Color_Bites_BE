@@ -25,4 +25,7 @@ public interface AccountRepository extends MongoRepository<Account, String> {
     default Account findAccountByUserName(String userName) {
         return findByUserName(userName).orElse(null);
     }
+    
+    // Đếm số account theo trạng thái active
+    long countByIsActive(Boolean isActive);
 }
