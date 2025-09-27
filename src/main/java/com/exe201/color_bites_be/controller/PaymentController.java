@@ -24,6 +24,20 @@ public class PaymentController {
     
     @Autowired
     private IPaymentService paymentService;
+    
+    /**
+     * Test PayOS connection (Debug endpoint)
+     */
+    @GetMapping("/test/payos")
+    public ResponseDto<String> testPayOSConnection() {
+        try {
+            String result = paymentService.testPayOSConnection();
+            return new ResponseDto<>(HttpStatus.OK.value(), "PayOS test completed", result);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "PayOS test failed: " + e.getMessage(), null);
+        }
+    }
 
 
 

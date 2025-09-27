@@ -42,4 +42,9 @@ public interface IPaymentService {
      * Xử lý thanh toán thất bại
      */
     void processFailedPayment(Transaction transaction);
+    
+    /**
+     * Test PayOS connection (Debug method)
+     */
+    String testPayOSConnection();
 }
