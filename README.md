@@ -2,7 +2,7 @@
 
 Hệ thống API backend cho ứng dụng ColorBites - một nền tảng đặt món ăn và quản lý thực phẩm được xây dựng bằng Spring Boot.
 
-## 🌟 Tính năng chính
+## Tính năng chính
 
 - **Xác thực & Phân quyền**: Hệ thống xác thực JWT với phân quyền theo vai trò người dùng
 - **Quản lý người dùng**: Đăng ký, đăng nhập và quản lý thông tin cá nhân
@@ -27,7 +27,7 @@ Hệ thống API backend cho ứng dụng ColorBites - một nền tảng đặt
   - ModelMapper cho object mapping
   - JJWT cho JWT token processing
 
-## 📋 Yêu cầu hệ thống
+## Yêu cầu hệ thống
 
 - Java 21 trở lên
 - Maven 3.6+
@@ -74,13 +74,13 @@ java -jar target/ColorBites_be-0.0.1-SNAPSHOT.jar
 
 Ứng dụng sẽ chạy tại `http://localhost:8080`
 
-## 📚 Tài liệu API
+## Tài liệu API
 
 Sau khi ứng dụng chạy, truy cập tài liệu API tương tác tại:
 - **Swagger UI**: `http://localhost:8080/api`
 - **API Docs JSON**: `http://localhost:8080/v3/api-docs`
 
-## 🔐 Xác thực và Bảo mật
+## Xác thực và Bảo mật
 
 ### JWT Authentication
 API sử dụng JWT (JSON Web Token) để xác thực. Thêm token vào header Authorization:
