@@ -2,18 +2,18 @@ name: Publish OpenAPI to SwaggerHub
 
 on:
   push:
-    branches: [ main, develop ]   # cứ push là auto cập nhật SwaggerHub
+    branches: [main, develop] # cứ push là auto cập nhật SwaggerHub
 
 jobs:
   spring-openapi:
     runs-on: ubuntu-latest
     env:
       # 👇 Sửa 3 dòng dưới cho đúng dự án của bạn
-      APP_DIR: .                  # thư mục chứa project Spring ('.' nếu ở root)
-      API_NAME: mumii       # tên API trên SwaggerHub (vd: color-bites)
-      APP_PORT: 8080              # cổng app chạy local trong CI (Spring sẽ nghe ở đây)
+      APP_DIR: . # thư mục chứa project Spring ('.' nếu ở root)
+      API_NAME: mumii # tên API trên SwaggerHub (vd: color-bites)
+      APP_PORT: 8080 # cổng app chạy local trong CI (Spring sẽ nghe ở đây)
 
-      OWNER: ${{ secrets.SWAGGERHUB_OWNER }}         # VD: Namtechie (org/user)
+      OWNER: ${{ secrets.SWAGGERHUB_OWNER }} # VD: Namtechie (org/user)
       SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
 
     steps:
@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Build (skip tests for speed)
         working-directory: ${{ env.APP_DIR }}
@@ -78,11 +78,20 @@ jobs:
             echo "VISIBILITY=private" >> $GITHUB_ENV
           fi
 
-      - name: Create or Update API (force)
-        run: |
-          echo "Creating/Overwriting ${OWNER}/${{ env.API_NAME }}/${VERSION}} (visibility=${VISIBILITY})"
-          swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
-            -f openapi.json --visibility="${VISIBILITY}" --force
+      - name: Create (or update if exists)
+  run: |
+    set -e
+    echo "Creating ${OWNER}/${{ env.API_NAME }}/${VERSION} (visibility=${VISIBILITY})"
+    if swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
+         -f openapi.json --visibility="${VISIBILITY}"; then
+      echo "✅ Created new API/version."
+    else
+      echo "ℹ️ Create failed (likely already exists) -> running update..."
+      swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
+         -f openapi.json --visibility="${VISIBILITY}"
+      echo "✅ Updated existing API/version."
+    fi
+
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
