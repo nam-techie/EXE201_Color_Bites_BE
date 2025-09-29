@@ -78,15 +78,11 @@ jobs:
             echo "VISIBILITY=private" >> $GITHUB_ENV
           fi
 
-      - name: Create API (ignore if exists)
+      - name: Create or Update API (force)
         run: |
+          echo "Creating/Overwriting ${OWNER}/${{ env.API_NAME }}/${VERSION}} (visibility=${VISIBILITY})"
           swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
-            -f openapi.json --visibility="${VISIBILITY}" || true
-
-      - name: Update API spec
-        run: |
-          swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
-            -f openapi.json --visibility="${VISIBILITY}"
+            -f openapi.json --visibility="${VISIBILITY}" --force
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
