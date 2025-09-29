@@ -63,8 +63,8 @@ jobs:
             )
           ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
 
-      - name: Install swaggerhub-cli
-        run: npm i -g swaggerhub-cli
+      - name: Install swaggerhub-cli (pin latest)
+        run: npm i -g swaggerhub-cli@latest
 
       - name: Validate SwaggerHub secrets and show target
         run: |
@@ -74,11 +74,14 @@ jobs:
           fi
           echo "Target: ${OWNER}/${{ env.API_NAME }} @ ${VERSION} (visibility=${VISIBILITY})"
 
-      - name: Who am I on SwaggerHub
-        run: swaggerhub account:whoami
-
-      - name: List APIs under OWNER (for debugging)
-        run: swaggerhub api:list "${OWNER}" || true
+      - name: Verify token & list APIs under OWNER
+        run: |
+          if [ -z "${OWNER}" ] || [ -z "${SWAGGERHUB_API_KEY}" ]; then
+            echo "OWNER or SWAGGERHUB_API_KEY is not set. Please add repo secrets SWAGGERHUB_OWNER and SWAGGERHUB_API_KEY." >&2
+            exit 1
+          fi
+          echo "Listing APIs under OWNER=${OWNER}..."
+          swaggerhub api:list "${OWNER}" --limit 10
 
       - name: Set version/visibility by branch
         run: |
@@ -90,13 +93,10 @@ jobs:
             echo "VISIBILITY=private" >> $GITHUB_ENV
           fi
 
-      - name: Create API if not exists
+      - name: Upsert API (create if missing)
         run: |
-          swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json --visibility=$VISIBILITY
-
-      - name: Update API spec
-        run: |
-          swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json
+          echo "Upserting ${OWNER}/${{ env.API_NAME }}/${VERSION} (visibility=${VISIBILITY})"
+          swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json --visibility="$VISIBILITY" --create
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
