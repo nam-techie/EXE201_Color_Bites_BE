@@ -1,0 +1,49 @@
+  name: Publish OpenAPI to SwaggerHub
+  on:
+    push:
+      branches: [ main, develop ]
+      paths: [ 'openapi.yaml', 'openapi.json' ]
+
+  jobs:
+    publish:
+      runs-on: ubuntu-latest
+      env:
+        SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+        OWNER: ${{ secrets.SWAGGERHUB_OWNER }}
+      steps:
+        - uses: actions/checkout@v4
+        - run: npm i -g swaggerhub-cli
+
+        - name: Detect spec file
+          shell: bash
+          run: |
+            if [ -f openapi.yaml ]; then echo "SPEC_FILE=openapi.yaml" >> $GITHUB_ENV; fi
+            if [ -f openapi.json ]; then echo "SPEC_FILE=openapi.json" >> $GITHUB_ENV; fi
+            test -n "$SPEC_FILE" || (echo "No openapi spec found" && exit 1)
+
+        - name: Set version for main
+          if: github.ref == 'refs/heads/main'
+          run: |
+            echo "VERSION=1.0.0" >> $GITHUB_ENV
+            echo "VISIBILITY=public" >> $GITHUB_ENV
+
+        - name: Set version for develop
+          if: github.ref == 'refs/heads/develop'
+          run: |
+            echo "VERSION=1.0.0-dev" >> $GITHUB_ENV
+            echo "VISIBILITY=private" >> $GITHUB_ENV
+
+        - name: Create API if not exists
+          run: |
+            swaggerhub api:create "$OWNER/color-bites/$VERSION" -f "$SPEC_FILE" --visibility=$VISIBILITY || true
+
+        - name: Update API spec
+          run: |
+            swaggerhub api:update "$OWNER/color-bites/$VERSION" -f "$SPEC_FILE"
+
+        - name: Publish version (main only)
+          if: github.ref == 'refs/heads/main'
+          run: |
+            swaggerhub api:publish "$OWNER/color-bites/$VERSION"
+
+
