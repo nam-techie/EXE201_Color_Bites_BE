@@ -3,10 +3,10 @@ package com.exe201.color_bites_be.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import com.exe201.color_bites_be.enums.CurrencyCode;
-import com.exe201.color_bites_be.enums.TxnStatus;
-import com.exe201.color_bites_be.enums.TxnType;
+import com.exe201.color_bites_be.enums.SubcriptionPlan;
+import com.exe201.color_bites_be.enums.TransactionEnums.TxnStatus;
+import com.exe201.color_bites_be.enums.TransactionEnums.TxnType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
@@ -43,4 +43,23 @@ public class Transaction {
 
     @Field("created_at")
     private LocalDateTime createdAt;
+
+    // Thêm fields theo database schema
+    @Field("order_code")
+    private String orderCode; // unique
+
+    @Field("plan")
+    private SubcriptionPlan plan; // enum SubscriptionPlan
+
+    @Field("gateway")
+    private String gateway;
+
+    @Field("provider_txn_id")
+    private String providerTxnId; // unique, sparse
+
+    @Field("raw_payload")
+    private Map<String, Object> rawPayload;
+
+    @Field("updated_at")
+    private LocalDateTime updatedAt;
 }

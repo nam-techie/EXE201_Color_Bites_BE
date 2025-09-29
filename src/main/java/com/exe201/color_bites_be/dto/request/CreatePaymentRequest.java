@@ -4,14 +4,17 @@ import com.exe201.color_bites_be.enums.CurrencyCode;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Request DTO để tạo thanh toán mới
- * Chứa thông tin cần thiết cho mobile app gửi lên
+ * Tuân thủ PayOS API specification
  */
 @Getter
 @Setter
@@ -19,18 +22,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CreatePaymentRequest {
     
-    /**
-     * Mô tả đơn hàng (VD: "Thanh toán đơn hàng #123")
-     */
-    @NotBlank(message = "Mô tả đơn hàng không được để trống")
-    private String description;
     
     /**
-     * Số tiền thanh toán (VD: 100000 = 100,000 VND)
+     * Số tiền thanh toán (VD: 200000 = 200,000 VND)
      */
     @NotNull(message = "Số tiền không được để trống")
     @DecimalMin(value = "1000", message = "Số tiền tối thiểu là 1,000 VND")
     private Long amount;
+    
+    /**
+     * Mô tả đơn hàng (VD: "Thanh toán gói Premium 30 ngày")
+     */
+    @NotBlank(message = "Mô tả đơn hàng không được để trống")
+    private String description;
     
     /**
      * Mã tiền tệ (VND, USD)
@@ -51,7 +55,28 @@ public class CreatePaymentRequest {
     private String cancelUrl;
     
     /**
-     * Thông tin bổ sung cho đơn hàng (metadata)
+     * Danh sách sản phẩm/dịch vụ (PayOS yêu cầu)
      */
-    private String orderInfo;
+    @NotNull(message = "Danh sách sản phẩm không được để trống")
+    private List<PaymentItem> items;
+    
+    /**
+     * Inner class cho Payment Item
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PaymentItem {
+        @NotBlank(message = "Tên sản phẩm không được để trống")
+        private String name;
+        
+        @NotNull(message = "Số lượng không được để trống")
+        @Positive(message = "Số lượng phải là số dương")
+        private Integer quantity;
+        
+        @NotNull(message = "Giá sản phẩm không được để trống")
+        @DecimalMin(value = "1000", message = "Giá sản phẩm tối thiểu là 1,000 VND")
+        private Long price;
+    }
 }

@@ -1,6 +1,6 @@
 package com.exe201.color_bites_be.dto.response;
 
-import com.exe201.color_bites_be.enums.TxnStatus;
+import com.exe201.color_bites_be.enums.TransactionEnums.TxnStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import lombok.Setter;
 
 /**
  * Response DTO cho trạng thái thanh toán
- * Dùng để mobile app kiểm tra status
+ * Trả về khi mobile app kiểm tra status
  */
 @Getter
 @Setter
@@ -29,32 +29,37 @@ public class PaymentStatusResponse {
     private Long orderCode;
     
     /**
-     * Trạng thái thanh toán
+     * Trạng thái hiện tại
      */
     private TxnStatus status;
     
     /**
-     * Số tiền đã thanh toán
+     * Số tiền
      */
     private Long amount;
     
     /**
-     * Thời gian thanh toán (nếu thành công)
-     */
-    private String paidAt;
-    
-    /**
-     * Thông tin bổ sung
+     * Mô tả giao dịch
      */
     private String description;
     
     /**
-     * Gateway sử dụng
+     * Tên gateway (PayOS)
      */
     private String gatewayName;
     
     /**
-     * Thông báo
+     * Thông báo trạng thái
      */
     private String message;
+    
+    /**
+     * Thời gian tạo
+     */
+    private String createdAt;
+    
+    /**
+     * Thời gian cập nhật
+     */
+    private String updatedAt;
 }
