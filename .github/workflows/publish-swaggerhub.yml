@@ -63,27 +63,10 @@ jobs:
             )
           ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
 
-      - name: Install swaggerhub-cli v2 and show version
+      - name: Install swaggerhub-cli and show version
         run: |
-          npm i -g swaggerhub-cli@2
+          npm i -g swaggerhub-cli
           swaggerhub --version
-
-      - name: Validate SwaggerHub secrets and show target
-        run: |
-          if [ -z "${OWNER}" ] || [ -z "${SWAGGERHUB_API_KEY}" ]; then
-            echo "OWNER or SWAGGERHUB_API_KEY is not set. Please add repo secrets SWAGGERHUB_OWNER and SWAGGERHUB_API_KEY." >&2
-            exit 1
-          fi
-          echo "Target: ${OWNER}/${{ env.API_NAME }} @ ${VERSION} (visibility=${VISIBILITY})"
-
-      - name: Verify token & list APIs under OWNER
-        run: |
-          if [ -z "${OWNER}" ] || [ -z "${SWAGGERHUB_API_KEY}" ]; then
-            echo "OWNER or SWAGGERHUB_API_KEY is not set. Please add repo secrets SWAGGERHUB_OWNER and SWAGGERHUB_API_KEY." >&2
-            exit 1
-          fi
-          echo "Listing APIs under OWNER=${OWNER}..."
-          swaggerhub api:list "${OWNER}" --limit 10
 
       - name: Set version/visibility by branch
         run: |
@@ -95,10 +78,15 @@ jobs:
             echo "VISIBILITY=private" >> $GITHUB_ENV
           fi
 
-      - name: Upsert API (create if missing)
+      - name: Create API (ignore if exists)
         run: |
-          echo "Upserting ${OWNER}/${{ env.API_NAME }}/${VERSION} (visibility=${VISIBILITY})"
-          swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json --visibility="$VISIBILITY" --create
+          swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
+            -f openapi.json --visibility="${VISIBILITY}" || true
+
+      - name: Update API spec
+        run: |
+          swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
+            -f openapi.json --visibility="${VISIBILITY}"
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
