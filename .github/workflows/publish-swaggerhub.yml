@@ -46,6 +46,11 @@ jobs:
           jq -e '.openapi and .info.version' openapi.json > /dev/null
           echo "VERSION=$(jq -r '.info.version' openapi.json)" >> $GITHUB_ENV
 
+      - name: Inject custom server
+        run: |
+          jq --arg url "https://api-mumii.namtechie.id.vn" \
+            '.servers = [{url: $url}]' openapi.json > tmp.json && mv tmp.json openapi.json
+
       - name: Stop app
         if: always()
         working-directory: ${{ env.APP_DIR }}
@@ -76,10 +81,4 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           swaggerhub api:publish "${OWNER}/${API_NAME}/${VERSION}"
-
-      - name: Inject custom server
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq
-          jq --arg url "https://api-mumii.namtechie.id.vn" \
-            '.servers = [{url: $url}]' openapi.json > tmp.json && mv tmp.json openapi.json
 
