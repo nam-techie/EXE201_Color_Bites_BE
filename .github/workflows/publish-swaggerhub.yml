@@ -2,94 +2,28 @@ name: Publish OpenAPI to SwaggerHub
 
 on:
   push:
-    branches: [main, develop] # cứ push là auto cập nhật SwaggerHub
+    branches: [main, develop]
 
 jobs:
-  spring-openapi:
+  publish:
     runs-on: ubuntu-latest
     env:
-      # 👇 Sửa 3 dòng dưới cho đúng dự án của bạn
-      APP_DIR: . # thư mục chứa project Spring ('.' nếu ở root)
-      API_NAME: mumii # tên API trên SwaggerHub (vd: color-bites)
-      APP_PORT: 8080 # cổng app chạy local trong CI (Spring sẽ nghe ở đây)
-
-      OWNER: ${{ secrets.SWAGGERHUB_OWNER }} # VD: Namtechie (org/user)
+      API_NAME: mumii
+      OWNER: ${{ secrets.SWAGGERHUB_OWNER }}
       SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Build (skip tests for speed)
-        working-directory: ${{ env.APP_DIR }}
-        run: mvn -q -DskipTests package
-
-      - name: Run app in background
-        working-directory: ${{ env.APP_DIR }}
+      - name: Install swaggerhub-cli
         run: |
-          nohup java -jar $(ls target/*-SNAPSHOT.jar 2>/dev/null || ls target/*.jar | head -n1) --server.port=${APP_PORT} > app.log 2>&1 &
-          echo $! > app.pid
-          # Wait until /v3/api-docs returns 200
-          for i in {1..40}; do
-            curl -fsS "http://localhost:${APP_PORT}/v3/api-docs" >/dev/null && break
-            sleep 3
-          done
-
-      - name: Export OpenAPI (JSON)
-        run: curl -fsS "http://localhost:${APP_PORT}/v3/api-docs" -o openapi.json
-
-      - name: Stop app and show tail logs on failure/success
-        if: always()
-        working-directory: ${{ env.APP_DIR }}
-        run: |
-          if [ -f app.pid ]; then kill -9 $(cat app.pid) || true; fi
-          echo "---- last 80 lines of app.log ----"
-          tail -n 80 app.log || true
-
-      - name: Inject servers into openapi.json (optional)
-        if: ${{ vars.DEV_SERVER_URL != '' || vars.PROD_SERVER_URL != '' }}
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq
-          jq --arg dev "${{ vars.DEV_SERVER_URL }}" --arg prod "${{ vars.PROD_SERVER_URL }}" '
-            .servers = (
-              [ ($prod | select(length>0) | {url: .}),
-                ($dev  | select(length>0) | {url: .})
-              ] | map(select(.url != null))
-            )
-          ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
-
-      - name: Install swaggerhub-cli and show version
-        run: |
-          npm i -g swaggerhub-cli
+          npm install -g swaggerhub-cli
           swaggerhub --version
 
-      - name: Set version/visibility by branch
+      - name: Push OpenAPI spec
         run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            echo "VERSION=1.0.0" >> $GITHUB_ENV
-            echo "VISIBILITY=public" >> $GITHUB_ENV
-          else
-            echo "VERSION=1.0.0-dev" >> $GITHUB_ENV
-            echo "VISIBILITY=private" >> $GITHUB_ENV
-          fi
-
-      - name: Create (or update if exists)
-        run: |
-          echo "Creating ${OWNER}/${{ env.API_NAME }}/${VERSION} (visibility=${VISIBILITY})"
-          if swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
-              -f openapi.json --visibility="${VISIBILITY}"; then
-            echo "Created new API/version."
-          else
-            echo "ℹCreate failed (likely already exists) -> running update..."
-            swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" \
-              -f openapi.json --visibility="${VISIBILITY}"
-            echo "Updated existing API/version."
-          fi
-      - name: Publish version (main only)
-        if: github.ref == 'refs/heads/main'
-        run: swaggerhub api:publish "$OWNER/${{ env.API_NAME }}/$VERSION"
+          echo "Publishing to SwaggerHub: ${OWNER}/${API_NAME}/${VERSION}"
+          swaggerhub api:create "${OWNER}/${API_NAME}/${VERSION}" \
+            -f openapi.json --visibility="${VISIBILITY}" || \
+          swaggerhub api:update "${OWNER}/${API_NAME}/${VERSION}" \
+            -f openapi.json --visibility="${VISIBILITY}"
