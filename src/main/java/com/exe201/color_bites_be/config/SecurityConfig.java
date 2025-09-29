@@ -77,6 +77,8 @@ public class SecurityConfig {
                 "http://172.24.16.1:8081", // React Native on emulator
                 "https://your-vercel-app.vercel.app", // FE production Vercel
                 "https://app.swaggerhub.com", // SwaggerHub Try it out
+                "https://app.swaggerhub.com",
+                "https://api-mumii.namtechie.id.vn",
                 "http://localhost:8080" // Local Spring if calling from SwaggerHub
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
