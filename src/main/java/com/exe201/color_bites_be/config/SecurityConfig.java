@@ -70,7 +70,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
+        config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173", // FE web local dev
                 "http://localhost:8081", // Expo dev server
                 "http://10.0.243.212:8081", // React Native on physical device
@@ -79,7 +79,9 @@ public class SecurityConfig {
                 "https://app.swaggerhub.com", // SwaggerHub Try it out
                 "https://app.swaggerhub.com",
                 "https://api-mumii.namtechie.id.vn",
-                "http://localhost:8080" // Local Spring if calling from SwaggerHub
+                "http://localhost:8080" ,
+                "https://virtserver.swaggerhub.com"
+                // Local Spring if calling from SwaggerHub
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
