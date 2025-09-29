@@ -66,12 +66,23 @@ jobs:
 
       - name: Create API if not exists
         run: |
-          echo "OWNER=$OWNER"
-          swaggerhub api:create "${OWNER}/mumii/${VERSION}" -f openapi.json --visibility=$VISIBILITY || true
+          swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json --visibility=$VISIBILITY || true
 
       - name: Update API spec
         run: |
-          swaggerhub api:update "${OWNER}/mumii/${VERSION}" -f openapi.json
+          swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json
+
+      - name: Inject servers into openapi.json (optional)
+        if: ${{ vars.DEV_SERVER_URL != '' || vars.PROD_SERVER_URL != '' }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          jq --arg dev "${{ vars.DEV_SERVER_URL }}" --arg prod "${{ vars.PROD_SERVER_URL }}" '
+            .servers = (
+              [ ($prod | select(length>0) | {url: .}),
+                ($dev  | select(length>0) | {url: .})
+              ] | map(select(.url != null))
+            )
+          ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
