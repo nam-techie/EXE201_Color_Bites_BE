@@ -63,8 +63,10 @@ jobs:
             )
           ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
 
-      - name: Install swaggerhub-cli (pin latest)
-        run: npm i -g swaggerhub-cli@latest
+      - name: Install swaggerhub-cli v2 and show version
+        run: |
+          npm i -g swaggerhub-cli@2
+          swaggerhub --version
 
       - name: Validate SwaggerHub secrets and show target
         run: |
