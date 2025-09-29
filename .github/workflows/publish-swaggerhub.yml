@@ -66,14 +66,6 @@ jobs:
           npm install -g swaggerhub-cli
           swaggerhub --version
 
-      # Diagnose: xem OWNER có dư khoảng trắng / sai tên không
-      - name: Debug OWNER and try listing org
-        run: |
-          echo "OWNER=>>${OWNER}<<"
-          echo "len=$(echo -n "${OWNER}" | wc -c)"
-          # đúng lệnh: apis:list
-          swaggerhub apis:list "${OWNER}" --limit 1 || (echo "Access to OWNER failed. Check Org API key & OWNER." && exit 1)
-
       - name: Create or Update on SwaggerHub
         run: |
           echo "Publishing ${OWNER}/${API_NAME}/${VERSION} (visibility=${VISIBILITY})"
@@ -84,9 +76,3 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         run: |
           swaggerhub api:publish "${OWNER}/${API_NAME}/${VERSION}"
-
-      - name: "Dry-run: try to create and show full error"
-        shell: bash
-        run: |
-          set -x
-          swaggerhub api:create "${OWNER}/${API_NAME}/${VERSION}" -f openapi.json --visibility="${VISIBILITY}" --debug || true
