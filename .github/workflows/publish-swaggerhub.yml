@@ -11,8 +11,8 @@ jobs:
       APP_DIR: .
       APP_PORT: 8080
       API_NAME: mumii
-      OWNER: ${{ secrets.SWAGGERHUB_OWNER }}            # ví dụ: Namtechie (đúng y tên org)
-      SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}  # **Organization API Key**
+      OWNER: ${{ secrets.SWAGGERHUB_OWNER }} # ví dụ: Namtechie (đúng y tên org)
+      SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }} # **Organization API Key**
 
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Build app (skip tests)
         working-directory: ${{ env.APP_DIR }}
@@ -74,7 +74,6 @@ jobs:
           # đúng lệnh: apis:list
           swaggerhub apis:list "${OWNER}" --limit 1 || (echo "Access to OWNER failed. Check Org API key & OWNER." && exit 1)
 
-
       - name: Create or Update on SwaggerHub
         run: |
           echo "Publishing ${OWNER}/${API_NAME}/${VERSION} (visibility=${VISIBILITY})"
@@ -82,11 +81,12 @@ jobs:
           swaggerhub api:update "${OWNER}/${API_NAME}/${VERSION}" -f openapi.json --visibility="${VISIBILITY}"
 
       - name: Publish version (main only)
-        if: github.ref == 'refs/heads/main'
-        run: swaggerhub api:publish "${OWNER}/${API_NAME}/${VERSION}"
-        
-      - name: Dry-run: try to create and show full error
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          swaggerhub api:publish "${OWNER}/${API_NAME}/${VERSION}"
+
+      - name: "Dry-run: try to create and show full error"
+        shell: bash
         run: |
           set -x
           swaggerhub api:create "${OWNER}/${API_NAME}/${VERSION}" -f openapi.json --visibility="${VISIBILITY}" --debug || true
-
