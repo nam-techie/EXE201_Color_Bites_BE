@@ -65,10 +65,13 @@ jobs:
           fi
 
       - name: Create API if not exists
-        run: swaggerhub api:create "$OWNER/${{ env.API_NAME }}/$VERSION" -f openapi.json --visibility=$VISIBILITY || true
+        run: |
+          echo "OWNER=$OWNER"
+          swaggerhub api:create "${OWNER}/mumii/${VERSION}" -f openapi.json --visibility=$VISIBILITY || true
 
       - name: Update API spec
-        run: swaggerhub api:update "$OWNER/${{ env.API_NAME }}/$VERSION" -f openapi.json
+        run: |
+          swaggerhub api:update "${OWNER}/mumii/${VERSION}" -f openapi.json
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
