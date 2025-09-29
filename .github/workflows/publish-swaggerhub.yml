@@ -22,8 +22,9 @@ jobs:
 
       - name: Push OpenAPI spec
         run: |
-          echo "Publishing to SwaggerHub: ${OWNER}/${API_NAME}/${VERSION}"
           swaggerhub api:create "${OWNER}/${API_NAME}/${VERSION}" \
-            -f openapi.json --visibility="${VISIBILITY}" || \
+            -f openapi.json || \
           swaggerhub api:update "${OWNER}/${API_NAME}/${VERSION}" \
-            -f openapi.json --visibility="${VISIBILITY}"
+            -f openapi.json
+
+
