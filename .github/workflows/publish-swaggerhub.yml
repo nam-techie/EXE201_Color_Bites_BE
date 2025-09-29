@@ -8,12 +8,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      # cấu hình dự án
       APP_DIR: .
       APP_PORT: 8080
       API_NAME: mumii
-      OWNER: ${{ secrets.SWAGGERHUB_OWNER }}
-      SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}
+      OWNER: ${{ secrets.SWAGGERHUB_OWNER }}            # ví dụ: Namtechie (đúng y tên org)
+      SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }}  # **Organization API Key**
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +51,6 @@ jobs:
         working-directory: ${{ env.APP_DIR }}
         run: |
           if [ -f app.pid ]; then kill -9 $(cat app.pid) || true; fi
-          echo '---- last 120 lines of app.log ----'
           tail -n 120 app.log || true
 
       - name: Set visibility by branch
@@ -67,6 +65,14 @@ jobs:
         run: |
           npm install -g swaggerhub-cli
           swaggerhub --version
+
+      # Diagnose: xem OWNER có dư khoảng trắng / sai tên không
+      - name: Debug OWNER and try listing org
+        run: |
+          echo "OWNER=>>${OWNER}<<"
+          echo "len=$(echo -n "${OWNER}" | wc -c)"
+          # thử list để xác nhận key hiện tại có quyền với OWNER
+          swaggerhub api:list "${OWNER}" --limit 1 || (echo "Access to OWNER failed. Check Org API key & OWNER." && exit 1)
 
       - name: Create or Update on SwaggerHub
         run: |
