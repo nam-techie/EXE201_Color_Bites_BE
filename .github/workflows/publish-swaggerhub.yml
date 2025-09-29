@@ -51,8 +51,34 @@ jobs:
           echo "---- last 80 lines of app.log ----"
           tail -n 80 app.log || true
 
+      - name: Inject servers into openapi.json (optional)
+        if: ${{ vars.DEV_SERVER_URL != '' || vars.PROD_SERVER_URL != '' }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          jq --arg dev "${{ vars.DEV_SERVER_URL }}" --arg prod "${{ vars.PROD_SERVER_URL }}" '
+            .servers = (
+              [ ($prod | select(length>0) | {url: .}),
+                ($dev  | select(length>0) | {url: .})
+              ] | map(select(.url != null))
+            )
+          ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
+
       - name: Install swaggerhub-cli
         run: npm i -g swaggerhub-cli
+
+      - name: Validate SwaggerHub secrets and show target
+        run: |
+          if [ -z "${OWNER}" ] || [ -z "${SWAGGERHUB_API_KEY}" ]; then
+            echo "OWNER or SWAGGERHUB_API_KEY is not set. Please add repo secrets SWAGGERHUB_OWNER and SWAGGERHUB_API_KEY." >&2
+            exit 1
+          fi
+          echo "Target: ${OWNER}/${{ env.API_NAME }} @ ${VERSION} (visibility=${VISIBILITY})"
+
+      - name: Who am I on SwaggerHub
+        run: swaggerhub account:whoami
+
+      - name: List APIs under OWNER (for debugging)
+        run: swaggerhub api:list "${OWNER}" || true
 
       - name: Set version/visibility by branch
         run: |
@@ -66,23 +92,11 @@ jobs:
 
       - name: Create API if not exists
         run: |
-          swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json --visibility=$VISIBILITY || true
+          swaggerhub api:create "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json --visibility=$VISIBILITY
 
       - name: Update API spec
         run: |
           swaggerhub api:update "${OWNER}/${{ env.API_NAME }}/${VERSION}" -f openapi.json
-
-      - name: Inject servers into openapi.json (optional)
-        if: ${{ vars.DEV_SERVER_URL != '' || vars.PROD_SERVER_URL != '' }}
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq
-          jq --arg dev "${{ vars.DEV_SERVER_URL }}" --arg prod "${{ vars.PROD_SERVER_URL }}" '
-            .servers = (
-              [ ($prod | select(length>0) | {url: .}),
-                ($dev  | select(length>0) | {url: .})
-              ] | map(select(.url != null))
-            )
-          ' openapi.json > openapi.tmp && mv openapi.tmp openapi.json
 
       - name: Publish version (main only)
         if: github.ref == 'refs/heads/main'
