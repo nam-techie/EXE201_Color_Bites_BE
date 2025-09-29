@@ -11,7 +11,7 @@ jobs:
       APP_DIR: .
       APP_PORT: 8080
       API_NAME: mumii
-      SWAGGERHUB_OWNER: ${{ secrets.SWAGGERHUB_OWNER }} # ví dụ: Namtechie (đúng y tên org)
+      OWNER: ${{ secrets.SWAGGERHUB_OWNER }} # ví dụ: Namtechie (đúng y tên org)
       SWAGGERHUB_API_KEY: ${{ secrets.SWAGGERHUB_API_KEY }} # **Organization API Key**
 
     steps:
