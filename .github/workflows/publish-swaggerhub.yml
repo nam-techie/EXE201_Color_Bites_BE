@@ -10,7 +10,7 @@ jobs:
     env:
       # 👇 Sửa 3 dòng dưới cho đúng dự án của bạn
       APP_DIR: .                  # thư mục chứa project Spring ('.' nếu ở root)
-      API_NAME: color-bites       # tên API trên SwaggerHub (vd: color-bites)
+      API_NAME: mumii       # tên API trên SwaggerHub (vd: color-bites)
       APP_PORT: 8080              # cổng app chạy local trong CI (Spring sẽ nghe ở đây)
 
       OWNER: ${{ secrets.SWAGGERHUB_OWNER }}         # VD: Namtechie (org/user)
