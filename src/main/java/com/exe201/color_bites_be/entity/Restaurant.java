@@ -1,26 +1,22 @@
 package com.exe201.color_bites_be.entity;
 
+import lombok.*;
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
-import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Document(collection = "restaurants")
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter @Setter
+@AllArgsConstructor @NoArgsConstructor
 public class Restaurant {
+
     @Id
-    private String id;
+    private String id;                 // _id
 
     @Field("name")
     private String name;
@@ -28,40 +24,28 @@ public class Restaurant {
     @Field("address")
     private String address;
 
-    @Field("longitude")
-    private Double longitude;
+    @Field("district")
+    private String district;             // VD: "Bình Chánh"
+
+    @Field("type")
+    private String type;                 // VD: "Gà"
+
+    @Field("price")
+    private String price;                // VD: "15.000 - 45.000" (range -> String)
 
     @Field("latitude")
     private Double latitude;
 
-    @Field("description")
-    private String description;
-
-    @Field("type")
-    private String type;
-
-    // Removed mood_tags - will be handled by RestaurantTags entity
-
-    @Field("region")
-    private String region;
-
-    // Removed image_urls - will be handled by RestaurantImages entity
-
-    @Field("avg_price")
-    private Double avgPrice;
-
-    @Field("rating")
-    private Double rating;
-
-    @Field("featured")
-    private Boolean featured;
+    @Field("longitude")
+    private Double longitude;
 
     @Field("created_by")
-    private String createdBy;
-
-    @Field("created_at")
-    private LocalDateTime createdAt;
+    private String createdBy;             // lưu UUID user (ref tới accounts)
 
     @Field("is_deleted")
     private Boolean isDeleted = false;
+
+    @Field("created_at")
+    @CreatedDate
+    private LocalDateTime createdAt;           // map ISODate trong Mongo
 }

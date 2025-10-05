@@ -46,8 +46,7 @@ public class RestaurantController {
      */
     @GetMapping("/read/{restaurantId}")
     public ResponseDto<RestaurantResponse> readRestaurantById(
-            @PathVariable String restaurantId,
-            Authentication authentication) {
+            @PathVariable String restaurantId) {
 
         try {
             RestaurantResponse response = restaurantService.readRestaurantById(restaurantId);
@@ -66,17 +65,12 @@ public class RestaurantController {
     @GetMapping("/list")
     public ResponseDto<Page<RestaurantResponse>> readAllRestaurants(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
+            
 
-            Page<RestaurantResponse> restaurants = restaurantService.readAllRestaurants(page, size, currentAccountId);
+            Page<RestaurantResponse> restaurants = restaurantService.readAllRestaurants(page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách nhà hàng đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -91,17 +85,11 @@ public class RestaurantController {
     public ResponseDto<Page<RestaurantResponse>> searchRestaurants(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
 
-            Page<RestaurantResponse> restaurants = restaurantService.searchRestaurants(keyword, page, size, currentAccountId);
+            Page<RestaurantResponse> restaurants = restaurantService.searchRestaurants(keyword, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Kết quả tìm kiếm nhà hàng đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -116,17 +104,12 @@ public class RestaurantController {
     public ResponseDto<Page<RestaurantResponse>> readRestaurantsByRegion(
             @PathVariable String region,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
+            
 
-            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByRegion(region, page, size, currentAccountId);
+            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByRegion(region, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng theo khu vực đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -141,17 +124,12 @@ public class RestaurantController {
     public ResponseDto<Page<RestaurantResponse>> readRestaurantsByMood(
             @PathVariable String mood,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int size) {
 
         try {
-            String currentAccountId = null;
-            if (authentication != null) {
-                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-                currentAccountId = userPrincipal.getAccount().getId();
-            }
+            
 
-            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByMood(mood, page, size, currentAccountId);
+            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByMood(mood, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng theo mood đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -166,8 +144,7 @@ public class RestaurantController {
     public ResponseDto<RestaurantResponse> editRestaurant(
             @PathVariable String restaurantId,
             @Valid @RequestBody UpdateRestaurantRequest request,
-            BindingResult bindingResult,
-            Authentication authentication) {
+            BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             StringBuilder errors = new StringBuilder();
@@ -178,10 +155,8 @@ public class RestaurantController {
         }
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
 
-            RestaurantResponse response = restaurantService.editRestaurant(restaurantId, accountId, request);
+            RestaurantResponse response = restaurantService.editRestaurant(restaurantId, request);
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng đã được cập nhật thành công", response);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
@@ -198,14 +173,10 @@ public class RestaurantController {
      */
     @DeleteMapping("/delete/{restaurantId}")
     public ResponseDto<Void> deleteRestaurant(
-            @PathVariable String restaurantId,
-            Authentication authentication) {
+            @PathVariable String restaurantId) {
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            String accountId = userPrincipal.getAccount().getId();
-
-            restaurantService.deleteRestaurant(restaurantId, accountId);
+            restaurantService.deleteRestaurant(restaurantId);
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng đã được xóa thành công", null);
         } catch (NotFoundException e) {
             return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
