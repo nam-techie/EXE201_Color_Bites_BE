@@ -5,7 +5,6 @@ import com.exe201.color_bites_be.dto.request.UpdateRestaurantRequest;
 import com.exe201.color_bites_be.dto.response.RestaurantResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Restaurant;
-import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.repository.AccountRepository;
@@ -97,16 +96,28 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Override
     public Page<RestaurantResponse> searchRestaurants(String keyword, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Restaurant> restaurants = restaurantRepository.findByKeywordAndNotDeleted(keyword, pageable);
+        // PageRequest: Spring dùng index 0-based → nếu FE truyền 1 thì trừ đi 1
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(Sort.Order.desc("createdAt")));
 
-        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant));
+        // Chuyển keyword -> regex an toàn và dạng 'contains'
+        String regex = toContainsRegex(keyword);
+
+        Page<Restaurant> restaurants =
+                restaurantRepository.findByKeywordAndNotDeleted(regex, pageable);
+
+        return restaurants.map(this::buildRestaurantResponse);
+    }
+
+    private String toContainsRegex(String keyword) {
+        if (keyword == null || keyword.isBlank()) return ".*"; // match-all
+        return ".*" + java.util.regex.Pattern.quote(keyword.trim()) + ".*";
     }
 
     @Override
-    public Page<RestaurantResponse> readRestaurantsByRegion(String region, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Restaurant> restaurants = restaurantRepository.findByRegionAndNotDeleted(region, pageable);
+    public Page<RestaurantResponse> readRestaurantsByDistrict(String district, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("district").ascending());
+        Page<Restaurant> restaurants = restaurantRepository.searchByDistrict(district, pageable);
 
         return restaurants.map(restaurant -> buildRestaurantResponse(restaurant));
     }

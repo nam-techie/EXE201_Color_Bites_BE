@@ -35,7 +35,7 @@ public interface IRestaurantService {
     /**
      * Lấy nhà hàng theo khu vực
      */
-    Page<RestaurantResponse> readRestaurantsByRegion(String region, int page, int size);
+    Page<RestaurantResponse> readRestaurantsByDistrict(String district, int page, int size);
     
     /**
      * Lấy nhà hàng theo mood

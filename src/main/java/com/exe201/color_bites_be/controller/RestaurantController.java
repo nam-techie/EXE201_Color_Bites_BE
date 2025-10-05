@@ -83,7 +83,7 @@ public class RestaurantController {
      */
     @GetMapping("/search")
     public ResponseDto<Page<RestaurantResponse>> searchRestaurants(
-            @RequestParam String keyword,
+            @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
@@ -100,16 +100,14 @@ public class RestaurantController {
     /**
      * Lấy nhà hàng theo khu vực
      */
-    @GetMapping("/read/region/{region}")
-    public ResponseDto<Page<RestaurantResponse>> readRestaurantsByRegion(
-            @PathVariable String region,
+    @GetMapping("/read/by-district/{district}")
+    public ResponseDto<Page<RestaurantResponse>> readRestaurantsByDistrict(
+            @PathVariable String district,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         try {
-            
-
-            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByRegion(region, page, size);
+            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByDistrict(district, page, size);
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng theo khu vực đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
