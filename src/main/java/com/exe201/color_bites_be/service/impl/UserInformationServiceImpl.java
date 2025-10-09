@@ -1,6 +1,7 @@
 package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.UserInformationRequest;
+import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
@@ -9,12 +10,15 @@ import com.exe201.color_bites_be.enums.Gender;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
+import com.exe201.color_bites_be.service.ICloudinaryService;
 import com.exe201.color_bites_be.service.IUserInformationService;
+import com.exe201.color_bites_be.util.FileUpLoadUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -28,6 +32,8 @@ public class UserInformationServiceImpl implements IUserInformationService {
     @Autowired
     private UserInformationRepository userInformationRepository;
 
+    @Autowired
+    ICloudinaryService cloudinaryService;
 
     @Autowired
     private ModelMapper modelMapper;
@@ -90,5 +96,20 @@ public class UserInformationServiceImpl implements IUserInformationService {
     @Transactional
     public void downgradeToFree(String accountId) {
         upgradeSubscriptionPlan(accountId, SubcriptionPlan.FREE);
+    }
+
+    @Override
+    @Transactional
+    public String uploadAvatar(String id, final MultipartFile file) {
+        final UserInformation userInformation = userInformationRepository.findByAccountId(id);
+        if (userInformation == null) {
+            throw new NotFoundException("Người dùng không tồn tại.");
+        }
+        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.IMAGE_PATTERN);
+        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
+        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadFile(file, fileName);
+        userInformation.setAvatarUrl(cloudinaryResponse.getUrl());
+        userInformationRepository.save(userInformation);
+        return userInformation.getAvatarUrl();
     }
 }

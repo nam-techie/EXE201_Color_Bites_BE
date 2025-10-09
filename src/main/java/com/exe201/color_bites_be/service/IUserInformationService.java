@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.service;
 import com.exe201.color_bites_be.dto.request.UserInformationRequest;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Interface định nghĩa các phương thức quản lý thông tin người dùng
@@ -35,4 +36,6 @@ public interface IUserInformationService {
      * @param accountId ID của tài khoản
      */
     void downgradeToFree(String accountId);
+
+    String uploadAvatar(String id, MultipartFile file);
 }

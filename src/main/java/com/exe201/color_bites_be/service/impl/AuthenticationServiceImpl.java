@@ -56,9 +56,6 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
     private ITokenService tokenService;
 
     @Autowired
-    ICloudinaryService cloudinaryService;
-
-    @Autowired
     private AuthenticationManager authenticationManager;
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
@@ -197,18 +194,5 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
         return accountRepository.save(existingAccount);
     }
 
-    @Override
-    @Transactional
-    public String uploadImage(String id, final MultipartFile file) {
-        final UserInformation userInformation = userInformationRepository.findByAccountId(id);
-        if (userInformation == null) {
-            throw new NotFoundException("Người dùng không tồn tại.");
-        }
-        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.IMAGE_PATTERN);
-        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
-        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadFile(file, fileName);
-        userInformation.setAvatarUrl(cloudinaryResponse.getUrl());
-        userInformationRepository.save(userInformation);
-        return userInformation.getAvatarUrl();
-    }
+
 }

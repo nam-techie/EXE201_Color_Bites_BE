@@ -4,6 +4,9 @@ import com.exe201.color_bites_be.dto.request.CreatePostRequest;
 import com.exe201.color_bites_be.dto.request.UpdatePostRequest;
 import com.exe201.color_bites_be.dto.response.PostResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * Interface định nghĩa các phương thức quản lý bài viết
@@ -12,7 +15,7 @@ import org.springframework.data.domain.Page;
 public interface IPostService {
     
 
-    PostResponse createPost(CreatePostRequest request);
+    PostResponse createPost(CreatePostRequest request, List<MultipartFile> files);
     
 
     PostResponse readPostById(String postId);
