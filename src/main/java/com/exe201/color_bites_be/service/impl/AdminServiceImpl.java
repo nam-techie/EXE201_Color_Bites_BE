@@ -269,12 +269,7 @@ public class AdminServiceImpl implements IAdminService {
         response.setAddress(restaurant.getAddress());
         response.setLongitude(restaurant.getLongitude());
         response.setLatitude(restaurant.getLatitude());
-        response.setDescription(restaurant.getDescription());
         response.setType(restaurant.getType());
-        response.setRegion(restaurant.getRegion());
-        response.setAvgPrice(restaurant.getAvgPrice());
-        response.setRating(restaurant.getRating());
-        response.setFeatured(restaurant.getFeatured());
         response.setCreatedBy(restaurant.getCreatedBy());
         response.setCreatedAt(restaurant.getCreatedAt());
         response.setIsDeleted(restaurant.getIsDeleted());

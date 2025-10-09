@@ -5,7 +5,6 @@ import com.exe201.color_bites_be.dto.request.UpdateRestaurantRequest;
 import com.exe201.color_bites_be.dto.response.RestaurantResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Restaurant;
-import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.repository.AccountRepository;
@@ -68,7 +67,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
             // Lưu restaurant
             Restaurant savedRestaurant = restaurantRepository.save(restaurant);
 
-            return buildRestaurantResponse(savedRestaurant, account.getId());
+            return buildRestaurantResponse(savedRestaurant);
 
         } catch (NotFoundException e) {
             throw e;
@@ -83,45 +82,57 @@ public class RestaurantServiceImpl implements IRestaurantService {
         Restaurant restaurant = restaurantRepository.findByIdAndNotDeleted(restaurantId)
                 .orElseThrow(() -> new NotFoundException("Nhà hàng không tồn tại"));
 
-        return buildRestaurantResponse(restaurant, account.getId());
+        return buildRestaurantResponse(restaurant);
     }
 
     @Override
-    public Page<RestaurantResponse> readAllRestaurants(int page, int size, String currentAccountId) {
+    public Page<RestaurantResponse> readAllRestaurants(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         // TODO: Add findAllByNotDeleted method to RestaurantRepository
         Page<Restaurant> restaurants = restaurantRepository.findAll(pageable);
 
-        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant, currentAccountId));
+        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant));
     }
 
     @Override
-    public Page<RestaurantResponse> searchRestaurants(String keyword, int page, int size, String currentAccountId) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Restaurant> restaurants = restaurantRepository.findByKeywordAndNotDeleted(keyword, pageable);
+    public Page<RestaurantResponse> searchRestaurants(String keyword, int page, int size) {
+        // PageRequest: Spring dùng index 0-based → nếu FE truyền 1 thì trừ đi 1
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(Sort.Order.desc("createdAt")));
 
-        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant, currentAccountId));
+        // Chuyển keyword -> regex an toàn và dạng 'contains'
+        String regex = toContainsRegex(keyword);
+
+        Page<Restaurant> restaurants =
+                restaurantRepository.findByKeywordAndNotDeleted(regex, pageable);
+
+        return restaurants.map(this::buildRestaurantResponse);
+    }
+
+    private String toContainsRegex(String keyword) {
+        if (keyword == null || keyword.isBlank()) return ".*"; // match-all
+        return ".*" + java.util.regex.Pattern.quote(keyword.trim()) + ".*";
     }
 
     @Override
-    public Page<RestaurantResponse> readRestaurantsByRegion(String region, int page, int size, String currentAccountId) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Restaurant> restaurants = restaurantRepository.findByRegionAndNotDeleted(region, pageable);
+    public Page<RestaurantResponse> readRestaurantsByDistrict(String district, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("district").ascending());
+        Page<Restaurant> restaurants = restaurantRepository.searchByDistrict(district, pageable);
 
-        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant, currentAccountId));
+        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant));
     }
 
     @Override
-    public Page<RestaurantResponse> readRestaurantsByMood(String mood, int page, int size, String currentAccountId) {
+    public Page<RestaurantResponse> readRestaurantsByMood(String mood, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         // TODO: Add findByMoodAndNotDeleted method to RestaurantRepository
         Page<Restaurant> restaurants = restaurantRepository.findAll(pageable);
 
-        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant, currentAccountId));
+        return restaurants.map(restaurant -> buildRestaurantResponse(restaurant));
     }
 
     @Override
-    public RestaurantResponse editRestaurant(String restaurantId, String accountId, UpdateRestaurantRequest request) {
+    public RestaurantResponse editRestaurant(String restaurantId, UpdateRestaurantRequest request) {
         Restaurant restaurant = restaurantRepository.findByIdAndNotDeleted(restaurantId)
                 .orElseThrow(() -> new NotFoundException("Nhà hàng không tồn tại"));
 
@@ -137,9 +148,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
             if (request.getName() != null) {
                 restaurant.setName(request.getName());
             }
-            if (request.getDescription() != null) {
-                restaurant.setDescription(request.getDescription());
-            }
+
             if (request.getAddress() != null) {
                 restaurant.setAddress(request.getAddress());
             }
@@ -179,7 +188,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
             // restaurant.setUpdatedAt(LocalDateTime.now());
 
             Restaurant updatedRestaurant = restaurantRepository.save(restaurant);
-            return buildRestaurantResponse(updatedRestaurant, accountId);
+            return buildRestaurantResponse(updatedRestaurant);
 
         } catch (Exception e) {
             throw new FuncErrorException("Lỗi khi cập nhật nhà hàng: " + e.getMessage());
@@ -187,7 +196,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
     }
 
     @Override
-    public void deleteRestaurant(String restaurantId, String accountId) {
+    public void deleteRestaurant(String restaurantId) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Restaurant restaurant = restaurantRepository.findByIdAndNotDeleted(restaurantId)
                 .orElseThrow(() -> new NotFoundException("Nhà hàng không tồn tại"));
 
@@ -213,9 +223,9 @@ public class RestaurantServiceImpl implements IRestaurantService {
     /**
      * Xây dựng RestaurantResponse từ Restaurant entity
      */
-    private RestaurantResponse buildRestaurantResponse(Restaurant restaurant, String currentAccountId) {
+    private RestaurantResponse buildRestaurantResponse(Restaurant restaurant) {
         RestaurantResponse response = modelMapper.map(restaurant, RestaurantResponse.class);
-
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // TODO: Add getAccountId method to Restaurant entity and setOwnerName/setOwnerAvatar to RestaurantResponse
         /*
         UserInformation userInfo = userInformationRepository.findByAccountId(restaurant.getAccountId());
@@ -229,17 +239,17 @@ public class RestaurantServiceImpl implements IRestaurantService {
         */
 
         // Kiểm tra đã favorite chưa - sử dụng repository trực tiếp để tránh circular dependency
-        if (currentAccountId != null) {
-            boolean isFavorited = favoriteRepository.existsByAccountIdAndRestaurantId(currentAccountId, restaurant.getId());
-            response.setIsFavorited(isFavorited);
-        } else {
-            response.setIsFavorited(false);
-        }
-
-        // Set favorite count - sử dụng repository trực tiếp
-        long favoriteCount = favoriteRepository.countByRestaurantId(restaurant.getId());
-        // TODO: Fix setFavoriteCount parameter type
-        response.setFavoriteCount(favoriteCount);
+//        if (account.getId() != null) {
+//            boolean isFavorited = favoriteRepository.existsByAccountIdAndRestaurantId(account.getId(), restaurant.getId());
+//            response.setIsFavorited(isFavorited);
+//        } else {
+//            response.setIsFavorited(false);
+//        }
+//
+//        // Set favorite count - sử dụng repository trực tiếp
+//        long favoriteCount = favoriteRepository.countByRestaurantId(restaurant.getId());
+//        // TODO: Fix setFavoriteCount parameter type
+//        response.setFavoriteCount(favoriteCount);
 
         return response;
     }

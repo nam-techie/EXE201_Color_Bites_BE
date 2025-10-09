@@ -19,21 +19,22 @@ public interface RestaurantRepository extends MongoRepository<Restaurant, String
     // Tìm tất cả nhà hàng chưa bị xóa
     @Query("{'isDeleted': {$ne: true}}")
     Page<Restaurant> findAllActiveRestaurants(Pageable pageable);
-    
-    // Tìm nhà hàng theo từ khóa trong tên hoặc mô tả
-    @Query("{'$and': [" +
-           "{'isDeleted': {$ne: true}}, " +
-           "{'$or': [" +
-           "{'name': {$regex: ?0, $options: 'i'}}, " +
-           "{'description': {$regex: ?0, $options: 'i'}}" +
-           "]}" +
-           "]}")
+
+    // Tìm theo keyword (chứa, không phân biệt hoa/thường) và chưa bị xóa mềm
+    @Query(value = "{ 'is_deleted': { $ne: true }, $or: [ " +
+            "{ 'name':    { $regex: ?0, $options: 'i' } }, " +
+            "{ 'address': { $regex: ?0, $options: 'i' } }, " +
+            "{ 'district':{ $regex: ?0, $options: 'i' } }, " +
+            "{ 'type':    { $regex: ?0, $options: 'i' } }, " +
+            "{ 'price':   { $regex: ?0, $options: 'i' } } " +
+            "] }")
     Page<Restaurant> findByKeywordAndNotDeleted(String keyword, Pageable pageable);
-    
-    // Tìm nhà hàng theo khu vực
-    @Query("{'region': ?0, 'isDeleted': {$ne: true}}")
-    Page<Restaurant> findByRegionAndNotDeleted(String region, Pageable pageable);
-    
+
+
+    @Query(value = "{ 'district': { $regex: ?0, $options: 'i' }, 'is_deleted': { $ne: true } }")
+    Page<Restaurant> searchByDistrict(String district, Pageable pageable);
+
+
     // Tìm nhà hàng theo loại
     @Query("{'type': ?0, 'isDeleted': {$ne: true}}")
     Page<Restaurant> findByTypeAndNotDeleted(String type, Pageable pageable);
