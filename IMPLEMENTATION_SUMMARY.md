@@ -27,7 +27,7 @@ All tasks from the plan have been successfully implemented and tested.
 
 **Action Required:**
 ```bash
-mongosh "mongodb+srv://namdpse180259:nam180259@cluster0.xssff0p.mongodb.net/color_bites_db" migration_add_location_field.js
+mongosh "
 ```
 
 ---
