@@ -5,6 +5,8 @@ import com.exe201.color_bites_be.dto.request.UpdateRestaurantRequest;
 import com.exe201.color_bites_be.dto.response.RestaurantResponse;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 
 /**
  * Interface định nghĩa các phương thức quản lý nhà hàng
@@ -33,9 +35,24 @@ public interface IRestaurantService {
     Page<RestaurantResponse> searchRestaurants(String keyword, int page, int size);
     
     /**
+     * Tìm kiếm nhà hàng theo từ khóa với filter district
+     */
+    Page<RestaurantResponse> searchRestaurants(String keyword, String district, int page, int size);
+    
+    /**
      * Lấy nhà hàng theo khu vực
      */
     Page<RestaurantResponse> readRestaurantsByDistrict(String district, int page, int size);
+    
+    /**
+     * Tìm nhà hàng gần vị trí
+     */
+    List<RestaurantResponse> findNearby(double lat, double lon, double radiusKm, int limit);
+    
+    /**
+     * Tìm nhà hàng trong bounding box
+     */
+    List<RestaurantResponse> findInBounds(double minLat, double maxLat, double minLon, double maxLon, int limit);
     
     /**
      * Lấy nhà hàng theo mood

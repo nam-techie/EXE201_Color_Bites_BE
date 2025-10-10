@@ -5,6 +5,7 @@ import com.exe201.color_bites_be.dto.request.UpdateRestaurantRequest;
 import com.exe201.color_bites_be.dto.response.RestaurantResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Restaurant;
+import com.exe201.color_bites_be.exception.BadRequestException;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.repository.AccountRepository;
@@ -18,9 +19,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation của IRestaurantService
@@ -52,17 +56,12 @@ public class RestaurantServiceImpl implements IRestaurantService {
     public RestaurantResponse createRestaurant(CreateRestaurantRequest request) {
         try {
             Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            // Kiểm tra account tồn tại
+            
             // Tạo restaurant entity
             Restaurant restaurant = modelMapper.map(request, Restaurant.class);
-            // TODO: Add accountId field to Restaurant entity
-            // restaurant.setAccountId(accountId);
+            restaurant.setCreatedBy(account.getId()); // Lưu user đã tạo
             restaurant.setCreatedAt(LocalDateTime.now());
-            // TODO: Add updatedAt field to Restaurant entity
-            // restaurant.setUpdatedAt(LocalDateTime.now());
             restaurant.setIsDeleted(false);
-            // TODO: Add favoriteCount field to Restaurant entity
-            // restaurant.setFavoriteCount(0);
 
             // Lưu restaurant
             Restaurant savedRestaurant = restaurantRepository.save(restaurant);
@@ -78,7 +77,6 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Override
     public RestaurantResponse readRestaurantById(String restaurantId) {
-        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Restaurant restaurant = restaurantRepository.findByIdAndNotDeleted(restaurantId)
                 .orElseThrow(() -> new NotFoundException("Nhà hàng không tồn tại"));
 
@@ -109,6 +107,23 @@ public class RestaurantServiceImpl implements IRestaurantService {
         return restaurants.map(this::buildRestaurantResponse);
     }
 
+    @Override
+    public Page<RestaurantResponse> searchRestaurants(String keyword, String district, int page, int size) {
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by(Sort.Order.desc("createdAt")));
+
+        String regex = toContainsRegex(keyword);
+
+        Page<Restaurant> restaurants;
+        if (district != null && !district.trim().isEmpty()) {
+            restaurants = restaurantRepository.findByKeywordAndDistrictAndNotDeleted(regex, district, pageable);
+        } else {
+            restaurants = restaurantRepository.findByKeywordAndNotDeleted(regex, pageable);
+        }
+
+        return restaurants.map(this::buildRestaurantResponse);
+    }
+
     private String toContainsRegex(String keyword) {
         if (keyword == null || keyword.isBlank()) return ".*"; // match-all
         return ".*" + java.util.regex.Pattern.quote(keyword.trim()) + ".*";
@@ -116,10 +131,82 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Override
     public Page<RestaurantResponse> readRestaurantsByDistrict(String district, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("district").ascending());
+        int pageIndex = Math.max(0, page - 1);
+        Pageable pageable = PageRequest.of(pageIndex, size, Sort.by("name").ascending());
         Page<Restaurant> restaurants = restaurantRepository.searchByDistrict(district, pageable);
 
         return restaurants.map(restaurant -> buildRestaurantResponse(restaurant));
+    }
+
+    @Override
+    public List<RestaurantResponse> findNearby(double lat, double lon, double radiusKm, int limit) {
+        try {
+            // Validate parameters
+            if (lat < -90 || lat > 90) {
+                throw new BadRequestException("Vĩ độ phải trong khoảng -90 đến 90");
+            }
+            if (lon < -180 || lon > 180) {
+                throw new BadRequestException("Kinh độ phải trong khoảng -180 đến 180");
+            }
+
+            // Clamp radiusKm and limit
+            radiusKm = Math.max(0.2, Math.min(20, radiusKm));
+            limit = Math.max(1, Math.min(100, limit));
+
+            // Convert km to meters
+            double radiusMeters = radiusKm * 1000;
+
+            // Create GeoJsonPoint (longitude, latitude order for GeoJSON)
+            GeoJsonPoint location = new GeoJsonPoint(lon, lat);
+
+            // Query database
+            List<Restaurant> restaurants = restaurantRepository.findNearbyByLocation(location, radiusMeters);
+
+            // Limit results
+            return restaurants.stream()
+                    .limit(limit)
+                    .map(this::buildRestaurantResponse)
+                    .collect(Collectors.toList());
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FuncErrorException("Lỗi khi tìm nhà hàng gần đây: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<RestaurantResponse> findInBounds(double minLat, double maxLat, double minLon, double maxLon, int limit) {
+        // Validate parameters
+        if (minLat < -90 || minLat > 90 || maxLat < -90 || maxLat > 90) {
+            throw new BadRequestException("Vĩ độ phải trong khoảng -90 đến 90");
+        }
+        if (minLon < -180 || minLon > 180 || maxLon < -180 || maxLon > 180) {
+            throw new BadRequestException("Kinh độ phải trong khoảng -180 đến 180");
+        }
+
+        // Normalize bounds (swap if min > max)
+        if (minLat > maxLat) {
+            double temp = minLat;
+            minLat = maxLat;
+            maxLat = temp;
+        }
+        if (minLon > maxLon) {
+            double temp = minLon;
+            minLon = maxLon;
+            maxLon = temp;
+        }
+
+        // Clamp limit
+        limit = Math.max(1, Math.min(100, limit));
+
+        // Query database
+        List<Restaurant> restaurants = restaurantRepository.findInBounds(minLon, minLat, maxLon, maxLat);
+
+        // Limit results
+        return restaurants.stream()
+                .limit(limit)
+                .map(this::buildRestaurantResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -201,18 +288,14 @@ public class RestaurantServiceImpl implements IRestaurantService {
         Restaurant restaurant = restaurantRepository.findByIdAndNotDeleted(restaurantId)
                 .orElseThrow(() -> new NotFoundException("Nhà hàng không tồn tại"));
 
-        // TODO: Add getAccountId method to Restaurant entity
-        /*
-        if (!restaurant.getAccountId().equals(accountId)) {
+        // Kiểm tra quyền sở hữu
+        if (restaurant.getCreatedBy() != null && !restaurant.getCreatedBy().equals(account.getId())) {
             throw new FuncErrorException("Bạn không có quyền xóa nhà hàng này");
         }
-        */
 
         try {
             // Soft delete
             restaurant.setIsDeleted(true);
-            // TODO: Add updatedAt field to Restaurant entity
-            // restaurant.setUpdatedAt(LocalDateTime.now());
             restaurantRepository.save(restaurant);
 
         } catch (Exception e) {
@@ -224,32 +307,30 @@ public class RestaurantServiceImpl implements IRestaurantService {
      * Xây dựng RestaurantResponse từ Restaurant entity
      */
     private RestaurantResponse buildRestaurantResponse(Restaurant restaurant) {
-        RestaurantResponse response = modelMapper.map(restaurant, RestaurantResponse.class);
-        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        // TODO: Add getAccountId method to Restaurant entity and setOwnerName/setOwnerAvatar to RestaurantResponse
-        /*
-        UserInformation userInfo = userInformationRepository.findByAccountId(restaurant.getAccountId());
-        if (userInfo != null) {
-            response.setOwnerName(userInfo.getFullName());
-            response.setOwnerAvatar(userInfo.getAvatarUrl());
-        }
-
-        // Kiểm tra quyền sở hữu
-        response.setIsOwner(restaurant.getAccountId().equals(currentAccountId));
-        */
-
-        // Kiểm tra đã favorite chưa - sử dụng repository trực tiếp để tránh circular dependency
-//        if (account.getId() != null) {
-//            boolean isFavorited = favoriteRepository.existsByAccountIdAndRestaurantId(account.getId(), restaurant.getId());
-//            response.setIsFavorited(isFavorited);
-//        } else {
-//            response.setIsFavorited(false);
-//        }
-//
-//        // Set favorite count - sử dụng repository trực tiếp
-//        long favoriteCount = favoriteRepository.countByRestaurantId(restaurant.getId());
-//        // TODO: Fix setFavoriteCount parameter type
-//        response.setFavoriteCount(favoriteCount);
+        RestaurantResponse response = new RestaurantResponse();
+        
+        // Map các field sử dụng helper methods để ưu tiên field đúng
+        response.setId(restaurant.getId());
+        response.setName(restaurant.getDisplayName());
+        response.setAddress(restaurant.getDisplayAddress());
+        response.setDistrict(restaurant.getDisplayDistrict());
+        response.setType(restaurant.getDisplayType());
+        response.setPrice(restaurant.getDisplayPrice());
+        response.setLatitude(restaurant.getDisplayLatitude());
+        response.setLongitude(restaurant.getDisplayLongitude());
+        
+        // Các field khác
+        response.setCreatedById(restaurant.getCreatedBy());
+        response.setCreatedBy(restaurant.getCreatedBy());
+        response.setCreatedAt(restaurant.getCreatedAt());
+        response.setIsDeleted(restaurant.getIsDeleted());
+        
+        // Nếu sau này cần thêm logic cho favorite/owner status, có thể check optional auth như sau:
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+        //     Account account = (Account) auth.getPrincipal();
+        //     // Check favorite status, owner status, etc.
+        // }
 
         return response;
     }

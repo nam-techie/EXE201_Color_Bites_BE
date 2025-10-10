@@ -52,7 +52,13 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/api/vnpay-return",
                                 "/api/payment/payos/webhook",
-                                "/api/payment/payos/return"
+                                "/api/payment/payos/return",
+                                "/api/restaurants/nearby",
+                                "/api/restaurants/in-bounds",
+                                "/api/restaurants/by-district",
+                                "/api/restaurants/read/by-district/**",
+                                "/api/restaurants/search",
+                                "/api/restaurants/reverse-geocode"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -85,6 +91,10 @@ public class SecurityConfig {
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of(
+                "X-Mode", "X-Center", "X-RadiusKm", "X-Limit", "X-Count", "X-Has-More",
+                "X-BBox", "X-District", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"
+        ));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L); // 1h
 

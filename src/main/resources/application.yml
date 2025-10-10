@@ -39,3 +39,13 @@ payos:
   api-url: https://api-merchant.payos.vn
   return-url: http://localhost:8080/api/payment/payos/return
   cancel-url: http://localhost:8080/api/payment/payos/cancel
+
+# Application Configuration
+app:
+  rate-limit:
+    enabled: true
+    max-requests: 100
+    time-window-seconds: 60
+  geocoding:
+    cache-ttl-minutes: 60
+    nominatim-url: https://nominatim.openstreetmap.org

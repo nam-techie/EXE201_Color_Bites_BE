@@ -58,4 +58,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleDisabledException(DisabledException exception) {
         return  new ResponseEntity<>(exception.getMessage(), HttpStatus.FORBIDDEN);
     }
+
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<String> handleRateLimitException(RateLimitException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<String> handleServiceUnavailableException(ServiceUnavailableException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
+    }
 }
