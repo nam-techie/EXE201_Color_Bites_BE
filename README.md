@@ -1,331 +1,173 @@
-# ColorBites Backend API
+# 🍽️ Color Bites Backend API
 
-Hệ thống API backend cho ứng dụng ColorBites - một nền tảng đặt món ăn và quản lý thực phẩm được xây dựng bằng Spring Boot.
+Backend API cho ứng dụng Color Bites - Nền tảng khám phá nhà hàng và chia sẻ trải nghiệm ẩm thực.
 
-## Tính năng chính
+## 🚀 Tech Stack
 
-- **Xác thực & Phân quyền**: Hệ thống xác thực JWT với phân quyền theo vai trò người dùng
-- **Quản lý người dùng**: Đăng ký, đăng nhập và quản lý thông tin cá nhân
-- **Tài liệu API**: Giao diện Swagger UI tương tác để test và xem tài liệu API
-- **Tích hợp cơ sở dữ liệu**: PostgreSQL với JPA/Hibernate ORM
-- **Bảo mật**: Spring Security tích hợp JWT token validation
-- **Xử lý ngoại lệ**: Xử lý lỗi toàn cục với thông báo lỗi tùy chỉnh
-- **Validation**: Kiểm tra dữ liệu đầu vào với thông báo lỗi chi tiết
-- **Blacklist Token**: Quản lý token bị vô hiệu hóa khi đăng xuất
+- **Framework**: Spring Boot 3.x
+- **Language**: Java 17
+- **Database**: MongoDB Atlas
+- **Authentication**: JWT
+- **File Storage**: Cloudinary
+- **Payment**: PayOS
+- **API Documentation**: Swagger/OpenAPI
 
-## 🛠 Công nghệ sử dụng
+## 📋 Features
 
-- **Framework**: Spring Boot 3.5.4
-- **Ngôn ngữ**: Java 21
-- **Cơ sở dữ liệu**: PostgreSQL
-- **ORM**: Spring Data JPA / Hibernate
-- **Bảo mật**: Spring Security + JWT
-- **Tài liệu API**: SpringDoc OpenAPI (Swagger)
-- **Build Tool**: Maven
-- **Thư viện bổ sung**: 
-  - Lombok để giảm boilerplate code
-  - ModelMapper cho object mapping
-  - JJWT cho JWT token processing
+### Core Features
+- ✅ User Authentication & Authorization (JWT)
+- ✅ Restaurant Management (CRUD + Geospatial Search)
+- ✅ Post & Comment System (Social Feed)
+- ✅ Mood Tracking & Quiz System
+- ✅ Favorite Restaurants
+- ✅ Payment Integration (PayOS)
+- ✅ File Upload (Cloudinary)
 
-## Yêu cầu hệ thống
+### Advanced Features
+- ✅ Geospatial Search (Nearby, In-Bounds)
+- ✅ Rate Limiting (100 req/min per IP)
+- ✅ Reverse Geocoding (Nominatim)
+- ✅ Soft Delete Pattern
+- ✅ Pagination & Sorting
+- ✅ CORS Configuration
 
-- Java 21 trở lên
-- Maven 3.6+
-- PostgreSQL 12+
-- IDE (khuyến nghị IntelliJ IDEA)
+## 🛠️ Setup & Installation
 
-## ⚙️ Cài đặt & Thiết lập
+### Prerequisites
+- Java 17+
+- Maven 3.8+
+- MongoDB Atlas account
+- Cloudinary account (optional)
+- PayOS account (optional)
 
-### 1. Clone repository
+### Environment Variables
+
+Tạo file `.env` trong root project với các biến sau:
+
 ```bash
+# Database
+MONGODB_URI=your_mongodb_connection_string
+MONGODB_DATABASE=color_bites_db
+
+# JWT Secret
+SECRET_KEY=your_jwt_secret_key_base64
+
+# Cloudinary (Optional)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# PayOS (Optional)
+PAYOS_CLIENT_ID=your_client_id
+PAYOS_API_KEY=your_api_key
+PAYOS_CHECKSUM_KEY=your_checksum_key
+```
+
+> **Lưu ý:** File `.env` đã được gitignore. Tham khảo `ENV_TEMPLATE.txt` để biết chi tiết.
+
+### Run Locally
+
+```bash
+# Clone repository
 git clone <repository-url>
-cd ColorBites_be
-```
+cd EXE201_Color_Bites_BE
 
-### 2. Thiết lập cơ sở dữ liệu
-Tạo database PostgreSQL:
-```sql
-CREATE DATABASE colorbites_db;
-CREATE USER postgres WITH PASSWORD '12345';
-GRANT ALL PRIVILEGES ON DATABASE colorbites_db TO postgres;
-```
-
-### 3. Cấu hình ứng dụng
-Cập nhật file `src/main/resources/application.yml`:
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/colorbites_db
-    username: postgres
-    password: 12345
-```
-
-### 4. Build và chạy ứng dụng
-```bash
-# Build project
+# Install dependencies
 mvn clean install
 
-# Chạy ứng dụng
+# Run application
 mvn spring-boot:run
-
-# Hoặc chạy trực tiếp file JAR
-java -jar target/ColorBites_be-0.0.1-SNAPSHOT.jar
 ```
 
-Ứng dụng sẽ chạy tại `http://localhost:8080`
+Application sẽ chạy tại: `http://localhost:8080`
 
-## Tài liệu API
+## 📖 API Documentation
 
-Sau khi ứng dụng chạy, truy cập tài liệu API tương tác tại:
-- **Swagger UI**: `http://localhost:8080/api`
-- **API Docs JSON**: `http://localhost:8080/v3/api-docs`
-
-## Xác thực và Bảo mật
-
-### JWT Authentication
-API sử dụng JWT (JSON Web Token) để xác thực. Thêm token vào header Authorization:
+Sau khi start ứng dụng, truy cập Swagger UI:
 
 ```
-Authorization: Bearer <jwt-token-của-bạn>
+http://localhost:8080/swagger-ui/index.html
 ```
 
-### Cấu trúc Token
-- **Thời gian sống**: 60 phút
-- **Secret Key**: Được mã hóa và lưu trong `TokenService`
-- **Blacklist**: Token bị vô hiệu hóa sẽ được lưu trong blacklist
+Hoặc xem OpenAPI spec:
 
-### Endpoints xác thực
-
-#### Đăng ký người dùng
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-  "username": "user123",
-  "email": "user@example.com",
-  "password": "password123",
-  "confirmPassword": "password123",
-  "fullName": "Nguyễn Văn A",
-  "gender": "MALE",
-  "dob": "1990-01-01"
-}
+```
+http://localhost:8080/v3/api-docs
 ```
 
-#### Đăng nhập
-```http
-POST /api/auth/login
-Content-Type: application/json
+## 🌐 Deployment
 
-{
-  "username": "user123",
-  "password": "password123"
-}
-```
+### Railway Deployment
 
-#### Đăng xuất
-```http
-POST /api/auth/logout
-Authorization: Bearer <token>
-```
+1. **Setup Environment Variables** trên Railway Dashboard:
+   - `SPRING_PROFILES_ACTIVE=prod`
+   - `MONGODB_URI=<your_mongodb_uri>`
+   - `SECRET_KEY=<your_jwt_secret>`
+   - `PAYOS_CLIENT_ID`, `PAYOS_API_KEY`, `PAYOS_CHECKSUM_KEY`
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
 
-## 🏗 Cấu trúc dự án
+2. **Push to Git**:
+   ```bash
+   git add .
+   git commit -m "Deploy to Railway"
+   git push origin main
+   ```
+
+3. **Railway** sẽ tự động build và deploy.
+
+## 📁 Project Structure
 
 ```
 src/
 ├── main/
 │   ├── java/com/exe201/color_bites_be/
-│   │   ├── config/              # Cấu hình ứng dụng
-│   │   │   ├── JwtFilter.java   # Filter xử lý JWT
-│   │   │   ├── SecurityConfig.java # Cấu hình bảo mật
-│   │   │   └── SwaggerConfig.java  # Cấu hình Swagger
-│   │   ├── controller/          # REST Controllers
-│   │   │   └── AuthenticationController.java
-│   │   ├── service/             # Business Logic
-│   │   │   ├── AuthenticationService.java
-│   │   │   └── TokenService.java
-│   │   ├── entity/              # JPA Entities
-│   │   ├── repository/          # Data Access Layer
-│   │   ├── dto/                 # Data Transfer Objects
-│   │   ├── exception/           # Exception Handling
-│   │   │   └── GlobalExceptionHandler.java
-│   │   ├── enums/               # Enumerations
-│   │   └── ColorBitesBeApplication.java
+│   │   ├── config/          # Configuration classes
+│   │   ├── controller/      # REST Controllers
+│   │   ├── dto/             # Data Transfer Objects
+│   │   ├── entity/          # MongoDB Entities
+│   │   ├── exception/       # Custom Exceptions
+│   │   ├── repository/      # MongoDB Repositories
+│   │   ├── service/         # Business Logic
+│   │   └── util/            # Utility Classes
 │   └── resources/
-│       ├── application.yml      # Cấu hình chính
-│       └── static/              # Static resources
-└── test/                        # Test files
+│       ├── application.yml       # Default config
+│       └── application-prod.yml  # Production config
+└── test/                    # Unit & Integration Tests
 ```
 
-## 🔧 Cấu hình chi tiết
+## 🔒 Security
 
-### Cấu hình Database
-```yaml
-spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
-```
+- ✅ JWT Authentication cho protected endpoints
+- ✅ Password encryption với BCrypt
+- ✅ CORS configuration
+- ✅ Rate limiting cho public endpoints
+- ✅ Input validation
+- ✅ Environment variables cho sensitive data
 
-### Cấu hình Logging
-```yaml
-logging:
-  level:
-    root: warn
-    org:
-      hibernate:
-        SQL: trace
-        orm:
-          jdbc:
-            bind: trace
-```
+## 📚 Documentation
 
-### Endpoints công khai (không cần xác thực)
-- `/swagger-ui/**` - Swagger UI
-- `/v3/api-docs/**` - API Documentation
-- `/api/auth/login` - Đăng nhập
-- `/api/auth/register` - Đăng ký
-- `/api/loginByGoogle` - Đăng nhập Google
-- `/oauth2/authorization/**` - OAuth2
-- `/api/vnpay-return` - VNPay callback
+Xem thêm tài liệu chi tiết trong folder `docs/`:
 
-## 🚦 API Endpoints
+- [API Development Notes](docs/API_DEVELOPMENT_NOTES.md)
+- [PayOS Integration Guide](docs/PAYOS_INTEGRATION_GUIDE.md)
+- [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md)
 
-### Authentication APIs
-| Method | Endpoint | Mô tả | Yêu cầu Auth |
-|--------|----------|-------|--------------|
-| POST | `/api/auth/register` | Đăng ký tài khoản mới | ❌ |
-| POST | `/api/auth/login` | Đăng nhập | ❌ |
-| POST | `/api/auth/logout` | Đăng xuất | ✅ |
-
-### Response Format
-```json
-{
-  "status": 200,
-  "message": "Thành công",
-  "data": {
-    // Dữ liệu response
-  }
-}
-```
-
-### Error Response
-```json
-{
-  "status": 400,
-  "message": "Lỗi validation",
-  "data": "Chi tiết lỗi"
-}
-```
-
-## 🧪 Testing
-
-### Chạy tests
-```bash
-# Chạy tất cả tests
-mvn test
-
-# Chạy tests với coverage
-mvn test jacoco:report
-```
-
-### Test với Swagger UI
-1. Truy cập `http://localhost:8080/api`
-2. Đăng ký tài khoản mới qua `/api/auth/register`
-3. Đăng nhập qua `/api/auth/login` để lấy token
-4. Click "Authorize" và nhập token
-5. Test các API khác
-
-## 🔍 Troubleshooting
-
-### Lỗi thường gặp
-
-#### 1. Lỗi kết nối database
-```
-Caused by: org.postgresql.util.PSQLException: Connection refused
-```
-**Giải pháp**: Kiểm tra PostgreSQL đã chạy và cấu hình connection string
-
-#### 2. Lỗi JWT token
-```
-Token không hợp lệ
-```
-**Giải pháp**: Kiểm tra token còn hạn và format đúng
-
-#### 3. Lỗi validation
-```
-Lỗi xác thực: Email không hợp lệ
-```
-**Giải pháp**: Kiểm tra format dữ liệu đầu vào
-
-## 🚀 Deployment
-
-### Production Configuration
-Tạo file `application-prod.yml`:
-```yaml
-spring:
-  datasource:
-    url: ${DATABASE_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    show-sql: false
-
-logging:
-  level:
-    root: info
-```
-
-### Build for production
-```bash
-mvn clean package -Pprod
-```
-
-## 🤝 Đóng góp
+## 🤝 Contributing
 
 1. Fork repository
-2. Tạo feature branch (`git checkout -b feature/tinh-nang-moi`)
-3. Commit changes (`git commit -m 'Thêm tính năng mới'`)
-4. Push to branch (`git push origin feature/tinh-nang-moi`)
+2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Tạo Pull Request
 
-## 📝 License
+## 📞 Support
 
-Dự án này được cấp phép theo MIT License - xem file LICENSE để biết thêm chi tiết.
+Nếu gặp vấn đề, vui lòng tạo issue trên GitHub hoặc liên hệ team.
 
-## 👥 Nhóm phát triển
+## 📄 License
 
-- **Backend Team**: Phát triển API và logic nghiệp vụ
-- **Frontend Repository**: [ColorBites Frontend](https://github.com/nam-techie/EXE201_Color_Bites_FE)
-
-## 📞 Hỗ trợ
-
-Để được hỗ trợ và giải đáp thắc mắc:
-- Tạo issue trong repository
-- Liên hệ team phát triển
-- Email: support@colorbites.com
-
-## 📈 Roadmap
-
-- [ ] Tích hợp thanh toán VNPay
-- [ ] API quản lý đơn hàng
-- [ ] Hệ thống notification
-- [ ] API quản lý menu
-- [ ] Dashboard admin
-- [ ] Mobile API optimization
+This project is private and proprietary.
 
 ---
 
-**Lưu ý quan trọng**: 
-- Cập nhật thông tin database và các thông tin nhạy cảm trước khi deploy
-- Thay đổi SECRET_KEY trong production
-- Sử dụng HTTPS trong môi trường production
-
+**Made with ❤️ by Color Bites Team**
