@@ -44,9 +44,7 @@ public class PostController {
             CreatePostRequest request = new CreatePostRequest();
             request.setContent(content.trim());
             request.setMoodId(moodId);
-            
-//            // Chuyển đổi array thành List để tương thích với service
-//            List<MultipartFile> fileList = files != null ? List.of(files) : null;
+
             PostResponse response = postService.createPost(request, files);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Bài viết đã được tạo thành công", response);
         } catch (Exception e) {
