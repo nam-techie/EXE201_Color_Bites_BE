@@ -5,18 +5,18 @@ import com.exe201.color_bites_be.dto.request.UpdatePostRequest;
 import com.exe201.color_bites_be.dto.response.PostResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.model.UserPrincipal;
 import com.exe201.color_bites_be.service.IPostImageService;
 import com.exe201.color_bites_be.service.IPostService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,14 +34,20 @@ public class PostController {
     @Autowired
     private IPostImageService postImageService;
 
-    /**
-     * Tạo bài viết mới
-     */
-    @PostMapping("/create")
+
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseDto<PostResponse> createPost(
-            @Valid @RequestBody CreatePostRequest request) {
+            @RequestPart("content") String content,
+            @RequestPart(value = "moodId", required = false) String moodId,
+            @RequestPart(value = "files", required = false)List <MultipartFile >files) {
         try {
-            PostResponse response = postService.createPost(request);
+            CreatePostRequest request = new CreatePostRequest();
+            request.setContent(content.trim());
+            request.setMoodId(moodId);
+            
+//            // Chuyển đổi array thành List để tương thích với service
+//            List<MultipartFile> fileList = files != null ? List.of(files) : null;
+            PostResponse response = postService.createPost(request, files);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Bài viết đã được tạo thành công", response);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -49,8 +55,14 @@ public class PostController {
         }
     }
 
-    @PostMapping("/uploadImage")
-    public ResponseDto<List<String>> uploadPostImage(@RequestPart List<MultipartFile> files){
+    @Operation(
+        summary = "Upload hình ảnh cho bài viết", 
+        description = "Upload nhiều hình ảnh và trả về danh sách URL"
+    )
+    @PostMapping(value = "/uploadImage", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseDto<List<String>> uploadPostImage(
+            @Parameter(description = "Danh sách hình ảnh cần upload", required = true)
+            @RequestPart("files") List<MultipartFile> files){
         List<String> urls = postImageService.uploadPostImages(files);
         return new ResponseDto<>(HttpStatus.OK.value(),  "Uploaded image successfully", urls);
     }

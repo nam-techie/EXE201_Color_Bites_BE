@@ -9,6 +9,7 @@ import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.enums.LoginMethod;
 import com.exe201.color_bites_be.enums.Role;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
+import com.exe201.color_bites_be.exception.DisabledException;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
@@ -53,9 +54,6 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
 
     @Autowired
     private ITokenService tokenService;
-
-    @Autowired
-    ICloudinaryService cloudinaryService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -134,9 +132,8 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
             Account account = userPrincipal.getAccount();
 
             if (!account.getIsActive()) {
-                throw new NotFoundException("Tài khoản đã bị vô hiệu hóa!");
+                throw new DisabledException("Tài khoản đã bị vô hiệu hóa!");
             }
-
             // Cập nhật thời gian login cuối cùng
             account.setUpdatedAt(LocalDateTime.now());
             accountRepository.save(account);
@@ -147,10 +144,10 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
                 accountResponse.setToken(tokenService.generateToken(account));
             }
             return accountResponse;
-        } catch (NotFoundException e) {
-            // Nếu tài khoản bị vô hiệu hóa
-            throw new NotFoundException("Tài khoản đã bị vô hiệu hóa!");
-        } catch (BadCredentialsException e) {
+        }catch (DisabledException e){
+            throw new DisabledException(e.getMessage());
+        }
+        catch (BadCredentialsException e) {
             // Nếu thông tin tài khoản hoặc mật khẩu sai
             throw new RuntimeException("Email hoặc mật khẩu sai!");
         } catch (Exception e) {
@@ -197,18 +194,5 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
         return accountRepository.save(existingAccount);
     }
 
-    @Override
-    @Transactional
-    public String uploadImage(String id, final MultipartFile file) {
-        final UserInformation userInformation = userInformationRepository.findByAccountId(id);
-        if (userInformation == null) {
-            throw new NotFoundException("Người dùng không tồn tại.");
-        }
-        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.IMAGE_PATTERN);
-        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
-        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadFile(file, fileName);
-        userInformation.setAvatarUrl(cloudinaryResponse.getUrl());
-        userInformationRepository.save(userInformation);
-        return userInformation.getAvatarUrl();
-    }
+
 }

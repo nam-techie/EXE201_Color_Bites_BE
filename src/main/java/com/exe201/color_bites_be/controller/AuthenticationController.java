@@ -4,6 +4,7 @@ import com.exe201.color_bites_be.dto.request.LoginRequest;
 import com.exe201.color_bites_be.dto.request.RegisterRequest;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
+import com.exe201.color_bites_be.exception.DisabledException;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.service.IAuthenticationService;
@@ -59,8 +60,8 @@ public class AuthenticationController {
         try {
             AccountResponse accountResponse = authenticationService.login(request);
             return new ResponseDto<>(HttpStatus.OK.value(), "Đăng nhập thành công", accountResponse);
-        } catch (NotFoundException e) {
-            return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
+        } catch (DisabledException e) {
+            return new ResponseDto<>(HttpStatus.FORBIDDEN.value(), e.getMessage(), null);
         } catch (RuntimeException e) {
             return new ResponseDto<>(HttpStatus.UNAUTHORIZED.value(), e.getMessage(), null);
         } catch (Exception e) {

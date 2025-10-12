@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 public class ListAccountResponse {
     private String id;
     private String username;
-    private String fullName;
     private boolean isActive;
     private String role;
     private String avatarUrl;

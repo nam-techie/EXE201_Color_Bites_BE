@@ -25,30 +25,30 @@ public interface IRestaurantService {
     /**
      * Lấy danh sách tất cả nhà hàng
      */
-    Page<RestaurantResponse> readAllRestaurants(int page, int size, String currentAccountId);
+    Page<RestaurantResponse> readAllRestaurants(int page, int size);
     
     /**
      * Tìm kiếm nhà hàng theo từ khóa
      */
-    Page<RestaurantResponse> searchRestaurants(String keyword, int page, int size, String currentAccountId);
+    Page<RestaurantResponse> searchRestaurants(String keyword, int page, int size);
     
     /**
      * Lấy nhà hàng theo khu vực
      */
-    Page<RestaurantResponse> readRestaurantsByRegion(String region, int page, int size, String currentAccountId);
+    Page<RestaurantResponse> readRestaurantsByDistrict(String district, int page, int size);
     
     /**
      * Lấy nhà hàng theo mood
      */
-    Page<RestaurantResponse> readRestaurantsByMood(String mood, int page, int size, String currentAccountId);
+    Page<RestaurantResponse> readRestaurantsByMood(String mood, int page, int size);
     
     /**
      * Cập nhật thông tin nhà hàng
      */
-    RestaurantResponse editRestaurant(String restaurantId, String accountId, UpdateRestaurantRequest request);
+    RestaurantResponse editRestaurant(String restaurantId, UpdateRestaurantRequest request);
     
     /**
      * Xóa nhà hàng
      */
-    void deleteRestaurant(String restaurantId, String accountId);
+    void deleteRestaurant(String restaurantId);
 }

@@ -53,4 +53,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleBadRequestException(BadRequestException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<String> handleDisabledException(DisabledException exception) {
+        return  new ResponseEntity<>(exception.getMessage(), HttpStatus.FORBIDDEN);
+    }
 }

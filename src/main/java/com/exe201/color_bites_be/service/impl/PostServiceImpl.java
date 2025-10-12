@@ -8,6 +8,7 @@ import com.exe201.color_bites_be.dto.response.TagResponse;
 import com.exe201.color_bites_be.entity.*;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.*;
+import com.exe201.color_bites_be.service.IPostImageService;
 import com.exe201.color_bites_be.service.IPostService;
 import com.exe201.color_bites_be.service.IReactionService;
 import com.exe201.color_bites_be.util.HashtagExtractor;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -59,10 +61,12 @@ public class PostServiceImpl implements IPostService {
     private PostImagesRepository postImagesRepository;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private IPostImageService iPostImageService;
 
     @Override
     @Transactional
-    public PostResponse createPost(CreatePostRequest request) {
+    public PostResponse createPost(CreatePostRequest request, List<MultipartFile> files) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // Tạo post entity
         Post post = new Post();
@@ -78,11 +82,15 @@ public class PostServiceImpl implements IPostService {
         // Lưu post
         Post savedPost = postRepository.save(post);
 
-        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-            List<PostImages> imgs = request.getImageUrls().stream().map(u -> {
+        List<String> uploadedUrls = new ArrayList<>();
+        if (files != null && !files.isEmpty()) {
+            uploadedUrls = iPostImageService.uploadPostImages(files); // gọi hàm upload
+        }
+        if (!uploadedUrls.isEmpty()) {
+            List<PostImages> imgs = uploadedUrls.stream().map(url -> {
                 PostImages pi = new PostImages();
                 pi.setPostId(savedPost.getId());
-                pi.setUrl(u);
+                pi.setUrl(url);
                 pi.setCreatedAt(LocalDateTime.now());
                 return pi;
             }).toList();

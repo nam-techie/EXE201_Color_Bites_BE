@@ -48,12 +48,5 @@ public interface IAuthenticationService extends UserDetailsService {
      * @return Account Tài khoản đã được cập nhật
      */
     Account updateAccount(String accountId, Account updatedAccount);
-    
-    /**
-     * Upload ảnh đại diện cho người dùng
-     * @param id ID của người dùng
-     * @param file File ảnh cần upload
-     * @return String URL của ảnh đã upload
-     */
-    String uploadImage(String id, MultipartFile file);
+
 }

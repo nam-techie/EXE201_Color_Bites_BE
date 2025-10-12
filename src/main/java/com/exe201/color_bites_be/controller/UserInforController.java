@@ -10,6 +10,7 @@ import com.exe201.color_bites_be.service.IUserInformationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -23,8 +24,6 @@ public class UserInforController {
 
     @Autowired
     private IUserInformationService userInformationService;
-    @Autowired
-    private IAuthenticationService authenticationService;
 
     /**
      * Lấy thông tin user theo accountId
@@ -64,9 +63,9 @@ public class UserInforController {
         }
     }
 
-    @PostMapping("/uploadImage/{id}")
-    public ResponseDto<String> uploadImage(@PathVariable String id,@RequestPart MultipartFile file) {
-        String avatarUrl = authenticationService.uploadImage(id,file);
+    @PostMapping(value = "/uploadAvatar/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseDto<String> uploadAvatar(@PathVariable String id,@RequestPart MultipartFile file) {
+        String avatarUrl = userInformationService.uploadAvatar(id,file);
         return new ResponseDto<>(HttpStatus.CREATED.value(), "Uploaded image successfully", avatarUrl);
     }
 }
