@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -23,6 +24,7 @@ import java.util.List;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
     @Autowired
+    @Lazy  // ✅ Thêm @Lazy để tránh circular dependency khi Filter khởi tạo sớm
     private ITokenService tokenService;
 
     @Autowired
@@ -38,7 +40,13 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/loginByGoogle",
             "/oauth2/authorization/**",
             "/login/oauth2/code/**",
-            "/api/vnpay-return"
+            "/api/vnpay-return",
+            "/api/restaurants/nearby",
+            "/api/restaurants/in-bounds",
+            "/api/restaurants/by-district",
+            "/api/restaurants/read/by-district/**",
+            "/api/restaurants/search",
+            "/api/restaurants/reverse-geocode"
     );
 
     public boolean checkIsPublicAPI(String uri) {

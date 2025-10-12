@@ -3,6 +3,9 @@ package com.exe201.color_bites_be.repository;
 import com.exe201.color_bites_be.entity.Restaurant;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.geo.Distance;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -29,6 +32,17 @@ public interface RestaurantRepository extends MongoRepository<Restaurant, String
             "{ 'price':   { $regex: ?0, $options: 'i' } } " +
             "] }")
     Page<Restaurant> findByKeywordAndNotDeleted(String keyword, Pageable pageable);
+
+    // Tìm theo keyword và district (optional filter)
+    @Query(value = "{ 'is_deleted': { $ne: true }, " +
+            "'district': { $regex: ?1, $options: 'i' }, " +
+            "$or: [ " +
+            "{ 'name':    { $regex: ?0, $options: 'i' } }, " +
+            "{ 'address': { $regex: ?0, $options: 'i' } }, " +
+            "{ 'type':    { $regex: ?0, $options: 'i' } }, " +
+            "{ 'price':   { $regex: ?0, $options: 'i' } } " +
+            "] }")
+    Page<Restaurant> findByKeywordAndDistrictAndNotDeleted(String keyword, String district, Pageable pageable);
 
 
     @Query(value = "{ 'district': { $regex: ?0, $options: 'i' }, 'is_deleted': { $ne: true } }")
@@ -70,7 +84,15 @@ public interface RestaurantRepository extends MongoRepository<Restaurant, String
     @Query(value = "{'_id': ?0, 'isDeleted': {$ne: true}}", exists = true)
     boolean existsByIdAndNotDeleted(String id);
     
-    // Tìm nhà hàng gần vị trí (GeoSpatial query)
+    // Tìm nhà hàng gần vị trí (GeoSpatial query) - OLD METHOD (keep for backward compatibility)
     @Query("{'coordinates': {$near: {$geometry: {type: 'Point', coordinates: [?0, ?1]}, $maxDistance: ?2}}, 'isDeleted': {$ne: true}}")
     List<Restaurant> findNearbyRestaurants(double longitude, double latitude, double maxDistanceInMeters);
+
+    // Tìm nhà hàng gần vị trí sử dụng location field (NEW - với 2dsphere index)
+    @Query(value = "{ 'is_deleted': { $ne: true }, 'location': { $near: { $geometry: ?0, $maxDistance: ?1 } } }")
+    List<Restaurant> findNearbyByLocation(GeoJsonPoint location, double maxDistanceInMeters);
+
+    // Tìm nhà hàng trong bounding box
+    @Query(value = "{ 'location': { $geoWithin: { $box: [ [?0, ?1], [?2, ?3] ] } }, 'is_deleted': { $ne: true } }")
+    List<Restaurant> findInBounds(double minLon, double minLat, double maxLon, double maxLat);
 }

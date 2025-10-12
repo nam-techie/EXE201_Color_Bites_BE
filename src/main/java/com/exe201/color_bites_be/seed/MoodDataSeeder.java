@@ -28,7 +28,7 @@ public class MoodDataSeeder implements DataSeeder {
             createMood("Tức giận", "😠"),
             createMood("Ngạc nhiên", "😮"),
             createMood("Sợ hãi", "😨"),
-            
+
             // Mood mở rộng cho ẩm thực
             createMood("Thèm ăn", "🤤"),
             createMood("Thỏa mãn", "😌"),
