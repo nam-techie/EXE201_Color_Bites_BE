@@ -1,8 +1,10 @@
 package com.exe201.color_bites_be.service;
 
 import com.exe201.color_bites_be.dto.request.CreatePaymentRequest;
+import com.exe201.color_bites_be.dto.request.PayOSWebhookRequest;
 import com.exe201.color_bites_be.dto.response.PaymentResponse;
 import com.exe201.color_bites_be.dto.response.PaymentStatusResponse;
+import com.exe201.color_bites_be.dto.response.PayOSWebhookResponse;
 import com.exe201.color_bites_be.entity.Transaction;
 
 /**
@@ -20,6 +22,11 @@ public interface IPaymentService {
      * Confirm payment status từ FE (an toàn - gọi PayOS để verify)
      */
     PaymentStatusResponse updateStatusFromGateway(String id);
+    
+    /**
+     * Xử lý webhook callback từ PayOS (real-time update)
+     */
+    PayOSWebhookResponse handlePayOSWebhook(PayOSWebhookRequest request);
     
     /**
      * Xử lý thanh toán thành công - upgrade subscription

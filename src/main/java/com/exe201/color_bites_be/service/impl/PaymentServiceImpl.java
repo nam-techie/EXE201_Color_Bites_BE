@@ -473,6 +473,169 @@ public class PaymentServiceImpl implements IPaymentService {
         return "";
     }
     
+    // ==================== WEBHOOK HANDLING METHODS ====================
+    
+    /**
+     * Xử lý webhook callback từ PayOS
+     * Method này được gọi khi PayOS gửi notification về trạng thái thanh toán
+     */
+    @Override
+    @Transactional
+    public com.exe201.color_bites_be.dto.response.PayOSWebhookResponse handlePayOSWebhook(
+            com.exe201.color_bites_be.dto.request.PayOSWebhookRequest request) {
+        
+        try {
+            log.info("Nhận webhook từ PayOS - OrderCode: {}, Code: {}", 
+                request.getData().getOrderCode(), request.getCode());
+            
+            // 1. Verify signature để đảm bảo request từ PayOS
+            boolean isValidSignature = verifyWebhookSignature(request);
+            if (!isValidSignature) {
+                log.error("Webhook signature không hợp lệ!");
+                return com.exe201.color_bites_be.dto.response.PayOSWebhookResponse.error("Invalid signature");
+            }
+            
+            log.info("Webhook signature hợp lệ - Bắt đầu xử lý...");
+            
+            // 2. Kiểm tra webhook code
+            if (!"00".equals(request.getCode())) {
+                log.warn("Webhook code không phải success: {}", request.getCode());
+                return com.exe201.color_bites_be.dto.response.PayOSWebhookResponse.error("Invalid webhook code");
+            }
+            
+            // 3. Xử lý dữ liệu webhook
+            processWebhookData(request.getData());
+            
+            log.info("Xử lý webhook thành công cho orderCode: {}", request.getData().getOrderCode());
+            return com.exe201.color_bites_be.dto.response.PayOSWebhookResponse.success();
+            
+        } catch (Exception e) {
+            log.error("Lỗi xử lý webhook: ", e);
+            return com.exe201.color_bites_be.dto.response.PayOSWebhookResponse.error("Internal error: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Verify signature của webhook từ PayOS
+     * PayOS sử dụng HMAC-SHA256 để ký dữ liệu
+     */
+    private boolean verifyWebhookSignature(com.exe201.color_bites_be.dto.request.PayOSWebhookRequest request) {
+        try {
+            // PayOS webhook signature format: sort data fields alphabetically và concatenate
+            // Theo PayOS spec: amount, code, desc, orderCode, ...
+            com.exe201.color_bites_be.dto.request.PayOSWebhookRequest.WebhookData data = request.getData();
+            
+            // Tạo sorted data map (TreeMap tự động sort theo key)
+            Map<String, Object> sortedData = new java.util.TreeMap<>();
+            
+            // Thêm các fields theo PayOS specification
+            if (data.getAmount() != null) sortedData.put("amount", data.getAmount());
+            if (data.getCode() != null) sortedData.put("code", data.getCode());
+            if (data.getDesc() != null) sortedData.put("desc", data.getDesc());
+            if (data.getOrderCode() != null) sortedData.put("orderCode", data.getOrderCode());
+            if (data.getPaymentLinkId() != null) sortedData.put("paymentLinkId", data.getPaymentLinkId());
+            
+            // Tạo data string theo format: key=value&key=value
+            String dataStr = sortedData.entrySet().stream()
+                .map(e -> e.getKey() + "=" + String.valueOf(e.getValue()))
+                .collect(java.util.stream.Collectors.joining("&"));
+            
+            log.info("Webhook signature data: {}", dataStr);
+            
+            // Tính signature
+            String calculatedSignature = HmacUtils.hmacSha256Hex(payOSConfig.getChecksumKey(), dataStr);
+            log.info("Calculated signature: {}", calculatedSignature);
+            log.info("Received signature: {}", request.getSignature());
+            
+            // So sánh signature
+            return calculatedSignature.equals(request.getSignature());
+            
+        } catch (Exception e) {
+            log.error("Lỗi verify webhook signature: ", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Xử lý dữ liệu từ webhook (idempotent)
+     */
+    private void processWebhookData(com.exe201.color_bites_be.dto.request.PayOSWebhookRequest.WebhookData data) {
+        try {
+            // 1. Tìm transaction theo orderCode
+            String orderCode = String.valueOf(data.getOrderCode());
+            Optional<Transaction> optTransaction = transactionRepository.findByOrderCode(orderCode);
+            
+            if (optTransaction.isEmpty()) {
+                log.error("Không tìm thấy transaction với orderCode: {}", orderCode);
+                throw new RuntimeException("Transaction not found: " + orderCode);
+            }
+            
+            Transaction transaction = optTransaction.get();
+            log.info("Tìm thấy transaction: {} - Current status: {}", 
+                transaction.getId(), transaction.getStatus());
+            
+            // 2. Map webhook code sang TxnStatus
+            TxnStatus newStatus = mapWebhookCodeToStatus(data.getCode());
+            log.info("Webhook code {} mapped to status: {}", data.getCode(), newStatus);
+            
+            // 3. Update transaction (idempotent - chỉ update nếu status thay đổi)
+            if (newStatus != transaction.getStatus()) {
+                log.info("Cập nhật transaction status từ {} sang {}", 
+                    transaction.getStatus(), newStatus);
+                
+                transaction.setStatus(newStatus);
+                transaction.setUpdatedAt(LocalDateTime.now());
+                
+                // Update providerTxnId nếu có
+                if (data.getPaymentLinkId() != null && transaction.getProviderTxnId() == null) {
+                    transaction.setProviderTxnId(data.getPaymentLinkId());
+                }
+                
+                // Lưu raw webhook payload để audit
+                if (transaction.getRawPayload() == null) {
+                    transaction.setRawPayload(new HashMap<>());
+                }
+                transaction.getRawPayload().put("webhook_data", data);
+                transaction.getRawPayload().put("webhook_received_at", LocalDateTime.now().toString());
+                
+                transactionRepository.save(transaction);
+                log.info("Đã lưu transaction với status mới: {}", newStatus);
+                
+                // 4. Process business logic
+                if (newStatus == TxnStatus.SUCCESS) {
+                    log.info("Thanh toán thành công - Bắt đầu nâng cấp subscription...");
+                    processSuccessfulPayment(transaction);
+                    log.info("Đã nâng cấp subscription thành công cho user: {}", transaction.getAccountId());
+                } else if (newStatus == TxnStatus.FAILED) {
+                    log.info("Thanh toán thất bại - Xử lý failed logic...");
+                    processFailedPayment(transaction);
+                }
+            } else {
+                log.info("Transaction status không thay đổi ({}), bỏ qua update", newStatus);
+            }
+            
+        } catch (Exception e) {
+            log.error("Lỗi xử lý webhook data: ", e);
+            throw new RuntimeException("Error processing webhook data: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Map webhook code từ PayOS sang TxnStatus
+     */
+    private TxnStatus mapWebhookCodeToStatus(String webhookCode) {
+        // PayOS webhook codes:
+        // "00" = Success
+        // "01" = Failed
+        // "02" = Pending
+        return switch (webhookCode) {
+            case "00" -> TxnStatus.SUCCESS;
+            case "02" -> TxnStatus.PENDING;
+            case "03" -> TxnStatus.CANCELED;
+            default -> TxnStatus.FAILED;
+        };
+    }
+    
     // ==================== INNER CLASSES ====================
     
     /**
