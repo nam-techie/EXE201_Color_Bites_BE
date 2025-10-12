@@ -36,7 +36,7 @@ Hướng dẫn setup môi trường local để phát triển Color Bites Backen
    
    **Kết quả cuối:**
    ```
-   mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/color_bites_db?retryWrites=true&w=majority
+   
    ```
 
 ### **Option 2: MongoDB Local**
@@ -58,7 +58,7 @@ Hướng dẫn setup môi trường local để phát triển Color Bites Backen
 5. Thêm các biến sau:
 
 ```
-MONGODB_URI=mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/color_bites_db?retryWrites=true&w=majority
+MONGODB_URI=
 SECRET_KEY=your_base64_encoded_jwt_secret_key_here
 PAYOS_CLIENT_ID=your_payos_client_id
 PAYOS_API_KEY=your_payos_api_key
@@ -90,7 +90,7 @@ Tạo file `.vscode/launch.json`:
       "mainClass": "com.exe201.color_bites_be.ColorBitesBeApplication",
       "projectName": "ColorBites_be",
       "env": {
-        "MONGODB_URI": "mongodb+srv://youruser:yourpass@cluster0.xxxxx.mongodb.net/color_bites_db?retryWrites=true&w=majority",
+        "MONGODB_URI": "",
         "SECRET_KEY": "your_base64_encoded_jwt_secret_key_here",
         "PAYOS_CLIENT_ID": "your_payos_client_id",
         "PAYOS_API_KEY": "your_payos_api_key",
