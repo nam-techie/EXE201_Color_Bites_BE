@@ -164,27 +164,24 @@ public class CommentServiceImpl implements ICommentService {
     @Override
     @Transactional
     public void deleteComment(String commentId) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Comment comment = commentRepository.findByIdAndNotDeleted(commentId)
                 .orElseThrow(() -> new NotFoundException("Comment không tồn tại"));
-
-//        // Kiểm tra quyền sở hữu
-//        if (!comment.getAccountId().equals(accountId)) {
-//            throw new RuntimeException("Bạn không có quyền xóa comment này");
-//        }
-
-        // Soft delete comment
+        Post post = postRepository.findByIdAndNotDeleted(comment.getPostId())
+                .orElse(null);
+        // Kiểm tra quyền sở hữu
+        if (!comment.getAccountId().equals(account.getId()) && !post.getAccountId().equals(account.getId())) {
+            throw new RuntimeException("Bạn không có quyền xóa comment này");
+        }
         comment.setIsDeleted(true);
         comment.setUpdatedAt(LocalDateTime.now());
         commentRepository.save(comment);
-
         deleteAllReplies(commentId);
+        int countComment = commentRepository.countByPostIdAndIsDeleted(comment.getPostId(), false);
 
-        Post post = postRepository.findByIdAndNotDeleted(comment.getPostId())
-                .orElse(null);
-        if (post != null) {
-            post.setCommentCount(Math.max(0, post.getCommentCount() - 1));
-            postRepository.save(post);
-        }
+        post.setCommentCount(countComment);
+        postRepository.save(post);
+        postRepository.save(post);
     }
 
     @Override
@@ -267,9 +264,9 @@ public class CommentServiceImpl implements ICommentService {
         return response;
     }
 
+
     private void deleteAllReplies(String parentCommentId) {
         List<Comment> replies = commentRepository.findRepliesByParentCommentId(parentCommentId);
-        
         for (Comment reply : replies) {
             deleteAllReplies(reply.getId());
             reply.setIsDeleted(true);

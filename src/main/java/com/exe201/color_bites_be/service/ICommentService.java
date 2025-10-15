@@ -39,4 +39,5 @@ public interface ICommentService {
     List<CommentResponse> readCommentsByUser(String postId, String accountId);
 
     void deleteAllCommentsByPost(String postId);
+
 }

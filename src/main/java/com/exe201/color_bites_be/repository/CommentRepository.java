@@ -62,4 +62,7 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     // Xóa tất cả comment của bài viết (soft delete)
     @Query("{'postId': ?0}")
     List<Comment> findAllByPostId(String postId);
+
+    int countByPostIdAndIsDeleted(String postId, boolean isDeleted);
+
 }

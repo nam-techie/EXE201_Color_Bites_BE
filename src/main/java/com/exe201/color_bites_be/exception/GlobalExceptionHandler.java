@@ -1,9 +1,6 @@
 package com.exe201.color_bites_be.exception;
 
-import com.exe201.color_bites_be.dto.response.ErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
-// Xóa import jakarta.persistence.EntityNotFoundException
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
