@@ -117,6 +117,19 @@ Failed to bind properties under 'spring.data.mongodb.uri'
 
 ---
 
+### **Lỗi: Build failed - MongoDB connection test**
+
+**Logs:**
+```
+The connection string is invalid. Connection strings must start with either 'mongodb://' or 'mongodb+srv://'
+```
+
+**Nguyên nhân:** Maven test chạy mà không có MongoDB connection.
+
+**Giải pháp:** Tests đã được skip mặc định trong `pom.xml` (`<skipTests>true</skipTests>`). Railway sẽ build thành công.
+
+---
+
 ### **Lỗi: Swagger hiển thị HTTP thay vì HTTPS**
 
 **Nguyên nhân:** Biến `SPRING_PROFILES_ACTIVE` chưa set hoặc không phải `prod`.

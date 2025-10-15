@@ -92,7 +92,36 @@ Authorization: Bearer {jwt_token}
 }
 ```
 
-### 3. Webhook callback (Internal)
+### 3. Lấy lịch sử giao dịch của user
+
+```http
+GET /api/payment/history
+Authorization: Bearer {jwt_token}
+```
+
+**Response:**
+
+```json
+{
+  "status": 200,
+  "message": "Lấy lịch sử giao dịch thành công",
+  "data": [
+    {
+      "transactionId": "1234567890",
+      "orderCode": 1234567890,
+      "status": "SUCCESS",
+      "amount": 100000,
+      "description": "Thanh toán đơn hàng #123",
+      "gatewayName": "PayOS",
+      "message": "Thanh toán thành công",
+      "createdAt": "2024-09-18T10:00:00",
+      "updatedAt": "2024-09-18T10:05:00"
+    }
+  ]
+}
+```
+
+### 4. Webhook callback (Internal)
 
 ```http
 POST /api/payment/payos/webhook
@@ -106,7 +135,7 @@ Content-Type: application/json
 }
 ```
 
-### 4. Return URL (Internal)
+### 5. Return URL (Internal)
 
 ```http
 GET /api/payment/payos/return?orderCode=123&status=SUCCESS
@@ -149,7 +178,7 @@ GET /api/payment/payos/return?orderCode=123&status=SUCCESS
 
    ```javascript
    const checkStatus = async (transactionId) => {
-     const response = await fetch(`/api/payment/status/${transactionId}`, {
+     const response = await fetch(`/api/payment/confirm?id=${transactionId}`, {
        headers: { Authorization: "Bearer " + token },
      });
 
@@ -165,6 +194,26 @@ GET /api/payment/payos/return?orderCode=123&status=SUCCESS
        handlePaymentResult(status);
      }
    }, 3000);
+   ```
+
+4. **Mobile lấy lịch sử giao dịch:**
+
+   ```javascript
+   const getPaymentHistory = async () => {
+     const response = await fetch("/api/payment/history", {
+       headers: { Authorization: "Bearer " + token },
+     });
+
+     const result = await response.json();
+     return result.data; // Array of transactions
+   };
+
+   // Sử dụng trong component
+   const [transactions, setTransactions] = useState([]);
+
+   useEffect(() => {
+     getPaymentHistory().then(setTransactions);
+   }, []);
    ```
 
 ## 🔒 Security Features
