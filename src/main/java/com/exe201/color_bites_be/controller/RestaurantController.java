@@ -7,7 +7,9 @@ import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.model.UserPrincipal;
+import com.exe201.color_bites_be.service.IGeocodingService;
 import com.exe201.color_bites_be.service.IRestaurantService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,18 +20,100 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
-@PreAuthorize("hasAuthority('USER')")
 @RequestMapping("/api/restaurants")
 public class RestaurantController {
 
     @Autowired
     private IRestaurantService restaurantService;
 
+    @Autowired
+    private IGeocodingService geocodingService;
+
     /**
-     * Tạo nhà hàng mới
+     * Tìm nhà hàng gần vị trí (PUBLIC - không cần auth)
+     */
+    @GetMapping("/nearby")
+    public ResponseDto<List<RestaurantResponse>> getNearbyRestaurants(
+            @RequestParam double lat,
+            @RequestParam double lon,
+            @RequestParam(defaultValue = "5") double radiusKm,
+            @RequestParam(defaultValue = "50") int limit,
+            HttpServletResponse response) {
+
+        try {
+            List<RestaurantResponse> restaurants = restaurantService.findNearby(lat, lon, radiusKm, limit);
+
+            // Set custom headers
+            response.setHeader("X-Mode", "nearby");
+            response.setHeader("X-Center", String.format("{\"lat\":%.6f,\"lon\":%.6f}", lat, lon));
+            response.setHeader("X-RadiusKm", String.valueOf(radiusKm));
+            response.setHeader("X-Limit", String.valueOf(limit));
+            response.setHeader("X-Count", String.valueOf(restaurants.size()));
+            response.setHeader("X-Has-More", String.valueOf(restaurants.size() >= limit));
+
+            return new ResponseDto<>(HttpStatus.OK.value(), "Nearby restaurants loaded", restaurants);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi tìm nhà hàng gần đây: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Tìm nhà hàng trong viewport/bounding box (PUBLIC - không cần auth)
+     */
+    @GetMapping("/in-bounds")
+    public ResponseDto<List<RestaurantResponse>> getRestaurantsInBounds(
+            @RequestParam double minLat,
+            @RequestParam double maxLat,
+            @RequestParam double minLon,
+            @RequestParam double maxLon,
+            @RequestParam(defaultValue = "100") int limit,
+            HttpServletResponse response) {
+
+        try {
+            List<RestaurantResponse> restaurants = restaurantService.findInBounds(minLat, maxLat, minLon, maxLon, limit);
+
+            // Set custom headers
+            response.setHeader("X-Mode", "in-bounds");
+            response.setHeader("X-BBox", String.format("{\"minLat\":%.6f,\"maxLat\":%.6f,\"minLon\":%.6f,\"maxLon\":%.6f}",
+                    minLat, maxLat, minLon, maxLon));
+            response.setHeader("X-Limit", String.valueOf(limit));
+            response.setHeader("X-Count", String.valueOf(restaurants.size()));
+            response.setHeader("X-Has-More", String.valueOf(restaurants.size() >= limit));
+
+            return new ResponseDto<>(HttpStatus.OK.value(), "Restaurants in bounds loaded", restaurants);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi tìm nhà hàng trong khu vực: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Reverse geocode tọa độ thành địa chỉ (PUBLIC - không cần auth)
+     */
+    @GetMapping("/reverse-geocode")
+    public ResponseDto<Map<String, Object>> reverseGeocode(
+            @RequestParam double lat,
+            @RequestParam double lon) {
+
+        try {
+            Map<String, Object> result = geocodingService.reverseGeocode(lat, lon);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Reverse geocode successful", result);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi reverse geocode: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Tạo nhà hàng mới (CẦN AUTH)
      */
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseDto<RestaurantResponse> createRestaurant(
             @Valid @RequestBody CreateRestaurantRequest request) {
         try {
@@ -79,17 +163,27 @@ public class RestaurantController {
     }
 
     /**
-     * Tìm kiếm nhà hàng
+     * Tìm kiếm nhà hàng (PUBLIC - không cần auth)
      */
     @GetMapping("/search")
     public ResponseDto<Page<RestaurantResponse>> searchRestaurants(
             @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(required = false) String district,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletResponse response) {
 
         try {
+            Page<RestaurantResponse> restaurants;
+            if (district != null && !district.trim().isEmpty()) {
+                restaurants = restaurantService.searchRestaurants(keyword, district, page, size);
+            } else {
+                restaurants = restaurantService.searchRestaurants(keyword, page, size);
+            }
 
-            Page<RestaurantResponse> restaurants = restaurantService.searchRestaurants(keyword, page, size);
+            // Set custom header
+            response.setHeader("X-Mode", "search");
+
             return new ResponseDto<>(HttpStatus.OK.value(), "Kết quả tìm kiếm nhà hàng đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -98,16 +192,47 @@ public class RestaurantController {
     }
 
     /**
-     * Lấy nhà hàng theo khu vực
+     * Lấy nhà hàng theo khu vực (PUBLIC - không cần auth)
+     * Keeping old path for backward compatibility
      */
     @GetMapping("/read/by-district/{district}")
-    public ResponseDto<Page<RestaurantResponse>> readRestaurantsByDistrict(
+    public ResponseDto<Page<RestaurantResponse>> readRestaurantsByDistrictPath(
             @PathVariable String district,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletResponse response) {
 
         try {
             Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByDistrict(district, page, size);
+
+            // Set custom headers
+            response.setHeader("X-Mode", "by-district");
+            response.setHeader("X-District", district);
+
+            return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng theo khu vực đã được tải thành công", restaurants);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi lấy nhà hàng theo khu vực", null);
+        }
+    }
+
+    /**
+     * Lấy nhà hàng theo khu vực - Query param version (PUBLIC - không cần auth)
+     */
+    @GetMapping("/by-district")
+    public ResponseDto<Page<RestaurantResponse>> readRestaurantsByDistrict(
+            @RequestParam String district,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletResponse response) {
+
+        try {
+            Page<RestaurantResponse> restaurants = restaurantService.readRestaurantsByDistrict(district, page, size);
+
+            // Set custom headers
+            response.setHeader("X-Mode", "by-district");
+            response.setHeader("X-District", district);
+
             return new ResponseDto<>(HttpStatus.OK.value(), "Nhà hàng theo khu vực đã được tải thành công", restaurants);
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -136,9 +261,10 @@ public class RestaurantController {
     }
 
     /**
-     * Cập nhật nhà hàng
+     * Cập nhật nhà hàng (CẦN AUTH)
      */
     @PutMapping("/edit/{restaurantId}")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseDto<RestaurantResponse> editRestaurant(
             @PathVariable String restaurantId,
             @Valid @RequestBody UpdateRestaurantRequest request,
@@ -167,9 +293,10 @@ public class RestaurantController {
     }
 
     /**
-     * Xóa nhà hàng
+     * Xóa nhà hàng (CẦN AUTH)
      */
     @DeleteMapping("/delete/{restaurantId}")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseDto<Void> deleteRestaurant(
             @PathVariable String restaurantId) {
 

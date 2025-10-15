@@ -21,9 +21,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         System.out.println("🌱 Bắt đầu seed database...");
-        
+
         boolean hasSeeded = false;
-        
+
         for (DataSeeder seeder : seeders) {
             try {
                 if (seeder.shouldSeed()) {
@@ -38,7 +38,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 e.printStackTrace();
             }
         }
-        
+
         if (hasSeeded) {
             System.out.println("🎉 Hoàn thành seed database!");
         } else {

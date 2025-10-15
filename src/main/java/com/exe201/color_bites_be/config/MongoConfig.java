@@ -1,10 +1,15 @@
 package com.exe201.color_bites_be.config;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import com.exe201.color_bites_be.entity.Account;
+import com.exe201.color_bites_be.entity.Restaurant;
+
 import java.time.LocalDateTime;
 
 /**

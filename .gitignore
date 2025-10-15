@@ -31,4 +31,8 @@ build/
 ### VS Code ###
 .vscode/
 
+### Environment Variables - NEVER COMMIT ###
 .env
+.env.local
+.env.production
+*.env
