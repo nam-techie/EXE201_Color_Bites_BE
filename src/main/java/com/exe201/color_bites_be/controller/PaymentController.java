@@ -15,6 +15,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/payment")
@@ -57,6 +59,22 @@ public class PaymentController {
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Lỗi xác nhận thanh toán: " + e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Lấy lịch sử giao dịch của user hiện tại
+     * Yêu cầu authentication (USER role)
+     */
+    @GetMapping("/history")
+    @PreAuthorize("hasAuthority('USER')")
+    public ResponseDto<List<PaymentStatusResponse>> getUserTransactionHistory() {
+        try {
+            List<PaymentStatusResponse> transactions = paymentService.getUserTransactions();
+            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy lịch sử giao dịch thành công", transactions);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi lấy lịch sử giao dịch: " + e.getMessage(), null);
         }
     }
     

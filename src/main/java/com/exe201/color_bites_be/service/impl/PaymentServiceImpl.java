@@ -395,6 +395,47 @@ public class PaymentServiceImpl implements IPaymentService {
     }
     
     
+    // ==================== USER TRANSACTION HISTORY ====================
+    
+    @Override
+    public List<PaymentStatusResponse> getUserTransactions() {
+        try {
+            Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            String accountId = account.getId();
+            
+            log.info("Lấy lịch sử giao dịch cho user: {}", accountId);
+            
+            // Lấy tất cả transactions của user, sắp xếp theo thời gian tạo giảm dần
+            List<Transaction> transactions = transactionRepository.findByAccountIdOrderByCreatedAtDesc(accountId);
+            
+            // Convert sang PaymentStatusResponse
+            List<PaymentStatusResponse> responses = new ArrayList<>();
+            for (Transaction transaction : transactions) {
+                PaymentStatusResponse response = PaymentStatusResponse.builder()
+                    .transactionId(transaction.getProviderTxnId() != null ? transaction.getProviderTxnId() : transaction.getOrderCode())
+                    .orderCode(Long.valueOf(transaction.getOrderCode()))
+                    .status(transaction.getStatus())
+                    .amount(transaction.getAmount().longValue())
+                    .description(getMetadataValue(transaction, "description"))
+                    .gatewayName(transaction.getGateway())
+                    .message(getStatusMessage(transaction.getStatus()))
+                    .createdAt(transaction.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                    .updatedAt(transaction.getUpdatedAt() != null ? 
+                        transaction.getUpdatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : 
+                        transaction.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                    .build();
+                responses.add(response);
+            }
+            
+            log.info("Tìm thấy {} giao dịch cho user: {}", responses.size(), accountId);
+            return responses;
+            
+        } catch (Exception e) {
+            log.error("Lỗi lấy lịch sử giao dịch: ", e);
+            throw new RuntimeException("Lỗi lấy lịch sử giao dịch: " + e.getMessage());
+        }
+    }
+    
     // ==================== HELPER METHODS ====================
     
     
