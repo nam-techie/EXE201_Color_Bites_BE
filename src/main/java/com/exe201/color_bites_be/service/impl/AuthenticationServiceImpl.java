@@ -233,4 +233,43 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
         return modelMapper.map(newAccount, AccountResponse.class);
     }
 
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        // newPassword phải trùng confirmPassword
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Mật khẩu mới và xác nhận mật khẩu không khớp");
+        }
+
+        // Lấy principal hiện tại, hỗ trợ cả UserPrincipal lẫn Account
+        Authentication currentAuth = org.springframework.security.core.context.SecurityContextHolder
+                .getContext()
+                .getAuthentication();
+
+        Object principal = currentAuth.getPrincipal();
+        Account account;
+        if (principal instanceof com.exe201.color_bites_be.model.UserPrincipal) {
+            account = ((com.exe201.color_bites_be.model.UserPrincipal) principal).getAccount();
+        } else if (principal instanceof Account) {
+            account = (Account) principal;
+        } else {
+            String username = currentAuth.getName();
+            account = accountRepository.findByUserName(username)
+                    .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại: " + username));
+        }
+
+        // Xác thực mật khẩu cũ bằng passwordEncoder thay vì re-authenticate để tránh sai username
+        if (!passwordEncoder.matches(request.getOldPassword(), account.getPassword())) {
+            throw new RuntimeException("Mật khẩu cũ không đúng");
+        }
+
+        // Không cho phép mật khẩu mới trùng mật khẩu hiện tại
+        if (passwordEncoder.matches(request.getNewPassword(), account.getPassword())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+        }
+
+        account.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        account.setUpdatedAt(LocalDateTime.now());
+        accountRepository.save(account);
+    }
+
 }

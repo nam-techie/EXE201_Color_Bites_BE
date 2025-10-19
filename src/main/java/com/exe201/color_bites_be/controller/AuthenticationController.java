@@ -1,6 +1,7 @@
 package com.exe201.color_bites_be.controller;
 
 import com.exe201.color_bites_be.dto.request.ForgotPasswordRequest;
+import com.exe201.color_bites_be.dto.request.ChangePasswordRequest;
 import com.exe201.color_bites_be.dto.request.LoginRequest;
 import com.exe201.color_bites_be.dto.request.RegisterRequest;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
@@ -61,12 +63,26 @@ public class AuthenticationController {
     @PostMapping("/forgot-password")
     @Operation(summary = "Quên mật khẩu và gửi mã OTP về email")
     public ResponseDto<Object> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
-
-        authenticationService.forgotPassword(request);
-
+        // Luôn trả về thông điệp chung để tránh lộ việc email có tồn tại hay không
+        try {
+            authenticationService.forgotPassword(request);
+        } catch (Exception ignored) {
+            // Không trả về chi tiết lỗi để tránh email enumeration
+        }
         return ResponseDto.builder()
                 .status(HttpStatus.OK.value())
-                .message("Gửi yêu cầu, vui lòng kiểm tra email để lấy mã OTP")
+                .message("Nếu email tồn tại, chúng tôi đã gửi OTP hướng dẫn đặt lại mật khẩu")
+                .build();
+    }
+
+    @PutMapping("/change-password")
+    @PreAuthorize("hasAuthority('USER')")
+    @Operation(summary = "Đổi mật khẩu chủ động (đã đăng nhập)")
+    public ResponseDto<Object> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+        authenticationService.changePassword(request);
+        return ResponseDto.builder()
+                .status(HttpStatus.OK.value())
+                .message("Đổi mật khẩu thành công")
                 .build();
     }
 

@@ -5,6 +5,7 @@ import com.exe201.color_bites_be.dto.response.AccountResponse;
 import com.exe201.color_bites_be.entity.Account;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.multipart.MultipartFile;
+import com.exe201.color_bites_be.dto.request.ChangePasswordRequest;
 
 /**
  * Interface định nghĩa các phương thức xác thực người dùng
@@ -54,5 +55,9 @@ public interface IAuthenticationService extends UserDetailsService {
 
     AccountResponse verifyResetPassword(VerifyRequest request);
 
+    /**
+     * Đổi mật khẩu chủ động cho user đã đăng nhập
+     */
+    void changePassword(ChangePasswordRequest request);
 
     }
