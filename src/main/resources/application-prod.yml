@@ -4,7 +4,7 @@
 
 server:
   port: 8080
-  forward-headers-strategy: framework  # Quan trọng: Để Spring hiểu X-Forwarded-* headers từ Railway proxy
+  forward-headers-strategy: framework # Quan trọng: Để Spring hiểu X-Forwarded-* headers từ Railway proxy
   servlet:
     encoding:
       charset: UTF-8
@@ -16,7 +16,7 @@ spring:
     name: ColorBites_be
   data:
     mongodb:
-      uri: ${MONGODB_URI}  # Set trên Railway Variables
+      uri: ${MONGODB_URI} # Set trên Railway Variables
       database: ${MONGODB_DATABASE:color_bites_db}
   main:
     banner-mode: off
@@ -56,4 +56,3 @@ app:
   geocoding:
     cache-ttl-minutes: 60
     nominatim-url: https://nominatim.openstreetmap.org
-
