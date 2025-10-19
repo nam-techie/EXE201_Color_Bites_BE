@@ -1,7 +1,6 @@
 package com.exe201.color_bites_be.service;
 
-import com.exe201.color_bites_be.dto.request.LoginRequest;
-import com.exe201.color_bites_be.dto.request.RegisterRequest;
+import com.exe201.color_bites_be.dto.request.*;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
 import com.exe201.color_bites_be.entity.Account;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,7 +18,9 @@ public interface IAuthenticationService extends UserDetailsService {
      * @param registerRequest Thông tin đăng ký
      * @return AccountResponse Thông tin tài khoản đã tạo
      */
-    AccountResponse register(RegisterRequest registerRequest);
+    void register(RegisterRequest registerRequest);
+
+    AccountResponse verifyRegister(VerifyRegisterRequest request);
     
     /**
      * Đăng nhập vào hệ thống
@@ -49,4 +50,9 @@ public interface IAuthenticationService extends UserDetailsService {
      */
     Account updateAccount(String accountId, Account updatedAccount);
 
-}
+    void forgotPassword(ForgotPasswordRequest request);
+
+    AccountResponse verifyResetPassword(VerifyRequest request);
+
+
+    }

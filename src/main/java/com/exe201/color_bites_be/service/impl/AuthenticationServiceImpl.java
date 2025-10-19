@@ -1,7 +1,6 @@
 package com.exe201.color_bites_be.service.impl;
 
-import com.exe201.color_bites_be.dto.request.LoginRequest;
-import com.exe201.color_bites_be.dto.request.RegisterRequest;
+import com.exe201.color_bites_be.dto.request.*;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
 import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
 import com.exe201.color_bites_be.entity.Account;
@@ -15,9 +14,7 @@ import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.model.UserPrincipal;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
-import com.exe201.color_bites_be.service.IAuthenticationService;
-import com.exe201.color_bites_be.service.ITokenService;
-import com.exe201.color_bites_be.service.ICloudinaryService;
+import com.exe201.color_bites_be.service.*;
 import com.exe201.color_bites_be.util.FileUpLoadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -42,7 +39,7 @@ import java.time.LocalDateTime;
  */
 @Service
 public class AuthenticationServiceImpl implements IAuthenticationService, UserDetailsService {
-    
+
     @Autowired
     private AccountRepository accountRepository;
 
@@ -58,20 +55,36 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    IEmailService emailService;
+
+    @Autowired
+    IOtpService otpService;
+
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Override
     @Transactional
-    public AccountResponse register(RegisterRequest registerRequest) {
+    public void register(RegisterRequest registerRequest) {
+        // Kiểm tra trùng lặp email và username trước khi lưu vào cơ sở dữ liệu
+        if (accountRepository.existsByEmail(registerRequest.getEmail())) {
+            throw new DuplicateEntity("Email này đã được sử dụng!");
+        }
+        emailService.sendOtpEmail(registerRequest.getEmail(), otpService.generateOtp(registerRequest.getEmail()));
+    }
+
+
+    @Override
+    public AccountResponse verifyRegister(VerifyRegisterRequest registerRequest) {
         try {
+            boolean flag = otpService.verifyOtp(registerRequest.getEmail(), registerRequest.getOtp());
+
+            if (!flag)
+                throw new NotFoundException("OTP không hợp lệ");
+
             // Kiểm tra confirmPassword trước khi tiếp tục
             if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
                 throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp!");
-            }
-
-            // Kiểm tra trùng lặp email và username trước khi lưu vào cơ sở dữ liệu
-            if (accountRepository.existsByEmail(registerRequest.getEmail())) {
-                throw new DuplicateEntity("Email này đã được sử dụng!");
             }
 
             // Kiểm tra trùng lặp username
@@ -120,6 +133,7 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
         }
     }
 
+
     @Override
     public AccountResponse login(LoginRequest loginRequest) {
         try {
@@ -144,10 +158,9 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
                 accountResponse.setToken(tokenService.generateToken(account));
             }
             return accountResponse;
-        }catch (DisabledException e){
+        } catch (DisabledException e) {
             throw new DisabledException(e.getMessage());
-        }
-        catch (BadCredentialsException e) {
+        } catch (BadCredentialsException e) {
             // Nếu thông tin tài khoản hoặc mật khẩu sai
             throw new RuntimeException("Email hoặc mật khẩu sai!");
         } catch (Exception e) {
@@ -194,5 +207,30 @@ public class AuthenticationServiceImpl implements IAuthenticationService, UserDe
         return accountRepository.save(existingAccount);
     }
 
+    @Override
+    public void forgotPassword(ForgotPasswordRequest request) {
+        Account account = accountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại: " + request.getEmail()));
+
+        emailService.sendForgotPasswordEmail(request.getEmail(), otpService.generateOtp(request.getEmail()));
+    }
+
+    @Override
+    public AccountResponse verifyResetPassword(VerifyRequest request) {
+        Account account = accountRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("Tài khoản không tồn tại: " + request.getEmail()));
+
+        boolean flag = otpService.verifyOtp(request.getEmail(), request.getOtp());
+
+        if (!flag)
+            throw new NotFoundException("OTP không hợp lệ");
+
+        account.setPassword(passwordEncoder.encode(request.getPassword()));
+        account.setUpdatedAt(LocalDateTime.now());
+
+        Account newAccount = accountRepository.save(account);
+
+        return modelMapper.map(newAccount, AccountResponse.class);
+    }
 
 }

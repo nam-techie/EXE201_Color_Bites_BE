@@ -37,6 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
             "/swagger-resources/**",
             "/api/auth/login",
             "/api/auth/register",
+            "/api/auth/forgot-password",
             "/api/loginByGoogle",
             "/oauth2/authorization/**",
             "/login/oauth2/code/**",
@@ -46,7 +47,9 @@ public class JwtFilter extends OncePerRequestFilter {
             "/api/restaurants/by-district",
             "/api/restaurants/read/by-district/**",
             "/api/restaurants/search",
-            "/api/restaurants/reverse-geocode"
+            "/api/restaurants/reverse-geocode",
+            "/api/otp/verify-register",
+            "/api/otp/verify-reset-password"
     );
 
     public boolean checkIsPublicAPI(String uri) {

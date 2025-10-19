@@ -1,5 +1,6 @@
 package com.exe201.color_bites_be.controller;
 
+import com.exe201.color_bites_be.dto.request.ForgotPasswordRequest;
 import com.exe201.color_bites_be.dto.request.LoginRequest;
 import com.exe201.color_bites_be.dto.request.RegisterRequest;
 import com.exe201.color_bites_be.dto.response.AccountResponse;
@@ -8,6 +9,7 @@ import com.exe201.color_bites_be.exception.DisabledException;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.service.IAuthenticationService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,33 +28,10 @@ public class AuthenticationController {
     IAuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseDto<String> register(@Valid @RequestBody RegisterRequest account, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            StringBuilder errors = new StringBuilder();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.append(error.getDefaultMessage()).append(". ");
-            }
-            return new ResponseDto<>(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "Validation failed",
-                    errors.toString());
-        }
-        try {
-            authenticationService.register(account);
-            return new ResponseDto<String>(HttpStatus.OK.value(), "Đăng ký thành công",
-                    "Vui lòng đăng nhập để tiếp tục");
-        } catch (IllegalArgumentException e) {
-            return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
-        } catch (DuplicateEntity e) {
-            // Xử lý lỗi duplicate với encoding đúng
-            return new ResponseDto<>(HttpStatus.CONFLICT.value(), e.getMessage(), null);
-        } catch (DataIntegrityViolationException e) {
-            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Đã xảy ra lỗi trong quá trình đăng ký, vui lòng thử lại sau.", null);
-        } catch (Exception e) {
-            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "Đã xảy ra lỗi không xác định, vui lòng thử lại sau.", null);
-        }
+    public ResponseDto<String> register(@Valid @RequestBody RegisterRequest account) {
+        authenticationService.register(account);
+        return new ResponseDto<String>(HttpStatus.OK.value(), "Vui lòng kiểm tra email để lấy mã OTP",
+                null);
     }
 
     @PostMapping("/login")
@@ -77,6 +56,18 @@ public class AuthenticationController {
         }
         authenticationService.logout(token);
         return ResponseEntity.ok("Đăng xuất thành công.");
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Quên mật khẩu và gửi mã OTP về email")
+    public ResponseDto<Object> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+
+        authenticationService.forgotPassword(request);
+
+        return ResponseDto.builder()
+                .status(HttpStatus.OK.value())
+                .message("Gửi yêu cầu, vui lòng kiểm tra email để lấy mã OTP")
+                .build();
     }
 
 
