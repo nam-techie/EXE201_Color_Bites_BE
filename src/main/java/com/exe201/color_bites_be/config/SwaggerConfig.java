@@ -24,6 +24,10 @@ public class SwaggerConfig {
                 .addServersItem(new Server()
                         .url("https://api-mumii.namtechie.id.vn")
                         .description("Production Server - Railway"))
+                // Thêm server URLs để Swagger UI sử dụng đúng HTTPS trên Ngrok
+                .addServersItem(new Server()
+                        .url("https://homelike-debora-harmotomic.ngrok-free.dev")
+                        .description("Dev Tunnel - Ngrok"))
                 .addServersItem(new Server()
                         .url("http://localhost:8080")
                         .description("Local Development Server"))
