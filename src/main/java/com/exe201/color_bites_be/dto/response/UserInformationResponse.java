@@ -18,6 +18,10 @@ public class UserInformationResponse {
     private String gender;
     private String avatarUrl;
     private String subscriptionPlan;
+    private String subscriptionStatus; // ACTIVE|EXPIRED|CANCELED
+    private LocalDateTime subscriptionStartsAt; // ISO timestamps
+    private LocalDateTime subscriptionExpiresAt; // ISO timestamps
+    private Integer subscriptionRemainingDays; // server-calculated remaining days
     private String bio;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
