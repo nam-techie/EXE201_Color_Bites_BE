@@ -28,6 +28,10 @@ public class SwaggerConfig {
                 .addServersItem(new Server()
                         .url("https://homelike-debora-harmotomic.ngrok-free.dev")
                         .description("Dev Tunnel - Ngrok"))
+                // Thêm server URLs để Swagger UI sử dụng đúng HTTPS trên Azure
+                .addServersItem(new Server()
+                        .url("https://mumii-be.namtechie.id.vn")
+                        .description("Deployment BE - Azure"))
                 .addServersItem(new Server()
                         .url("http://localhost:8080")
                         .description("Local Development Server"))

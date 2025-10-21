@@ -99,6 +99,7 @@ public class SecurityConfig {
                 "https://*.up.railway.app", // Railway wildcard domains
                 "http://localhost:8080",
                 "https://homelike-debora-harmotomic.ngrok-free.dev",
+                "https://mumii-be.namtechie.id.vn",
                 "https://virtserver.swaggerhub.com"
         ));
         // Thêm PATCH và OPTIONS cho đầy đủ REST operations
