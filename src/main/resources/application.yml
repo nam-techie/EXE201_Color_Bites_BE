@@ -3,7 +3,7 @@
 # Để chạy local: Tạo file .env theo mẫu .env.example
 
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     encoding:
       charset: UTF-8
