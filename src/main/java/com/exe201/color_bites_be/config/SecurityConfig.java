@@ -96,9 +96,8 @@ public class SecurityConfig {
                 "https://your-vercel-app.vercel.app", // FE production Vercel
                 "https://app.swaggerhub.com", // SwaggerHub Try it out
                 "https://api-mumii.namtechie.id.vn", // Railway production domain
-                "https://*.up.railway.app", // Railway wildcard domains
+//                "https://*.up.railway.app", // Railway wildcard domains
                 "http://localhost:8080",
-                "https://homelike-debora-harmotomic.ngrok-free.dev",
                 "https://virtserver.swaggerhub.com"
         ));
         // Thêm PATCH và OPTIONS cho đầy đủ REST operations
