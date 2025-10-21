@@ -5,11 +5,14 @@ import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
+import com.exe201.color_bites_be.entity.Subscription;
+import com.exe201.color_bites_be.entity.Subscription.SubscriptionStatus;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.enums.Gender;
 import com.exe201.color_bites_be.exception.DuplicateEntity;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
+import com.exe201.color_bites_be.repository.SubscriptionRepository;
 import com.exe201.color_bites_be.service.ICloudinaryService;
 import com.exe201.color_bites_be.service.IUserInformationService;
 import com.exe201.color_bites_be.util.FileUpLoadUtil;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 /**
  * Implementation của IUserInformationService
@@ -31,6 +35,9 @@ public class UserInformationServiceImpl implements IUserInformationService {
 
     @Autowired
     private UserInformationRepository userInformationRepository;
+
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
 
     @Autowired
     ICloudinaryService cloudinaryService;
@@ -49,6 +56,25 @@ public class UserInformationServiceImpl implements IUserInformationService {
         UserInformationResponse response = modelMapper.map(userInformation, UserInformationResponse.class);
         response.setAccountId(account.getId());
         response.setUsername(account.getUserName());
+
+        // Bổ sung thông tin subscription cho FE hiển thị
+        subscriptionRepository.findByAccountIdAndStatus(account.getId(), SubscriptionStatus.ACTIVE)
+                .ifPresentOrElse(sub -> {
+                    response.setSubscriptionStatus(SubscriptionStatus.ACTIVE.name());
+                    response.setSubscriptionStartsAt(sub.getStartsAt());
+                    response.setSubscriptionExpiresAt(sub.getExpiresAt());
+                    long remaining = 0;
+                    if (sub.getExpiresAt() != null) {
+                        remaining = Duration.between(LocalDateTime.now(), sub.getExpiresAt()).toDays();
+                        if (remaining < 0) remaining = 0;
+                    }
+                    response.setSubscriptionRemainingDays((int) remaining);
+                }, () -> {
+                    response.setSubscriptionStatus(SubscriptionStatus.EXPIRED.name());
+                    response.setSubscriptionStartsAt(null);
+                    response.setSubscriptionExpiresAt(null);
+                    response.setSubscriptionRemainingDays(0);
+                });
         return response;
     }
 
@@ -76,6 +102,25 @@ public class UserInformationServiceImpl implements IUserInformationService {
         UserInformationResponse response = modelMapper.map(updatedUserInfo, UserInformationResponse.class);
         response.setAccountId(account.getId());
         response.setUsername(account.getUserName());
+
+        // Bổ sung lại thông tin subscription để FE luôn có dữ liệu mới
+        subscriptionRepository.findByAccountIdAndStatus(account.getId(), SubscriptionStatus.ACTIVE)
+                .ifPresentOrElse(sub -> {
+                    response.setSubscriptionStatus(SubscriptionStatus.ACTIVE.name());
+                    response.setSubscriptionStartsAt(sub.getStartsAt());
+                    response.setSubscriptionExpiresAt(sub.getExpiresAt());
+                    long remaining = 0;
+                    if (sub.getExpiresAt() != null) {
+                        remaining = Duration.between(LocalDateTime.now(), sub.getExpiresAt()).toDays();
+                        if (remaining < 0) remaining = 0;
+                    }
+                    response.setSubscriptionRemainingDays((int) remaining);
+                }, () -> {
+                    response.setSubscriptionStatus(SubscriptionStatus.EXPIRED.name());
+                    response.setSubscriptionStartsAt(null);
+                    response.setSubscriptionExpiresAt(null);
+                    response.setSubscriptionRemainingDays(0);
+                });
         return response;
     }
 
