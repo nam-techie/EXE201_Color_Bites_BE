@@ -1,0 +1,58 @@
+# Production Configuration for Railway Deployment
+# Kích hoạt profile này bằng cách set biến môi trường: SPRING_PROFILES_ACTIVE=prod
+# Tất cả sensitive data được lấy từ Environment Variables trên Railway
+
+server:
+  port: 8080
+  forward-headers-strategy: framework # Quan trọng: Để Spring hiểu X-Forwarded-* headers từ Railway proxy
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: ColorBites_be
+  data:
+    mongodb:
+      uri: ${MONGODB_URI} # Set trên Railway Variables
+      database: ${MONGODB_DATABASE:color_bites_db}
+  main:
+    banner-mode: off
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+logging:
+  level:
+    root: warn
+    org.springframework.data.mongodb: INFO
+    org.springframework.security: INFO
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api
+
+# PayOS Configuration - Production URLs
+# Tất cả credentials được lấy từ Railway Environment Variables
+payos:
+  client-id: ${PAYOS_CLIENT_ID}
+  api-key: ${PAYOS_API_KEY}
+  checksum-key: ${PAYOS_CHECKSUM_KEY}
+  api-url: https://api-merchant.payos.vn
+  return-url: ${PAYOS_RETURN_URL:https://api-mumii.namtechie.id.vn/api/payment/payos/return}
+  cancel-url: ${PAYOS_CANCEL_URL:https://api-mumii.namtechie.id.vn/api/payment/payos/cancel}
+
+# Application Configuration
+app:
+  rate-limit:
+    enabled: true
+    max-requests: 100
+    time-window-seconds: 60
+  geocoding:
+    cache-ttl-minutes: 60
+    nominatim-url: https://nominatim.openstreetmap.org

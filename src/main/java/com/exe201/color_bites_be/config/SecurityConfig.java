@@ -1,0 +1,133 @@
+package com.exe201.color_bites_be.config;
+
+import com.exe201.color_bites_be.service.IAuthenticationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.*;
+import org.springframework.web.filter.ForwardedHeaderFilter;
+
+import java.util.List;
+
+@Configuration
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    @Autowired
+    private JwtFilter jwtFilter;
+
+    @Autowired
+    @Lazy
+    private IAuthenticationService authenticationService;
+
+    // Bean này xử lý X-Forwarded-* headers từ Railway proxy
+    // Giúp Spring hiểu đúng scheme (HTTPS) và host khi đứng sau proxy
+    @Bean
+    public ForwardedHeaderFilter forwardedHeaderFilter() {
+        return new ForwardedHeaderFilter();
+    }
+
+//    @Autowired
+//    private CustomOAuth2UserService oauth2UserService;
+//
+//    @Autowired
+//    private OAuth2SuccessHandler successHandler;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(req -> req
+                        // Cho phép OPTIONS preflight requests để CORS hoạt động
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/forgot-password",
+                                "/api/loginByGoogle",
+                                "/oauth2/authorization/**",
+                                "/login/oauth2/code/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/api/vnpay-return",
+                                "/api/payment/payos/webhook",
+                                "/api/payment/payos/return",
+                                "/api/restaurants/nearby",
+                                "/api/restaurants/in-bounds",
+                                "/api/restaurants/by-district",
+                                "/api/restaurants/read/by-district/**",
+                                "/api/restaurants/search",
+                                "/api/restaurants/reverse-geocode",
+                                "/api/otp/verify-register",
+                                "/api/otp/verify-reset-password"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+//                .oauth2Login(oauth2 -> oauth2
+//                        .loginPage("http://localhost:5173/login") // Cập nhật cho FE local, Vercel có thể chỉnh env sau
+//                        .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+//                        .successHandler(successHandler)
+//                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173", // FE web local dev
+                "http://localhost:8081", // Expo dev server
+                "http://10.0.243.212:8081", // React Native on physical device
+                "http://172.24.16.1:8081", // React Native on emulator
+                "https://your-vercel-app.vercel.app", // FE production Vercel
+                "https://app.swaggerhub.com", // SwaggerHub Try it out
+                "https://api-mumii.namtechie.id.vn", // Railway production domain
+                "https://*.up.railway.app", // Railway wildcard domains
+                "http://localhost:8080",
+                "https://homelike-debora-harmotomic.ngrok-free.dev",
+                "https://mumii-be.namtechie.id.vn",
+                "https://virtserver.swaggerhub.com"
+        ));
+        // Thêm PATCH và OPTIONS cho đầy đủ REST operations
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of(
+                "X-Mode", "X-Center", "X-RadiusKm", "X-Limit", "X-Count", "X-Has-More",
+                "X-BBox", "X-District", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"
+        ));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // 1h
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        // IAuthenticationService now extends UserDetailsService
+        provider.setUserDetailsService(authenticationService);
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+}

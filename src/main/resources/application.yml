@@ -1,0 +1,69 @@
+# Default Configuration (Local Development)
+# Sensitive data được lấy từ Environment Variables hoặc .env file
+# Để chạy local: Tạo file .env theo mẫu .env.example
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: ColorBites_be
+  data:
+    mongodb:
+      uri: ${MONGODB_URI} # Set trong .env file hoặc IDE Environment Variables
+      database: ${MONGODB_DATABASE:color_bites_db}
+  main:
+    banner-mode: off
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        transport:
+          protocol: smtp
+
+logging:
+  level:
+    root: warn
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api
+
+# PayOS Configuration
+# Credentials được lấy từ Environment Variables
+payos:
+  client-id: ${PAYOS_CLIENT_ID}
+  api-key: ${PAYOS_API_KEY}
+  checksum-key: ${PAYOS_CHECKSUM_KEY}
+  api-url: https://api-merchant.payos.vn
+  return-url: ${PAYOS_RETURN_URL:http://localhost:8080/api/payment/payos/return}
+  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:8080/api/payment/payos/cancel}
+
+# Application Configuration
+app:
+  rate-limit:
+    enabled: true
+    max-requests: 100
+    time-window-seconds: 60
+  geocoding:
+    cache-ttl-minutes: 60
+    nominatim-url: https://nominatim.openstreetmap.org

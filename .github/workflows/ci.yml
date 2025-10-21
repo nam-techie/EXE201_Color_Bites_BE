@@ -1,0 +1,45 @@
+name: Java CI with Maven Wrapper (Spring Boot)
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Grant execute permission for Maven Wrapper
+        run: chmod +x ./mvnw
+
+      - name: Run tests
+        run: ./mvnw test
+
+      - name: Build Spring Boot app
+        run: ./mvnw clean package -DskipTests
+
+      - name: Verify JAR file created
+        run: |
+          if [ ! -f target/ColorBites_be-0.0.1-SNAPSHOT.jar ]; then
+            echo "❌ Build failed: JAR file not found"
+            exit 1
+          fi
+          echo "✅ Build successful: JAR created"
+
+      - name: Upload build artifact (JAR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ColorBites-be-jar
+          path: target/ColorBites_be-0.0.1-SNAPSHOT.jar

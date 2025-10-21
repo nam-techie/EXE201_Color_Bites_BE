@@ -1,0 +1,31 @@
+package com.exe201.color_bites_be.entity;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+
+@Document(collection = "post_images")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class PostImages {
+    @Id
+    private String id;
+
+    @Field("post_id")
+    @Indexed
+    private String postId;
+
+    @Field("url")
+    private String url;
+
+    @Field("created_at")
+    private LocalDateTime createdAt;
+}
