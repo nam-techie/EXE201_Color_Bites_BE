@@ -23,10 +23,10 @@ public class SwaggerConfig {
                 .addServersItem(new Server()
                         .url("http://localhost:8080")
                         .description("Local Development Server"))
-                // Thêm server URLs để Swagger UI sử dụng đúng HTTPS trên Railway
-//                .addServersItem(new Server()
-//                        .url("https://api-mumii.namtechie.id.vn")
-//                        .description("Production Server - Railway"))
+                // Thêm server URLs để Swagger UI sử dụng đúng HTTPS trên Azure
+               .addServersItem(new Server()
+                       .url("https://mumii-be.namtechie.id.vn/")
+                       .description("Production Server -Azure"))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEMES))
                 .components(new Components()
                         .addSecuritySchemes(SECURITY_SCHEMES,

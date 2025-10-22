@@ -95,7 +95,8 @@ public class SecurityConfig {
                 "http://172.24.16.1:8081", // React Native on emulator
                 "https://your-vercel-app.vercel.app", // FE production Vercel
                 "https://app.swaggerhub.com", // SwaggerHub Try it out
-                "https://api-mumii.namtechie.id.vn", // Railway production domain
+                // "https://api-mumii.namtechie.id.vn", // Railway production domain
+                "https://mumii-be.namtechie.id.vn/",
 //                "https://*.up.railway.app", // Railway wildcard domains
                 "http://localhost:8080",
                 "https://virtserver.swaggerhub.com"
