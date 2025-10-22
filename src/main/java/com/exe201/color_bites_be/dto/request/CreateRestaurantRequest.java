@@ -28,10 +28,8 @@ public class CreateRestaurantRequest {
     @Size(max = 500, message = "Mô tả không được quá 500 ký tự")
     private String description;
     
-    @NotBlank(message = "Loại nhà hàng không được để trống")
-    private String type;
-    
-    private List<String> moodTags;
+    @NotEmpty(message = "Phải chọn ít nhất một loại món ăn")
+    private List<String> foodTypeIds;
     
     @NotBlank(message = "Khu vực không được để trống")
     private String region;

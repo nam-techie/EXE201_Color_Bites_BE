@@ -1,8 +1,9 @@
 package com.exe201.color_bites_be.dto.response;
 
 import lombok.*;
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -10,24 +11,29 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class RestaurantResponse {
 
-    private String id;                // _id trong Mongo
-    private String name;              // Tên quán (được normalize từ Restaurant Name hoặc name)
-    private String address;           // Địa chỉ chi tiết (từ Address hoặc address)
-    private String district;          // Quận/huyện (từ quận hoặc district)
-    private String type;              // Loại món (từ Type hoặc type: Gà, Bún, v.v.)
-    private String price;             // Chuỗi giá "15.000 - 45.000" (từ Price hoặc price)
-    private Double latitude;          // Vĩ độ (từ lat hoặc latitude)
-    private Double longitude;         // Kinh độ (từ lon hoặc longitude)
+    private String id;
+    private String name;
+    private String address;
+    private String region;
+    private BigDecimal avgPrice;
+    private BigDecimal rating;
+    private Boolean featured;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
+
+    // Food types instead of single type
+    private List<FoodTypeResponse> foodTypes;
 
     // Người tạo (tham chiếu đến accounts.id)
     private String createdById;
-    private String createdBy;         // nếu bạn join sang account có thể điền ở service
+    private String createdBy;
 
-    private LocalDateTime createdAt;  // ISODate trong Mongo
-    private Boolean isDeleted;        // soft delete
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Boolean isDeleted;
 
     // Các thông tin mở rộng (có thể tính thêm ở service)
-    private Boolean isFavorited;      // user hiện tại đã yêu thích chưa
-    private Long favoriteCount;       // tổng số người yêu thích
-    private Double distance;          // khoảng cách từ vị trí user (meters)
+    private Boolean isFavorited;
+    private Long favoriteCount;
+    private Double distance; // khoảng cách từ vị trí user (meters)
 }
