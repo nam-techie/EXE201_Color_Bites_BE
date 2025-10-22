@@ -1,5 +1,7 @@
 package com.exe201.color_bites_be.entity;
 
+import com.exe201.color_bites_be.enums.Role;
+import com.exe201.color_bites_be.enums.Visibility;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -21,8 +23,8 @@ public class Challenge {
     @Id
     private String id;
 
-    @Field("account_id")
-    private String accountId;
+    @Field("create_by")
+    private Role createBy;
 
     @Field("title")
     private String title;
@@ -30,14 +32,11 @@ public class Challenge {
     @Field("description")
     private String description;
 
+    @Field("visibility")
+    private Visibility visibility;
+
     @Field("type")
     private String type;
-
-    @Field("duration_days")
-    private Integer durationDays;
-
-    @Field("status")
-    private ChallengeStatus status;
 
     @Field("entries")
     private Map<String, Object> entries;
@@ -47,4 +46,10 @@ public class Challenge {
 
     @Field("created_at")
     private LocalDateTime createdAt;
+
+    @Field("start_at")
+    private  LocalDateTime startAt;
+
+    @Field("expired_at")
+    private  LocalDateTime expiredAt;
 }

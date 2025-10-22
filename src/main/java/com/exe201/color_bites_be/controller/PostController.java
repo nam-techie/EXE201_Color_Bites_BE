@@ -4,6 +4,7 @@ import com.exe201.color_bites_be.dto.request.CreatePostRequest;
 import com.exe201.color_bites_be.dto.request.UpdatePostRequest;
 import com.exe201.color_bites_be.dto.response.PostResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
+import com.exe201.color_bites_be.enums.Visibility;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.service.IPostImageService;
 import com.exe201.color_bites_be.service.IPostService;
@@ -35,15 +36,29 @@ public class PostController {
     private IPostImageService postImageService;
 
 
+
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseDto<PostResponse> createPost(
             @RequestPart("content") String content,
             @RequestPart(value = "moodId", required = false) String moodId,
+            @RequestPart(value = "visibility", required = false) String visibility,
             @RequestPart(value = "files", required = false)List <MultipartFile >files) {
         try {
             CreatePostRequest request = new CreatePostRequest();
             request.setContent(content.trim());
             request.setMoodId(moodId);
+
+            if (visibility != null && !visibility.trim().isEmpty()) {
+                try {
+                    request.setVisibility(Visibility.valueOf(visibility.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    return new ResponseDto<>(HttpStatus.BAD_REQUEST.value(),
+                            "Giá trị quyền riêng tư không hợp lệ. Các giá trị hợp lệ: PUBLIC, FRIENDS, PRIVATE", null);
+                }
+            } else {
+                // Mặc định là PUBLIC nếu không được cung cấp
+                request.setVisibility(Visibility.PUBLIC);
+            }
 
             PostResponse response = postService.createPost(request, files);
             return new ResponseDto<>(HttpStatus.CREATED.value(), "Bài viết đã được tạo thành công", response);
@@ -152,6 +167,23 @@ public class PostController {
         } catch (Exception e) {
             return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "Đã xảy ra lỗi khi lấy bài viết theo mood", null);
+        }
+    }
+
+    /**
+     * Lấy bài viết theo quyền riêng tư (chỉ hiển thị bài viết có thể xem được)
+     */
+    @GetMapping("/read/privacy")
+    public ResponseDto<Page<PostResponse>> readPostsByPrivacy(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            Page<PostResponse> posts = postService.readPostsByPrivacy(page - 1, size);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Bài viết theo quyền riêng tư đã được tải thành công", posts);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi lấy bài viết theo quyền riêng tư: " + e.getMessage(), null);
         }
     }
 
