@@ -64,8 +64,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
             restaurant.setName(request.getName());
             restaurant.setAddress(request.getAddress());
             restaurant.setRegion(request.getRegion());
-            restaurant.setAvgPrice(request.getAvgPrice() != null ? BigDecimal.valueOf(request.getAvgPrice()) : null);
-            restaurant.setRating(request.getRating() != null ? BigDecimal.valueOf(request.getRating()) : null);
+            restaurant.setAvgPrice(request.getAvgPrice());
+            restaurant.setRating(request.getRating());
             restaurant.setFeatured(request.getFeatured() != null ? request.getFeatured() : false);
             
             // Handle coordinates

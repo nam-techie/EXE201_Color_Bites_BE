@@ -267,9 +267,9 @@ public class AdminServiceImpl implements IAdminService {
         response.setId(restaurant.getId());
         response.setName(restaurant.getName());
         response.setAddress(restaurant.getAddress());
-        response.setLongitude(restaurant.getLongitude());
-        response.setLatitude(restaurant.getLatitude());
-        response.setType(restaurant.getType());
+        response.setLongitude(restaurant.getLongitude() != null ? restaurant.getLongitude().doubleValue() : null);
+        response.setLatitude(restaurant.getLatitude() != null ? restaurant.getLatitude().doubleValue() : null);
+        response.setType(null); // Restaurant entity doesn't have type field
         response.setCreatedBy(restaurant.getCreatedBy());
         response.setCreatedAt(restaurant.getCreatedAt());
         response.setIsDeleted(restaurant.getIsDeleted());

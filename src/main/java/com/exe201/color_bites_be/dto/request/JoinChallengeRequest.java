@@ -4,7 +4,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class JoinChallengeRequest {
     // No additional fields needed - challenge ID comes from path parameter

@@ -43,10 +43,10 @@ public class Restaurant {
     private String region;
 
     @Field("avg_price")
-    private BigDecimal avgPrice;
+    private Double avgPrice;
 
     @Field("rating")
-    private BigDecimal rating;
+    private Double rating;
 
     @Field("featured")
     @Indexed
