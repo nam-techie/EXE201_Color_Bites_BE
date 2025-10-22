@@ -3,8 +3,8 @@
 # Tất cả sensitive data được lấy từ Environment Variables trên Railway
 
 server:
-  port: 8080
-  forward-headers-strategy: framework # Quan trọng: Để Spring hiểu X-Forwarded-* headers từ Railway proxy
+  port: ${PORT:80}  # Azure App Service sử dụng port 80, có thể override bằng PORT env var
+  forward-headers-strategy: framework # Quan trọng: Để Spring hiểu X-Forwarded-* headers từ Azure proxy
   servlet:
     encoding:
       charset: UTF-8
@@ -36,6 +36,27 @@ springdoc:
   swagger-ui:
     disable-swagger-default-url: true
     path: /api
+
+# Health Check Configuration for Azure App Service
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info   # chỉ mở health/info ra web
+  endpoint:
+    health:
+      probes:
+        enabled: true          # bật liveness/readiness probe-style
+      show-details: never      # không lộ chi tiết cho public
+  health:
+    mongodb:
+      enabled: true            # readiness: có thể giữ true để kiểm tra DB
+# Nhóm health chuyên dụng (Spring Boot 3+)
+management.endpoint.health.group:
+  liveness:
+    include: ping              # liveness chỉ cần ping -> rất nhanh
+  readiness:
+    include: ping              # readiness chỉ ping cho Azure (bỏ mongo để tránh timeout)
 
 # PayOS Configuration - Production URLs
 # Tất cả credentials được lấy từ Railway Environment Variables

@@ -48,6 +48,27 @@ springdoc:
     disable-swagger-default-url: true
     path: /api
 
+# Health Check Configuration for Azure App Service
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info   # chỉ mở health/info ra web
+  endpoint:
+    health:
+      probes:
+        enabled: true          # bật liveness/readiness probe-style
+      show-details: never      # không lộ chi tiết cho public
+  health:
+    mongodb:
+      enabled: true            # readiness: có thể giữ true để kiểm tra DB
+# Nhóm health chuyên dụng (Spring Boot 3+)
+management.endpoint.health.group:
+  liveness:
+    include: ping              # liveness chỉ cần ping -> rất nhanh
+  readiness:
+    include: ping,mongo        # readiness kiểm DB (nếu MongoDB khởi tạo lâu có thể bỏ mongo)
+
 # PayOS Configuration
 # Credentials được lấy từ Environment Variables
 payos:

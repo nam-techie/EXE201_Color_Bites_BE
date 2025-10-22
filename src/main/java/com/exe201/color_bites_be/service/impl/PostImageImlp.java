@@ -1,12 +1,7 @@
 package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
-import com.exe201.color_bites_be.entity.Post;
-import com.exe201.color_bites_be.entity.PostImages;
 import com.exe201.color_bites_be.exception.BadRequestException;
-import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.repository.PostImagesRepository;
-import com.exe201.color_bites_be.repository.PostRepository;
 import com.exe201.color_bites_be.service.ICloudinaryService;
 import com.exe201.color_bites_be.service.IPostImageService;
 import com.exe201.color_bites_be.util.FileUpLoadUtil;
@@ -14,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 

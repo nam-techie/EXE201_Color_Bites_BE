@@ -338,8 +338,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
         response.setName(restaurant.getName());
         response.setAddress(restaurant.getAddress());
         response.setRegion(restaurant.getRegion());
-        response.setAvgPrice(restaurant.getAvgPrice());
-        response.setRating(restaurant.getRating());
+        response.setAvgPrice(restaurant.getAvgPrice() != null ? BigDecimal.valueOf(restaurant.getAvgPrice()) : null);
+        response.setRating(restaurant.getRating() != null ? BigDecimal.valueOf(restaurant.getRating()) : null);
         response.setFeatured(restaurant.getFeatured());
         response.setLatitude(restaurant.getLatitude());
         response.setLongitude(restaurant.getLongitude());
