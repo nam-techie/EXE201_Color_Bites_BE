@@ -1,9 +1,10 @@
-# Default Configuration (Local Development)
-# Sensitive data được lấy từ Environment Variables hoặc .env file
-# Để chạy local: Tạo file .env theo mẫu .env.example
+# =====================================
+# Default Configuration (Local + Azure)
+# =====================================
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8080}       # Azure sẽ tự inject PORT=80, local vẫn dùng 8080
+  forward-headers-strategy: framework
   servlet:
     encoding:
       charset: UTF-8
@@ -15,7 +16,7 @@ spring:
     name: ColorBites_be
   data:
     mongodb:
-      uri: ${MONGODB_URI} # Set trong .env file hoặc IDE Environment Variables
+      uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE:color_bites_db}
   main:
     banner-mode: off
@@ -32,33 +33,55 @@ spring:
       mail:
         smtp:
           auth: true
-          starttls:
-            enable: true
-        transport:
-          protocol: smtp
+          starttls.enable: true
+        transport.protocol: smtp
 
+# ==============================
+# Logging
+# ==============================
 logging:
   level:
     root: warn
-    org.springframework.data.mongodb: DEBUG
+    org.springframework.data.mongodb: INFO
+    org.springframework.security: INFO
     org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
 
+# ==============================
+# Swagger (bật khi local, tắt khi prod)
+# ==============================
 springdoc:
+  api-docs.enabled: ${SWAGGER_ENABLED:true}
   swagger-ui:
+    enabled: ${SWAGGER_ENABLED:true}
     disable-swagger-default-url: true
     path: /api
 
+# ==============================
+# Actuator Healthcheck (cho Azure)
+# ==============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes.enabled: true
+
+# ==============================
 # PayOS Configuration
-# Credentials được lấy từ Environment Variables
+# ==============================
 payos:
   client-id: ${PAYOS_CLIENT_ID}
   api-key: ${PAYOS_API_KEY}
   checksum-key: ${PAYOS_CHECKSUM_KEY}
   api-url: https://api-merchant.payos.vn
-  return-url: ${PAYOS_RETURN_URL:http://localhost:8080/api/payment/payos/return}
-  cancel-url: ${PAYOS_CANCEL_URL:http://localhost:8080/api/payment/payos/cancel}
+  return-url: ${PAYOS_RETURN_URL:https://api-mumii.namtechie.id.vn/api/payment/payos/return}
+  cancel-url: ${PAYOS_CANCEL_URL:https://api-mumii.namtechie.id.vn/api/payment/payos/cancel}
 
+# ==============================
 # Application Configuration
+# ==============================
 app:
   rate-limit:
     enabled: true
@@ -67,3 +90,13 @@ app:
   geocoding:
     cache-ttl-minutes: 60
     nominatim-url: https://nominatim.openstreetmap.org
+  seed-on-startup: ${SEED_ON_STARTUP:false}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://mumii.app,https://mumii-be.namtechie.id.vn}
+
+# ==============================
+# JWT Configuration
+# ==============================
+jwt:
+  secret: ${JWT_SECRET:change-me-in-prod}
+  expiration-ms: ${JWT_EXPIRATION_MS:604800000} # 7 ngày
