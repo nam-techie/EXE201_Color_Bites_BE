@@ -33,6 +33,9 @@ public interface IPostService {
     Page<PostResponse> readPostsByMood(String mood, int page, int size);
     
 
+    Page<PostResponse> readPostsByPrivacy(int page, int size);
+    
+
     PostResponse editPost(String postId, UpdatePostRequest request);
     
 

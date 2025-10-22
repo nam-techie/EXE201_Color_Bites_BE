@@ -6,8 +6,10 @@ import com.exe201.color_bites_be.dto.response.AuthorResponsePost;
 import com.exe201.color_bites_be.dto.response.PostResponse;
 import com.exe201.color_bites_be.dto.response.TagResponse;
 import com.exe201.color_bites_be.entity.*;
+import com.exe201.color_bites_be.enums.Visibility;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.*;
+import com.exe201.color_bites_be.service.IFriendShipService;
 import com.exe201.color_bites_be.service.IPostImageService;
 import com.exe201.color_bites_be.service.IPostService;
 import com.exe201.color_bites_be.service.IReactionService;
@@ -64,6 +66,9 @@ public class PostServiceImpl implements IPostService {
     @Autowired
     private IPostImageService iPostImageService;
 
+    @Autowired
+    private IFriendShipService friendShipService;
+
     @Override
     @Transactional
     public PostResponse createPost(CreatePostRequest request, List<MultipartFile> files) {
@@ -76,6 +81,7 @@ public class PostServiceImpl implements IPostService {
         post.setReactionCount(0);
         post.setCommentCount(0);
         post.setIsDeleted(false);
+        post.setVisibility(request.getVisibility());
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
 
@@ -99,10 +105,10 @@ public class PostServiceImpl implements IPostService {
 
         // Trích xuất hashtags từ content
         List<String> extractedHashtags = HashtagExtractor.extractHashtags(request.getContent());
-        
+
 //        // Combine manual tags với extracted hashtags
 //        List<String> allTags = HashtagExtractor.combineAndNormalizeTags(request.getTagNames(), extractedHashtags);
-        
+
         // Xử lý tags
         List<Tag> tags = new ArrayList<>();
         if (!extractedHashtags.isEmpty()) {
@@ -128,7 +134,6 @@ public class PostServiceImpl implements IPostService {
     public Page<PostResponse> readAllPosts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> posts = postRepository.findAllActivePosts(pageable);
-
         return posts.map(post -> {
             List<Tag> tags = getPostTags(post.getId());
             return buildPostResponse(post, tags);
@@ -170,6 +175,29 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
+    public Page<PostResponse> readPostsByPrivacy(int page, int size) {
+        Account currentUser = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        // Lấy danh sách bạn bè của user hiện tại
+        List<Friendship> friends = friendShipService.getFriendsByUserId(currentUser.getId());
+        
+        // Lấy danh sách ID của bạn bè
+        List<String> friendIds = friends.stream()
+                .map(fs -> currentUser.getId().equals(fs.getUserA()) ? fs.getUserB() : fs.getUserA())
+                .collect(Collectors.toList());
+        
+        // Lấy tất cả bài viết có thể xem được (PUBLIC + của bạn bè + của chính mình)
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Post> visiblePosts = postRepository.findVisiblePosts(currentUser.getId(), friendIds, pageable);
+        
+        // Chuyển đổi sang PostResponse
+        return visiblePosts.map(post -> {
+            List<Tag> tags = getPostTags(post.getId());
+            return buildPostResponse(post, tags);
+        });
+    }
+
+    @Override
     @Transactional
     public PostResponse editPost(String postId, UpdatePostRequest request) {
         Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -195,20 +223,20 @@ public class PostServiceImpl implements IPostService {
 
         // Xử lý tags - auto-extract hashtags từ content và combine với manual tags
         List<Tag> tags = new ArrayList<>();
-        
+
         // Trích xuất hashtags từ content nếu content được cập nhật
         List<String> extractedHashtags = new ArrayList<>();
         if (request.getContent() != null) {
             extractedHashtags = HashtagExtractor.extractHashtags(request.getContent());
         }
-        
+
         // Combine manual tags với extracted hashtags
         List<String> allTags = HashtagExtractor.combineAndNormalizeTags(request.getTagNames(), extractedHashtags);
-        
+
         if (!allTags.isEmpty() || request.getContent() != null) {
             // Xóa tags cũ nếu có thay đổi tags hoặc content
             postTagRepository.deleteByPostId(postId);
-            
+
             // Thêm tags mới (bao gồm cả hashtags từ content)
             if (!allTags.isEmpty()) {
                 tags = processPostTags(postId, allTags);
@@ -240,10 +268,10 @@ public class PostServiceImpl implements IPostService {
 
         // Xóa tags liên quan
         postTagRepository.deleteByPostId(postId);
-        
+
         // Xóa reactions liên quan
         reactionService.deleteAllReactionsByPost(postId);
-        
+
         // Xóa tất cả comments liên quan (soft delete)
         deleteAllCommentsByPost(postId);
     }
@@ -343,6 +371,7 @@ public class PostServiceImpl implements IPostService {
 
 
         response.setIsOwner(post.getAccountId().equals(account.getId()));
+        response.setVisibility(post.getVisibility());
 
         response.setImageUrls(postImagesRepository.findUrlsByPostId(post.getId()));
         return response;
@@ -356,4 +385,5 @@ public class PostServiceImpl implements IPostService {
             commentRepository.save(comment);
         }
     }
+
 }
