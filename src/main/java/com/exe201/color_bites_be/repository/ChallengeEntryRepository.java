@@ -34,3 +34,5 @@ public interface ChallengeEntryRepository extends MongoRepository<ChallengeEntry
     @Query("{'participation_id': ?0, 'status': ?1}")
     List<ChallengeEntry> findByParticipationIdAndStatus(String participationId, EntryStatus status);
 }
+
+

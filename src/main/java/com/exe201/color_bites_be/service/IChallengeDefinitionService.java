@@ -20,7 +20,7 @@ public interface IChallengeDefinitionService {
     
     List<ChallengeDefinitionResponse> readChallengesByRestaurant(String restaurantId);
     
-    List<ChallengeDefinitionResponse> readChallengesByFoodType(String foodTypeId);
+    List<ChallengeDefinitionResponse> readChallengesByTypeObj(String typeKey);
     
     ChallengeDefinitionResponse updateChallengeDefinition(String challengeId, UpdateChallengeDefinitionRequest request);
     
@@ -30,3 +30,4 @@ public interface IChallengeDefinitionService {
     
     void deactivateChallenge(String challengeId);
 }
+

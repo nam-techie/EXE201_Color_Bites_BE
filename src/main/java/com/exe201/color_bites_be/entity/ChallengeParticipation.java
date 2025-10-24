@@ -48,3 +48,4 @@ public class ChallengeParticipation {
     @CreatedDate
     private LocalDateTime createdAt;
 }
+

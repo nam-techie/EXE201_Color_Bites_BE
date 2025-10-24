@@ -36,3 +36,5 @@ public interface IChallengeEntryService {
     
     long countApprovedEntriesByParticipation(String participationId);
 }
+
+

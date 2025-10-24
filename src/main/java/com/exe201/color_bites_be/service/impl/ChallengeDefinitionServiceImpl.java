@@ -40,7 +40,17 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
             // Validate challenge type specific requirements
             validateChallengeDefinitionRequest(request);
 
-            ChallengeDefinition challengeDefinition = modelMapper.map(request, ChallengeDefinition.class);
+            ChallengeDefinition challengeDefinition = new ChallengeDefinition();
+            challengeDefinition.setTitle(request.getTitle());
+            challengeDefinition.setDescription(request.getDescription());
+            challengeDefinition.setChallengeType(request.getChallengeType());
+            challengeDefinition.setRestaurantId(request.getRestaurantId());
+            challengeDefinition.setTypeObj(request.getTypeObj()); // JSON embedded type object
+            challengeDefinition.setImages(request.getImages()); // JSON embedded images
+            challengeDefinition.setTargetCount(request.getTargetCount());
+            challengeDefinition.setStartDate(request.getStartDate());
+            challengeDefinition.setEndDate(request.getEndDate());
+            challengeDefinition.setRewardDescription(request.getRewardDescription());
             challengeDefinition.setCreatedBy(account.getId());
             challengeDefinition.setCreatedAt(LocalDateTime.now());
             challengeDefinition.setIsActive(true);
@@ -88,8 +98,8 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
     }
 
     @Override
-    public List<ChallengeDefinitionResponse> readChallengesByFoodType(String foodTypeId) {
-        List<ChallengeDefinition> challenges = challengeDefinitionRepository.findByFoodTypeId(foodTypeId);
+    public List<ChallengeDefinitionResponse> readChallengesByTypeObj(String typeKey) {
+        List<ChallengeDefinition> challenges = challengeDefinitionRepository.findByTypeObjKey(typeKey);
         return challenges.stream()
                 .map(this::buildChallengeDefinitionResponse)
                 .collect(Collectors.toList());
@@ -114,8 +124,11 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
             if (request.getRestaurantId() != null) {
                 challenge.setRestaurantId(request.getRestaurantId());
             }
-            if (request.getFoodTypeId() != null) {
-                challenge.setFoodTypeId(request.getFoodTypeId());
+            if (request.getTypeObj() != null) {
+                challenge.setTypeObj(request.getTypeObj()); // JSON embedded type object
+            }
+            if (request.getImages() != null) {
+                challenge.setImages(request.getImages()); // JSON embedded images
             }
             if (request.getTargetCount() != null) {
                 challenge.setTargetCount(request.getTargetCount());
@@ -178,8 +191,8 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
         }
         
         if (request.getChallengeType() == ChallengeType.THEME_COUNT && 
-            (request.getFoodTypeId() == null || request.getFoodTypeId().trim().isEmpty())) {
-            throw new BadRequestException("Thử thách THEME_COUNT cần có foodTypeId");
+            (request.getTypeObj() == null || request.getTypeObj().getKey() == null || request.getTypeObj().getKey().trim().isEmpty())) {
+            throw new BadRequestException("Thử thách THEME_COUNT cần có typeObj với key hợp lệ");
         }
         
         if (request.getEndDate().isBefore(request.getStartDate())) {
@@ -188,11 +201,25 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
     }
 
     private ChallengeDefinitionResponse buildChallengeDefinitionResponse(ChallengeDefinition challenge) {
-        ChallengeDefinitionResponse response = modelMapper.map(challenge, ChallengeDefinitionResponse.class);
+        ChallengeDefinitionResponse response = new ChallengeDefinitionResponse();
         
-        // TODO: Add additional fields like restaurantName, foodTypeName, participantCount
-        // These would require additional repository calls or joins
+        // Map basic fields
+        response.setId(challenge.getId());
+        response.setTitle(challenge.getTitle());
+        response.setDescription(challenge.getDescription());
+        response.setChallengeType(challenge.getChallengeType());
+        response.setRestaurantId(challenge.getRestaurantId());
+        response.setTypeObj(challenge.getTypeObj()); // JSON embedded type object
+        response.setImages(challenge.getImages()); // JSON embedded images
+        response.setTargetCount(challenge.getTargetCount());
+        response.setStartDate(challenge.getStartDate());
+        response.setEndDate(challenge.getEndDate());
+        response.setRewardDescription(challenge.getRewardDescription());
+        response.setCreatedBy(challenge.getCreatedBy());
+        response.setCreatedAt(challenge.getCreatedAt());
+        response.setIsActive(challenge.getIsActive());
         
         return response;
     }
 }
+

@@ -23,8 +23,8 @@ public interface ChallengeDefinitionRepository extends MongoRepository<Challenge
     @Query("{'restaurant_id': ?0, 'is_active': true}")
     List<ChallengeDefinition> findByRestaurantId(String restaurantId);
     
-    @Query("{'food_type_id': ?0, 'is_active': true}")
-    List<ChallengeDefinition> findByFoodTypeId(String foodTypeId);
+    @Query("{'type_obj.key': ?0, 'is_active': true}")
+    List<ChallengeDefinition> findByTypeObjKey(String typeKey);
     
     @Query("{'challenge_type': ?0, 'is_active': true}")
     List<ChallengeDefinition> findByChallengeType(ChallengeType challengeType);
@@ -35,3 +35,4 @@ public interface ChallengeDefinitionRepository extends MongoRepository<Challenge
     @Query("{'created_by': ?0, 'is_active': true}")
     Page<ChallengeDefinition> findByCreatedBy(String createdBy, Pageable pageable);
 }
+

@@ -1,5 +1,7 @@
 package com.exe201.color_bites_be.entity;
 
+import com.exe201.color_bites_be.model.TypeObject;
+import com.exe201.color_bites_be.model.ImageObject;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -13,6 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "restaurants")
 @Getter @Setter
@@ -39,11 +42,17 @@ public class Restaurant {
     @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
     private GeoJsonPoint location;
 
-    @Field("region")
-    private String region;
+    @Field("district")
+    private String district;
 
-    @Field("avg_price")
-    private Double avgPrice;
+    @Field("types")
+    private List<TypeObject> types; // JSON array embedded
+
+    @Field("images")
+    private List<ImageObject> images; // JSON array embedded
+
+    @Field("price")
+    private String price; // Changed from avgPrice (Double) to price (String)
 
     @Field("rating")
     private Double rating;

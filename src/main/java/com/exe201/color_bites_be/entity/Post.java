@@ -31,6 +31,9 @@ public class Post {
     @Field("mood_id")
     private String moodId;
 
+    @Field("video_url")
+    private String videoUrl;
+
     @Field("reaction_count")
     private Integer reactionCount;
 

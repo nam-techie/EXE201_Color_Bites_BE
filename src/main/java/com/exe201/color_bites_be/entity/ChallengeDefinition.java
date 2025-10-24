@@ -1,6 +1,8 @@
 package com.exe201.color_bites_be.entity;
 
 import com.exe201.color_bites_be.enums.ChallengeType;
+import com.exe201.color_bites_be.model.TypeObject;
+import com.exe201.color_bites_be.model.ImageObject;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -11,6 +13,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "challenge_definitions")
 @Getter @Setter
@@ -18,7 +21,6 @@ import java.time.LocalDateTime;
 @CompoundIndexes({
     @CompoundIndex(name = "challenge_type_idx", def = "{'challenge_type': 1}"),
     @CompoundIndex(name = "restaurant_id_idx", def = "{'restaurant_id': 1}"),
-    @CompoundIndex(name = "food_type_id_idx", def = "{'food_type_id': 1}"),
     @CompoundIndex(name = "start_date_idx", def = "{'start_date': 1}"),
     @CompoundIndex(name = "end_date_idx", def = "{'end_date': 1}"),
     @CompoundIndex(name = "is_active_idx", def = "{'is_active': 1}")
@@ -42,8 +44,11 @@ public class ChallengeDefinition {
     @Field("restaurant_id")
     private String restaurantId; // for PARTNER_LOCATION type
 
-    @Field("food_type_id")
-    private String foodTypeId; // for THEME_COUNT type
+    @Field("type_obj")
+    private TypeObject typeObj; // JSON object embedded for THEME_COUNT type
+
+    @Field("images")
+    private List<ImageObject> images; // JSON array embedded
 
     @Field("target_count")
     private Integer targetCount;
@@ -68,3 +73,4 @@ public class ChallengeDefinition {
     @Indexed
     private Boolean isActive = true;
 }
+

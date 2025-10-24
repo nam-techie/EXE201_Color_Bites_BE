@@ -55,3 +55,5 @@ public class ChallengeEntry {
     @CreatedDate
     private LocalDateTime createdAt;
 }
+
+

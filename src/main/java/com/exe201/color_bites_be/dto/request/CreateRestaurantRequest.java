@@ -1,5 +1,7 @@
 package com.exe201.color_bites_be.dto.request;
 
+import com.exe201.color_bites_be.model.TypeObject;
+import com.exe201.color_bites_be.model.ImageObject;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,15 +31,16 @@ public class CreateRestaurantRequest {
     private String description;
     
     @NotEmpty(message = "Phải chọn ít nhất một loại món ăn")
-    private List<String> foodTypeIds;
+    private List<TypeObject> types; // Changed from foodTypeIds to types
     
     @NotBlank(message = "Khu vực không được để trống")
-    private String region;
+    private String district; // Changed from region to district
     
-    private List<String> imageUrls;
+    private List<ImageObject> images; // Changed from imageUrls to images
     
-    @DecimalMin(value = "0.0", message = "Giá trung bình phải lớn hơn hoặc bằng 0")
-    private Double avgPrice;
+    @NotBlank(message = "Giá không được để trống")
+    @Size(max = 100, message = "Giá không được quá 100 ký tự")
+    private String price; // Changed from avgPrice (Double) to price (String)
     
     @DecimalMin(value = "0.0", message = "Đánh giá phải từ 0.0")
     @DecimalMax(value = "5.0", message = "Đánh giá phải nhỏ hơn hoặc bằng 5.0")

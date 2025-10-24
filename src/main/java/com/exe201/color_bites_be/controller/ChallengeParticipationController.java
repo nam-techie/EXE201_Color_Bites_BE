@@ -104,3 +104,5 @@ public class ChallengeParticipationController {
         return ResponseEntity.ok().build();
     }
 }
+
+

@@ -5,7 +5,7 @@ import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
 import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
-import com.exe201.color_bites_be.entity.Subscription.SubscriptionStatus;
+import com.exe201.color_bites_be.enums.SubscriptionStatus;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.enums.Gender;
 import com.exe201.color_bites_be.exception.NotFoundException;

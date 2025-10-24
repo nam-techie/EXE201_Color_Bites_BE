@@ -26,3 +26,5 @@ public class ChallengeEntryResponse {
     private String challengeTitle;
     private String accountId; // User who submitted
 }
+
+

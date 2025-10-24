@@ -30,3 +30,5 @@ public interface IChallengeParticipationService {
     
     void failParticipation(String participationId);
 }
+
+

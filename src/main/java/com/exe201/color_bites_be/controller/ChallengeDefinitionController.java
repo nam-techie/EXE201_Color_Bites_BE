@@ -55,12 +55,6 @@ public class ChallengeDefinitionController {
         return ResponseEntity.ok(challenges);
     }
 
-    @GetMapping("/food-type/{foodTypeId}")
-    @Operation(summary = "Get challenges by food type", description = "Retrieve challenges for a specific food type")
-    public ResponseEntity<List<ChallengeDefinitionResponse>> getChallengesByFoodType(@PathVariable String foodTypeId) {
-        List<ChallengeDefinitionResponse> challenges = challengeDefinitionService.readChallengesByFoodType(foodTypeId);
-        return ResponseEntity.ok(challenges);
-    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
@@ -104,3 +98,5 @@ public class ChallengeDefinitionController {
         return ResponseEntity.ok().build();
     }
 }
+
+

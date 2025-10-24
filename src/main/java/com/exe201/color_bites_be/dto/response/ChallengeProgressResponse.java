@@ -26,3 +26,5 @@ public class ChallengeProgressResponse {
     private Long pendingEntries;
     private Long rejectedEntries;
 }
+
+

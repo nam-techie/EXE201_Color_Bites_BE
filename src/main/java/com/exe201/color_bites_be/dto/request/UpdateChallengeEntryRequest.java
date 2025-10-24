@@ -27,3 +27,5 @@ public class UpdateChallengeEntryRequest {
     @Size(max = 500, message = "Ghi chú không được quá 500 ký tự")
     private String notes;
 }
+
+

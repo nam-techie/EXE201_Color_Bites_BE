@@ -1,0 +1,493 @@
+// Color Bites Backend - Current Database Schema
+// Paste this code into https://dbdiagram.io/
+
+//// ==============================
+//// Enums
+//// ==============================
+Enum challenge_type {
+  PARTNER_LOCATION // Check-in tại 1 nhà hàng cụ thể
+  THEME_COUNT      // Ăn đủ số lượng quán theo chủ đề
+}
+
+Enum participation_status {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+Enum entry_status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+Enum role {
+  USER
+  ADMIN
+  PARTNER
+}
+
+Enum subscription_plan {
+  FREE
+  PREMIUM
+}
+
+Enum login_method {
+  GOOGLE
+  USERNAME
+}
+
+Enum gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+Enum visibility {
+  PRIVATE
+  PUBLIC
+  FRIENDS
+}
+
+Enum challenge_status {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+}
+
+Enum reaction_type {
+  LOVE
+}
+
+Enum currency_code {
+  VND
+  USD
+}
+
+Enum txn_status {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELED
+  REFUNDED
+}
+
+Enum txn_type {
+  PAYMENT
+  REFUND
+  SUBSCRIPTION
+}
+
+Enum friend_status {
+  PENDING
+  ACCEPTED
+}
+
+Enum subscription_status {
+  ACTIVE
+  EXPIRED
+  CANCELED
+}
+
+//// ==============================
+//// CORE USER MANAGEMENT
+//// ==============================
+Table accounts {
+  id           uuid [pk]
+  user_name    varchar(100) [unique, not null]
+  email        varchar(255) [unique, not null]
+  password     varchar(255) [not null]
+  role         role [not null, default: 'USER']
+  is_active    boolean [not null, default: true]
+  login_method login_method
+  google_id    varchar(255) [unique]
+  created_at   timestamp
+  updated_at   timestamp
+  indexes {
+    (user_name) [unique]
+    (email) [unique]
+    (google_id) [unique]
+  }
+}
+
+Table user_information {
+  id                uuid [pk]
+  account_id        uuid [not null, unique, ref: > accounts.id]
+  gender            gender
+  avatar_url        varchar(500)
+  subscription_plan subscription_plan [not null, default: 'FREE']
+  bio               text
+  created_at        timestamp
+  updated_at        timestamp
+}
+
+//// ==============================
+//// RESTAURANT & LOCATION
+//// ==============================
+Table restaurants {
+  id           uuid [pk]
+  name         varchar(200) [not null]
+  address      varchar(255)
+  longitude    decimal(10,7)
+  latitude     decimal(10,7)
+  types        json  // Array of type objects: [{"key": "KOREAN", "name": "Korean Food", "image_url": "..."}]
+  images       json  // Array of image objects: [{"url": "...", "sort_order": 1}]
+  district     varchar(100)
+  price        varchar(100)
+  rating       double
+  created_by   uuid [ref: > accounts.id]
+  created_at   timestamp
+  updated_at   timestamp
+  is_deleted   boolean [default: false]
+  indexes {
+    (created_by)
+    (is_deleted)
+  }
+}
+
+Table type_objects {
+  id          uuid [pk]
+  name         varchar(100) [not null, unique] // ví dụ: "KOREAN"        // ví dụ: "Korean Food"
+  image_url   varchar(500)
+  is_active   boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+  indexes {
+    (name) [unique]
+    (is_active)
+  }
+}
+
+Table tags {
+  id          uuid [pk]
+  name        varchar(100) [unique, not null]
+  usage_count int [default: 0]
+  created_at  timestamp
+  indexes {
+    (name) [unique]
+  }
+}
+
+Table restaurant_tags {
+  id             uuid [pk]
+  restaurant_id  uuid [not null, ref: > restaurants.id]
+  tag_id         uuid [not null, ref: > tags.id]
+  indexes {
+    (restaurant_id, tag_id) [unique]
+    (tag_id)
+  }
+}
+
+//// ==============================
+//// FRIENDS SYSTEM
+//// ==============================
+Table friendships {
+  id            uuid [pk]
+  user_a        uuid [not null, ref: > accounts.id]
+  user_b        uuid [not null, ref: > accounts.id]
+  status        friend_status [not null, default: 'PENDING']
+  requested_by  uuid [not null, ref: > accounts.id]
+  created_at    timestamp
+  updated_at    timestamp
+  indexes {
+    (user_a, user_b) [unique]
+    (user_a)
+    (user_b)
+    (status)
+  }
+}
+
+//// ==============================
+//// CONTENT & SOCIAL FEATURES
+//// ==============================
+Table posts {
+  id             uuid [pk]
+  account_id     uuid [not null, ref: > accounts.id]
+  content        text
+  mood_id        uuid [ref: > moods.id]
+  video_url      varchar(500)
+  reaction_count int [default: 0]
+  comment_count  int [default: 0]
+  is_deleted     boolean [default: false]
+  created_at     timestamp
+  updated_at     timestamp
+  indexes {
+    (account_id)
+    (mood_id)
+    (is_deleted)
+    (created_at)
+  }
+}
+
+Table post_images {
+  id         uuid [pk]
+  post_id    uuid [not null, ref: > posts.id]
+  url        varchar(500) [not null]
+  created_at timestamp
+  indexes {
+    (post_id)
+  }
+}
+
+Table moods {
+  id         uuid [pk]
+  name       varchar(100) [unique, not null]
+  emoji      varchar(10)
+  created_at timestamp
+  indexes {
+    (name) [unique]
+  }
+}
+
+Table comments {
+  id                uuid [pk]
+  post_id           uuid [not null, ref: > posts.id]
+  account_id        uuid [not null, ref: > accounts.id]
+  parent_comment_id uuid [ref: > comments.id]
+  depth             int [default: 0]
+  content           text [not null]
+  is_deleted        boolean [default: false]
+  created_at        timestamp
+  updated_at        timestamp
+  indexes {
+    (post_id)
+    (parent_comment_id)
+    (account_id)
+    (is_deleted)
+  }
+}
+
+Table reactions {
+  id           uuid [pk]
+  post_id      uuid [not null, ref: > posts.id]
+  account_id   uuid [not null, ref: > accounts.id]
+  reaction     reaction_type [not null]
+  created_at   timestamp
+  indexes {
+    (post_id, account_id) [unique]
+    (post_id)
+    (account_id)
+  }
+}
+
+Table post_tags {
+  id        uuid [pk]
+  post_id   uuid [not null, ref: > posts.id]
+  tag_id    uuid [not null, ref: > tags.id]
+  indexes {
+    (post_id, tag_id) [unique]
+    (tag_id)
+  }
+}
+
+//// ==============================
+//// USER PREFERENCES
+//// ==============================
+Table favorites {
+  id            uuid [pk]
+  account_id    uuid [not null, ref: > accounts.id]
+  restaurant_id uuid [not null, ref: > restaurants.id]
+  created_at    timestamp
+  indexes {
+    (account_id, restaurant_id) [unique]
+    (account_id)
+    (restaurant_id)
+  }
+}
+
+//// ==============================
+//// MOOD & PERSONALIZATION
+//// ==============================
+Table mood_maps {
+  id          uuid [pk]
+  account_id  uuid [not null, ref: > accounts.id]
+  title       varchar(200)
+  entries     json
+  visibility  visibility [default: 'PRIVATE']
+  exported    boolean [default: false]
+  export_url  varchar(500)
+  created_at  timestamp
+  is_deleted  boolean [default: false]
+  indexes {
+    (account_id)
+    (visibility)
+    (is_deleted)
+  }
+}
+
+Table quizzes {
+  id                      uuid [pk]
+  account_id              uuid [not null, ref: > accounts.id]
+  answers                 json
+  mood_result             varchar(100)
+  recommended_foods       json
+  recommended_restaurants json
+  created_at              timestamp
+  indexes {
+    (account_id)
+    (mood_result)
+  }
+}
+
+//// ==============================
+//// GAMIFICATION (CHALLENGES)
+//// ==============================
+Table challenge_definitions {
+  id                 uuid [pk]
+  title              varchar(200) [not null]
+  description        text
+  challenge_type     challenge_type [not null, default: 'PARTNER_LOCATION']
+  restaurant_id      uuid [ref: > restaurants.id]  // for PARTNER_LOCATION
+  type_obj           json  // for THEME_COUNT: {"key": "KOREAN", "name": "Korean Food", "image_url": "..."}
+  images             json  // Array of image objects: [{"url": "...", "sort_order": 1}]
+  target_count       int [not null, default: 1]
+  start_date         timestamp
+  end_date           timestamp
+  reward_description text
+  created_by         uuid [not null, ref: > accounts.id]
+  created_at         timestamp
+  is_active          boolean [default: true]
+  indexes {
+    (challenge_type)
+    (restaurant_id)
+    (start_date)
+    (end_date)
+    (is_active)
+  }
+}
+
+Table challenge_participations {
+  id               uuid [pk]
+  account_id       uuid [not null, ref: > accounts.id]
+  challenge_id     uuid [not null, ref: > challenge_definitions.id]
+  status           participation_status [not null, default: 'IN_PROGRESS']
+  progress_count   int [not null, default: 0]
+  completed_at     timestamp
+  created_at       timestamp
+  indexes {
+    (account_id)
+    (challenge_id)
+    (status)
+  }
+}
+
+Table challenge_entries {
+  id               uuid [pk]
+  participation_id uuid [not null, ref: > challenge_participations.id]
+  restaurant_id    uuid [not null, ref: > restaurants.id]
+  photo_url        varchar(500)
+  latitude         decimal(10,7)
+  longitude        decimal(10,7)
+  status           entry_status [not null, default: 'PENDING']
+  notes            text
+  created_at       timestamp
+  indexes {
+    (participation_id)
+    (restaurant_id)
+    (status)
+  }
+}
+
+//// ==============================
+//// BUSINESS FEATURES
+//// ==============================
+Table promotions {
+  id            uuid [pk]
+  restaurant_id uuid [not null, ref: > restaurants.id]
+  title         varchar(200)
+  description   text
+  start_date    timestamp
+  end_date      timestamp
+  price         decimal(12,2)
+  type          varchar(100)
+  link          varchar(500)
+  created_at    timestamp
+  indexes {
+    (restaurant_id)
+    (start_date)
+    (end_date)
+  }
+}
+
+Table transactions {
+  id               uuid [pk]
+  account_id       uuid [not null, ref: > accounts.id]
+  amount           double
+  currency         currency_code [default: 'VND']
+  type             txn_type
+  status           txn_status
+  metadata         json
+  order_code       varchar(100) [unique]
+  plan             subscription_plan
+  gateway          varchar(100)
+  provider_txn_id  varchar(100) [unique]
+  raw_payload      json
+  created_at       timestamp
+  updated_at       timestamp
+  indexes {
+    (account_id)
+    (status)
+    (type)
+    (created_at)
+  }
+}
+
+Table subscriptions {
+  id          uuid [pk]
+  account_id  uuid [not null, ref: > accounts.id]
+  plan        subscription_plan
+  status      subscription_status
+  start_date  timestamp
+  end_date    timestamp
+  created_at  timestamp
+  updated_at  timestamp
+  indexes {
+    (account_id)
+    (status)
+  }
+}
+
+//// ==============================
+//// RELATIONSHIPS & CONSTRAINT NOTES
+//// ==============================
+// Ref: user_information.account_id > accounts.id (one-to-one)
+// Ref: restaurants.created_by > accounts.id
+// Ref: restaurant_tags.restaurant_id > restaurants.id
+// Ref: restaurant_tags.tag_id > tags.id
+// Ref: favorites.account_id > accounts.id
+// Ref: favorites.restaurant_id > restaurants.id
+// Ref: posts.account_id > accounts.id
+// Ref: posts.mood_id > moods.id
+// Ref: post_images.post_id > posts.id
+// Ref: comments.post_id > posts.id
+// Ref: comments.account_id > accounts.id
+// Ref: comments.parent_comment_id > comments.id
+// Ref: reactions.post_id > posts.id
+// Ref: reactions.account_id > accounts.id
+// Ref: post_tags.post_id > posts.id
+// Ref: post_tags.tag_id > tags.id
+// Ref: friendships.user_a > accounts.id
+// Ref: friendships.user_b > accounts.id
+// Ref: friendships.requested_by > accounts.id
+// Ref: promotions.restaurant_id > restaurants.id
+// Ref: transactions.account_id > accounts.id
+// Ref: subscriptions.account_id > accounts.id
+// Ref: challenge_definitions.restaurant_id > restaurants.id
+// Ref: challenge_definitions.created_by > accounts.id
+// Ref: challenge_participations.account_id > accounts.id
+// Ref: challenge_participations.challenge_id > challenge_definitions.id
+// Ref: challenge_entries.participation_id > challenge_participations.id
+// Ref: challenge_entries.restaurant_id > restaurants.id
+// Ref: mood_maps.account_id > accounts.id
+// Ref: quizzes.account_id > accounts.id
+// NOTE: Không có FK từ restaurants/challenge_definitions tới type_objects (JSON embedding approach)
+
+// Logic constraint suggestions (implement ở app layer):
+// 1) challenge_definitions.start_date < challenge_definitions.end_date
+// 2) Nếu challenge_type = PARTNER_LOCATION => restaurant_id NOT NULL và type_obj NULL
+// 3) Nếu challenge_type = THEME_COUNT => type_obj NOT NULL (có tối thiểu "key"/"name") và restaurant_id NULL
+// 4) friendships.user_a < friendships.user_b (normalization)
+// 5) reactions: unique constraint on (post_id, account_id)
+// 6) favorites: unique constraint on (account_id, restaurant_id)
+// 7) restaurants.types: là array object; đảm bảo unique theo "key" ở app layer
+// 8) restaurants.images: là array object; đảm bảo sort_order unique trong array

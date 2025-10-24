@@ -1,10 +1,13 @@
 package com.exe201.color_bites_be.dto.request;
 
 import com.exe201.color_bites_be.enums.ChallengeType;
+import com.exe201.color_bites_be.model.TypeObject;
+import com.exe201.color_bites_be.model.ImageObject;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -20,9 +23,11 @@ public class UpdateChallengeDefinitionRequest {
     
     private ChallengeType challengeType;
     
-    private String restaurantId;
+    private String restaurantId; // Required for PARTNER_LOCATION
     
-    private String foodTypeId;
+    private TypeObject typeObj; // Required for THEME_COUNT - JSON object embedded
+    
+    private List<ImageObject> images; // JSON array embedded
     
     @Min(value = 1, message = "Số lượng mục tiêu phải lớn hơn 0")
     private Integer targetCount;
@@ -37,3 +42,4 @@ public class UpdateChallengeDefinitionRequest {
     
     private Boolean isActive;
 }
+

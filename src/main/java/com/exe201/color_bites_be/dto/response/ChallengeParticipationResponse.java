@@ -25,3 +25,5 @@ public class ChallengeParticipationResponse {
     private Long totalEntries; // Total entries submitted
     private Long approvedEntries; // Approved entries count
 }
+
+

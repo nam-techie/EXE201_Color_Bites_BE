@@ -2,7 +2,6 @@ package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.dto.request.CreateRestaurantRequest;
 import com.exe201.color_bites_be.dto.request.UpdateRestaurantRequest;
-import com.exe201.color_bites_be.dto.response.FoodTypeResponse;
 import com.exe201.color_bites_be.dto.response.RestaurantResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Restaurant;
@@ -12,7 +11,6 @@ import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.RestaurantRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
-import com.exe201.color_bites_be.service.IFoodTypeService;
 import com.exe201.color_bites_be.service.IRestaurantService;
 import com.exe201.color_bites_be.repository.FavoriteRepository;
 import org.modelmapper.ModelMapper;
@@ -46,12 +44,6 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private UserInformationRepository userInformationRepository;
 
     @Autowired
-    private IFoodTypeService foodTypeService;
-
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
     private FavoriteRepository favoriteRepository;
 
     @Override
@@ -63,8 +55,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
             Restaurant restaurant = new Restaurant();
             restaurant.setName(request.getName());
             restaurant.setAddress(request.getAddress());
-            restaurant.setRegion(request.getRegion());
-            restaurant.setAvgPrice(request.getAvgPrice());
+            restaurant.setDistrict(request.getDistrict()); // Changed from region to district
+            restaurant.setPrice(request.getPrice()); // Changed from avgPrice to price (String)
             restaurant.setRating(request.getRating());
             restaurant.setFeatured(request.getFeatured() != null ? request.getFeatured() : false);
             
@@ -77,18 +69,17 @@ public class RestaurantServiceImpl implements IRestaurantService {
                 restaurant.setLocation(new GeoJsonPoint(longitude, latitude));
             }
             
+            // Set JSON embedded fields
+            restaurant.setTypes(request.getTypes()); // JSON embedded types
+            restaurant.setImages(request.getImages()); // JSON embedded images
+            
             restaurant.setCreatedBy(account.getId());
             restaurant.setCreatedAt(LocalDateTime.now());
             restaurant.setUpdatedAt(LocalDateTime.now());
             restaurant.setIsDeleted(false);
 
-            // Save restaurant first
+            // Save restaurant
             Restaurant savedRestaurant = restaurantRepository.save(restaurant);
-
-            // Assign food types
-            if (request.getFoodTypeIds() != null && !request.getFoodTypeIds().isEmpty()) {
-                foodTypeService.assignFoodTypesToRestaurant(savedRestaurant.getId(), request.getFoodTypeIds());
-            }
 
             return buildRestaurantResponse(savedRestaurant);
 
@@ -337,12 +328,16 @@ public class RestaurantServiceImpl implements IRestaurantService {
         response.setId(restaurant.getId());
         response.setName(restaurant.getName());
         response.setAddress(restaurant.getAddress());
-        response.setRegion(restaurant.getRegion());
-        response.setAvgPrice(restaurant.getAvgPrice() != null ? BigDecimal.valueOf(restaurant.getAvgPrice()) : null);
+        response.setDistrict(restaurant.getDistrict()); // Changed from region to district
+        response.setPrice(restaurant.getPrice()); // Changed from avgPrice to price (String)
         response.setRating(restaurant.getRating() != null ? BigDecimal.valueOf(restaurant.getRating()) : null);
         response.setFeatured(restaurant.getFeatured());
         response.setLatitude(restaurant.getLatitude());
         response.setLongitude(restaurant.getLongitude());
+        
+        // Map JSON embedded fields
+        response.setTypes(restaurant.getTypes()); // JSON embedded types
+        response.setImages(restaurant.getImages()); // JSON embedded images
         
         // Map metadata fields
         response.setCreatedById(restaurant.getCreatedBy());
@@ -350,15 +345,6 @@ public class RestaurantServiceImpl implements IRestaurantService {
         response.setCreatedAt(restaurant.getCreatedAt());
         response.setUpdatedAt(restaurant.getUpdatedAt());
         response.setIsDeleted(restaurant.getIsDeleted());
-        
-        // Get food types for this restaurant
-        try {
-            List<FoodTypeResponse> foodTypes = foodTypeService.getFoodTypesByRestaurant(restaurant.getId());
-            response.setFoodTypes(foodTypes);
-        } catch (Exception e) {
-            // If there's an error getting food types, set empty list
-            response.setFoodTypes(List.of());
-        }
         
         // TODO: Add favorite status and count if needed
         // TODO: Add distance calculation if needed

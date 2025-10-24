@@ -1,7 +1,7 @@
 package com.exe201.color_bites_be.service.impl;
 
 import com.exe201.color_bites_be.entity.Subscription;
-import com.exe201.color_bites_be.entity.Subscription.SubscriptionStatus;
+import com.exe201.color_bites_be.enums.SubscriptionStatus;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.repository.SubscriptionRepository;
 import com.exe201.color_bites_be.service.ISubscriptionService;

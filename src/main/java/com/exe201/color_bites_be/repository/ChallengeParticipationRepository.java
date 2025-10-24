@@ -32,3 +32,5 @@ public interface ChallengeParticipationRepository extends MongoRepository<Challe
     @Query("{'account_id': ?0, 'status': ?1}")
     List<ChallengeParticipation> findByAccountIdAndStatus(String accountId, ParticipationStatus status);
 }
+
+

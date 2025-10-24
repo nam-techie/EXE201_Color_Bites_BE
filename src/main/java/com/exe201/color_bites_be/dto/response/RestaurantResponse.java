@@ -1,5 +1,7 @@
 package com.exe201.color_bites_be.dto.response;
 
+import com.exe201.color_bites_be.model.TypeObject;
+import com.exe201.color_bites_be.model.ImageObject;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,15 +16,18 @@ public class RestaurantResponse {
     private String id;
     private String name;
     private String address;
-    private String region;
-    private BigDecimal avgPrice;
+    private String district; // Changed from region to district
+    private String price; // Changed from avgPrice to price (String)
     private BigDecimal rating;
     private Boolean featured;
     private BigDecimal latitude;
     private BigDecimal longitude;
 
-    // Food types instead of single type
-    private List<FoodTypeResponse> foodTypes;
+    // Types instead of foodTypes - JSON embedded
+    private List<TypeObject> types;
+
+    // Images - JSON embedded
+    private List<ImageObject> images;
 
     // Người tạo (tham chiếu đến accounts.id)
     private String createdById;
