@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/challenges")
-@Tag(name = "Quản lý Tham gia Thử thách", description = "API quản lý việc tham gia các thử thách")
+@Tag(name = "ChallengeParticipationController", description = "API quản lý việc tham gia các thử thách")
 public class ChallengeParticipationController {
 
     @Autowired
