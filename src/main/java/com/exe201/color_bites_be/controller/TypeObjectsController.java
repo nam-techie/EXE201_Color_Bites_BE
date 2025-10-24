@@ -38,10 +38,11 @@ public class TypeObjectsController {
     private final ITypeObjectsService typeObjectsService;
 
     /**
-     * Create new TypeObject
+     * Tạo loại món ăn mới
      */
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Tạo loại món ăn", description = "Tạo loại món ăn mới (Chỉ Admin)")
     public ResponseEntity<ResponseDto<TypeObjectResponse>> createTypeObject(
             @Valid @RequestBody CreateTypeObjectRequest request) {
         log.info("Creating TypeObject with name: {}", request.getName());
@@ -57,9 +58,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get TypeObject by ID
+     * Lấy thông tin loại món ăn theo ID
      */
     @GetMapping("/read/{id}")
+    @Operation(summary = "Lấy thông tin theo ID", description = "Lấy thông tin chi tiết loại món ăn theo ID")
     public ResponseEntity<ResponseDto<TypeObjectResponse>> getTypeObjectById(@PathVariable String id) {
         log.info("Getting TypeObject by ID: {}", id);
         
@@ -73,9 +75,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get all TypeObjects with pagination
+     * Lấy danh sách tất cả loại món ăn với phân trang
      */
     @GetMapping("/list")
+    @Operation(summary = "Lấy danh sách tất cả", description = "Lấy danh sách tất cả loại món ăn với phân trang")
     public ResponseEntity<ResponseDto<Page<TypeObjectResponse>>> getAllTypeObjects(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -92,9 +95,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get all active TypeObjects
+     * Lấy danh sách loại món ăn đang hoạt động
      */
     @GetMapping("/read/active")
+    @Operation(summary = "Lấy danh sách đang hoạt động", description = "Lấy danh sách tất cả loại món ăn đang hoạt động")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> getActiveTypeObjects() {
         log.info("Getting all active TypeObjects");
         
@@ -108,9 +112,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Search TypeObjects by name
+     * Tìm kiếm loại món ăn theo tên
      */
     @GetMapping("/search")
+    @Operation(summary = "Tìm kiếm theo tên", description = "Tìm kiếm loại món ăn theo từ khóa tên")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> searchTypeObjectsByName(
             @RequestParam String keyword) {
         log.info("Searching TypeObjects by keyword: {}", keyword);
@@ -125,10 +130,11 @@ public class TypeObjectsController {
     }
 
     /**
-     * Update TypeObject
+     * Cập nhật loại món ăn
      */
     @PutMapping("/edit/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Cập nhật loại món ăn", description = "Cập nhật thông tin loại món ăn (Chỉ Admin)")
     public ResponseEntity<ResponseDto<TypeObjectResponse>> updateTypeObject(
             @PathVariable String id,
             @Valid @RequestBody UpdateTypeObjectRequest request) {
@@ -144,10 +150,11 @@ public class TypeObjectsController {
     }
 
     /**
-     * Delete TypeObject (soft delete)
+     * Xóa loại món ăn (xóa mềm)
      */
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Xóa loại món ăn", description = "Xóa loại món ăn (xóa mềm - chỉ vô hiệu hóa) (Chỉ Admin)")
     public ResponseEntity<ResponseDto<Void>> deleteTypeObject(@PathVariable String id) {
         log.info("Deleting TypeObject with ID: {}", id);
         
@@ -160,10 +167,11 @@ public class TypeObjectsController {
     }
 
     /**
-     * Activate TypeObject
+     * Kích hoạt loại món ăn
      */
     @PutMapping("/activate/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Kích hoạt loại món ăn", description = "Kích hoạt loại món ăn (Chỉ Admin)")
     public ResponseEntity<ResponseDto<TypeObjectResponse>> activateTypeObject(@PathVariable String id) {
         log.info("Activating TypeObject with ID: {}", id);
         
@@ -177,10 +185,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get TypeObject by name
+     * Lấy thông tin loại món ăn theo tên
      */
     @GetMapping("/read/name/{name}")
-    @Operation(summary = "Get TypeObject by name", description = "Retrieve a specific TypeObject by its name")
+    @Operation(summary = "Lấy thông tin theo tên", description = "Lấy thông tin chi tiết loại món ăn theo tên")
     public ResponseEntity<ResponseDto<TypeObjectResponse>> getTypeObjectByName(@PathVariable String name) {
         log.info("Getting TypeObject by name: {}", name);
         
@@ -198,10 +206,10 @@ public class TypeObjectsController {
     // ============================================
 
     /**
-     * Advanced search with multiple criteria
+     * Tìm kiếm nâng cao với nhiều tiêu chí
      */
     @PostMapping("/search/advanced")
-    @Operation(summary = "Advanced search", description = "Search TypeObjects with multiple criteria, sorting, and pagination")
+    @Operation(summary = "Tìm kiếm nâng cao", description = "Tìm kiếm loại món ăn với nhiều tiêu chí, sắp xếp và phân trang")
     public ResponseEntity<ResponseDto<Page<TypeObjectResponse>>> advancedSearch(
             @Valid @RequestBody AdvancedSearchRequest request) {
         log.info("Advanced search with criteria: {}", request);
@@ -216,10 +224,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get TypeObjects by status with pagination
+     * Lấy danh sách loại món ăn theo trạng thái với phân trang
      */
     @GetMapping("/filter/status")
-    @Operation(summary = "Filter by status", description = "Get TypeObjects filtered by active/inactive status")
+    @Operation(summary = "Lọc theo trạng thái", description = "Lấy danh sách loại món ăn được lọc theo trạng thái hoạt động/không hoạt động")
     public ResponseEntity<ResponseDto<Page<TypeObjectResponse>>> getTypeObjectsByStatus(
             @RequestParam Boolean isActive,
             @RequestParam(defaultValue = "0") int page,
@@ -241,10 +249,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get TypeObjects by date range
+     * Lấy danh sách loại món ăn theo khoảng thời gian
      */
     @GetMapping("/filter/date-range")
-    @Operation(summary = "Filter by date range", description = "Get TypeObjects created within date range")
+    @Operation(summary = "Lọc theo khoảng thời gian", description = "Lấy danh sách loại món ăn được tạo trong khoảng thời gian chỉ định")
     public ResponseEntity<ResponseDto<Page<TypeObjectResponse>>> getTypeObjectsByDateRange(
             @RequestParam String startDate,
             @RequestParam String endDate,
@@ -270,10 +278,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Search TypeObjects by name with pagination
+     * Tìm kiếm loại món ăn theo tên với phân trang
      */
     @GetMapping("/search/name")
-    @Operation(summary = "Search by name with pagination", description = "Search TypeObjects by name pattern with pagination")
+    @Operation(summary = "Tìm kiếm theo tên với phân trang", description = "Tìm kiếm loại món ăn theo mẫu tên với phân trang")
     public ResponseEntity<ResponseDto<Page<TypeObjectResponse>>> searchTypeObjectsByName(
             @RequestParam String name,
             @RequestParam(defaultValue = "0") int page,
@@ -295,10 +303,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get TypeObjects by status and name
+     * Lấy danh sách loại món ăn theo trạng thái và tên
      */
     @GetMapping("/filter/status-and-name")
-    @Operation(summary = "Filter by status and name", description = "Get TypeObjects filtered by both status and name pattern")
+    @Operation(summary = "Lọc theo trạng thái và tên", description = "Lấy danh sách loại món ăn được lọc theo cả trạng thái và mẫu tên")
     public ResponseEntity<ResponseDto<Page<TypeObjectResponse>>> getTypeObjectsByStatusAndName(
             @RequestParam Boolean isActive,
             @RequestParam String name,
@@ -321,10 +329,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get recently created TypeObjects
+     * Lấy danh sách loại món ăn mới tạo gần đây
      */
     @GetMapping("/recent/created")
-    @Operation(summary = "Get recently created", description = "Get TypeObjects created in the last N days")
+    @Operation(summary = "Lấy danh sách mới tạo", description = "Lấy danh sách loại món ăn được tạo trong N ngày gần đây")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> getRecentlyCreated(
             @RequestParam(defaultValue = "7") int days) {
         log.info("Getting recently created TypeObjects for last {} days", days);
@@ -339,10 +347,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get recently updated TypeObjects
+     * Lấy danh sách loại món ăn mới cập nhật gần đây
      */
     @GetMapping("/recent/updated")
-    @Operation(summary = "Get recently updated", description = "Get TypeObjects updated in the last N days")
+    @Operation(summary = "Lấy danh sách mới cập nhật", description = "Lấy danh sách loại món ăn được cập nhật trong N ngày gần đây")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> getRecentlyUpdated(
             @RequestParam(defaultValue = "7") int days) {
         log.info("Getting recently updated TypeObjects for last {} days", days);
@@ -357,10 +365,10 @@ public class TypeObjectsController {
     }
 
     /**
-     * Get statistics
+     * Lấy thống kê loại món ăn
      */
     @GetMapping("/statistics")
-    @Operation(summary = "Get statistics", description = "Get TypeObjects statistics (total, active, inactive)")
+    @Operation(summary = "Lấy thống kê", description = "Lấy thống kê loại món ăn (tổng số, đang hoạt động, không hoạt động)")
     public ResponseEntity<ResponseDto<Map<String, Long>>> getStatistics() {
         log.info("Getting TypeObjects statistics");
         
@@ -378,11 +386,11 @@ public class TypeObjectsController {
     // ============================================
 
     /**
-     * Bulk activate TypeObjects
+     * Kích hoạt hàng loạt loại món ăn
      */
     @PutMapping("/bulk/activate")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Bulk activate", description = "Activate multiple TypeObjects (Admin only)")
+    @Operation(summary = "Kích hoạt hàng loạt", description = "Kích hoạt nhiều loại món ăn cùng lúc (Chỉ Admin)")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> bulkActivate(
             @RequestBody List<String> ids) {
         log.info("Bulk activating {} TypeObjects", ids.size());
@@ -397,11 +405,11 @@ public class TypeObjectsController {
     }
 
     /**
-     * Bulk deactivate TypeObjects
+     * Vô hiệu hóa hàng loạt loại món ăn
      */
     @PutMapping("/bulk/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Bulk deactivate", description = "Deactivate multiple TypeObjects (Admin only)")
+    @Operation(summary = "Vô hiệu hóa hàng loạt", description = "Vô hiệu hóa nhiều loại món ăn cùng lúc (Chỉ Admin)")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> bulkDeactivate(
             @RequestBody List<String> ids) {
         log.info("Bulk deactivating {} TypeObjects", ids.size());
@@ -416,11 +424,11 @@ public class TypeObjectsController {
     }
 
     /**
-     * Bulk delete TypeObjects
+     * Xóa hàng loạt loại món ăn
      */
     @DeleteMapping("/bulk/delete")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Bulk delete", description = "Delete multiple TypeObjects (Admin only)")
+    @Operation(summary = "Xóa hàng loạt", description = "Xóa nhiều loại món ăn cùng lúc (Chỉ Admin)")
     public ResponseEntity<ResponseDto<Void>> bulkDelete(
             @RequestBody List<String> ids) {
         log.info("Bulk deleting {} TypeObjects", ids.size());
@@ -434,11 +442,11 @@ public class TypeObjectsController {
     }
 
     /**
-     * Execute bulk operation
+     * Thực hiện thao tác hàng loạt
      */
     @PostMapping("/bulk/execute")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Execute bulk operation", description = "Execute bulk operation (activate/deactivate/delete) (Admin only)")
+    @Operation(summary = "Thực hiện thao tác hàng loạt", description = "Thực hiện thao tác hàng loạt (kích hoạt/vô hiệu hóa/xóa) (Chỉ Admin)")
     public ResponseEntity<ResponseDto<List<TypeObjectResponse>>> executeBulkOperation(
             @Valid @RequestBody BulkOperationRequest request) {
         log.info("Executing bulk operation: {} on {} items", request.getOperation(), request.getIds().size());
