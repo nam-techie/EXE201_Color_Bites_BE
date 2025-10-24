@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.controller;
 import com.exe201.color_bites_be.dto.request.CreateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.request.UpdateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.enums.ChallengeType;
 import com.exe201.color_bites_be.service.IChallengeDefinitionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,75 +28,108 @@ public class ChallengeDefinitionController {
 
     @GetMapping
     @Operation(summary = "Lấy danh sách thử thách đang hoạt động", description = "Lấy tất cả thử thách đang hoạt động với phân trang")
-    public ResponseEntity<Page<ChallengeDefinitionResponse>> getActiveChallenges(
+    public ResponseEntity<ResponseDto<Page<ChallengeDefinitionResponse>>> getActiveChallenges(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<ChallengeDefinitionResponse> challenges = challengeDefinitionService.readActiveChallenges(page, size);
-        return ResponseEntity.ok(challenges);
+        return ResponseEntity.ok(ResponseDto.<Page<ChallengeDefinitionResponse>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Lấy danh sách thử thách đang hoạt động thành công")
+                .data(challenges)
+                .build());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Lấy thử thách theo ID", description = "Lấy thông tin chi tiết của một thử thách")
-    public ResponseEntity<ChallengeDefinitionResponse> getChallengeById(@PathVariable String id) {
+    public ResponseEntity<ResponseDto<ChallengeDefinitionResponse>> getChallengeById(@PathVariable String id) {
         ChallengeDefinitionResponse challenge = challengeDefinitionService.readChallengeDefinitionById(id);
-        return ResponseEntity.ok(challenge);
+        return ResponseEntity.ok(ResponseDto.<ChallengeDefinitionResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Lấy thông tin thử thách thành công")
+                .data(challenge)
+                .build());
     }
 
     @GetMapping("/type/{type}")
     @Operation(summary = "Lấy danh sách thử thách theo loại", description = "Lấy các thử thách được lọc theo loại")
-    public ResponseEntity<List<ChallengeDefinitionResponse>> getChallengesByType(@PathVariable ChallengeType type) {
+    public ResponseEntity<ResponseDto<List<ChallengeDefinitionResponse>>> getChallengesByType(@PathVariable ChallengeType type) {
         List<ChallengeDefinitionResponse> challenges = challengeDefinitionService.readChallengesByType(type);
-        return ResponseEntity.ok(challenges);
+        return ResponseEntity.ok(ResponseDto.<List<ChallengeDefinitionResponse>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Lấy danh sách thử thách theo loại thành công")
+                .data(challenges)
+                .build());
     }
 
     @GetMapping("/restaurant/{restaurantId}")
     @Operation(summary = "Lấy danh sách thử thách theo nhà hàng", description = "Lấy các thử thách của một nhà hàng cụ thể")
-    public ResponseEntity<List<ChallengeDefinitionResponse>> getChallengesByRestaurant(@PathVariable String restaurantId) {
+    public ResponseEntity<ResponseDto<List<ChallengeDefinitionResponse>>> getChallengesByRestaurant(@PathVariable String restaurantId) {
         List<ChallengeDefinitionResponse> challenges = challengeDefinitionService.readChallengesByRestaurant(restaurantId);
-        return ResponseEntity.ok(challenges);
+        return ResponseEntity.ok(ResponseDto.<List<ChallengeDefinitionResponse>>builder()
+                .status(HttpStatus.OK.value())
+                .message("Lấy danh sách thử thách theo nhà hàng thành công")
+                .data(challenges)
+                .build());
     }
 
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Tạo thử thách mới", description = "Tạo một thử thách mới (chỉ Admin/Partner)")
-    public ResponseEntity<ChallengeDefinitionResponse> createChallenge(@Valid @RequestBody CreateChallengeDefinitionRequest request) {
+    public ResponseEntity<ResponseDto<ChallengeDefinitionResponse>> createChallenge(@Valid @RequestBody CreateChallengeDefinitionRequest request) {
         ChallengeDefinitionResponse challenge = challengeDefinitionService.createChallengeDefinition(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(challenge);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDto.<ChallengeDefinitionResponse>builder()
+                .status(HttpStatus.CREATED.value())
+                .message("Tạo thử thách mới thành công")
+                .data(challenge)
+                .build());
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Cập nhật thử thách", description = "Cập nhật một thử thách đã tồn tại (chỉ Admin/Partner)")
-    public ResponseEntity<ChallengeDefinitionResponse> updateChallenge(
+    public ResponseEntity<ResponseDto<ChallengeDefinitionResponse>> updateChallenge(
             @PathVariable String id, 
             @Valid @RequestBody UpdateChallengeDefinitionRequest request) {
         ChallengeDefinitionResponse challenge = challengeDefinitionService.updateChallengeDefinition(id, request);
-        return ResponseEntity.ok(challenge);
+        return ResponseEntity.ok(ResponseDto.<ChallengeDefinitionResponse>builder()
+                .status(HttpStatus.OK.value())
+                .message("Cập nhật thử thách thành công")
+                .data(challenge)
+                .build());
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Xóa thử thách", description = "Xóa một thử thách (chỉ Admin/Partner)")
-    public ResponseEntity<Void> deleteChallenge(@PathVariable String id) {
+    public ResponseEntity<ResponseDto<Void>> deleteChallenge(@PathVariable String id) {
         challengeDefinitionService.deleteChallengeDefinition(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ResponseDto.<Void>builder()
+                .status(HttpStatus.OK.value())
+                .message("Xóa thử thách thành công")
+                .build());
     }
 
     @PutMapping("/{id}/activate")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Kích hoạt thử thách", description = "Kích hoạt một thử thách (chỉ Admin/Partner)")
-    public ResponseEntity<Void> activateChallenge(@PathVariable String id) {
+    public ResponseEntity<ResponseDto<Void>> activateChallenge(@PathVariable String id) {
         challengeDefinitionService.activateChallenge(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ResponseDto.<Void>builder()
+                .status(HttpStatus.OK.value())
+                .message("Kích hoạt thử thách thành công")
+                .build());
     }
 
     @PutMapping("/{id}/deactivate")
     @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Vô hiệu hóa thử thách", description = "Vô hiệu hóa một thử thách (chỉ Admin/Partner)")
-    public ResponseEntity<Void> deactivateChallenge(@PathVariable String id) {
+    public ResponseEntity<ResponseDto<Void>> deactivateChallenge(@PathVariable String id) {
         challengeDefinitionService.deactivateChallenge(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ResponseDto.<Void>builder()
+                .status(HttpStatus.OK.value())
+                .message("Vô hiệu hóa thử thách thành công")
+                .build());
     }
 }
 

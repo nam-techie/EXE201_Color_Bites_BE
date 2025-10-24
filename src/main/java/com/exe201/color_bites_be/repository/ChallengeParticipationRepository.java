@@ -34,3 +34,4 @@ public interface ChallengeParticipationRepository extends MongoRepository<Challe
 }
 
 
+
