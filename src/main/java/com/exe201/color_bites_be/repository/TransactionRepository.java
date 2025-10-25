@@ -56,4 +56,7 @@ public interface TransactionRepository extends MongoRepository<Transaction, Stri
      */
     @Query("{'status': 'PENDING', 'created_at': {$gte: ?0}}")
     List<Transaction> findPendingTransactionsSince(LocalDateTime cutoffTime);
+    
+    // Thêm method cho admin
+    long countByStatus(TxnStatus status);
 }

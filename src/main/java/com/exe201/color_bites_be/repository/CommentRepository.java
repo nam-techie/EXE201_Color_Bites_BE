@@ -64,5 +64,10 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     List<Comment> findAllByPostId(String postId);
 
     int countByPostIdAndIsDeleted(String postId, boolean isDeleted);
+    
+    // Thêm method cho admin
+    Page<Comment> findByPostId(String postId, Pageable pageable);
+    
+    long countByIsDeleted(boolean isDeleted);
 
 }

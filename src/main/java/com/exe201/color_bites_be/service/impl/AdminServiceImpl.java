@@ -318,7 +318,7 @@ public class AdminServiceImpl implements IAdminService {
         Tag tag = new Tag();
         tag.setName(name);
         tag.setDescription(description);
-        tag.setUsageCount(0L);
+        tag.setUsageCount(0);
         tag.setIsDeleted(false);
         
         Tag savedTag = tagRepository.save(tag);
@@ -576,7 +576,7 @@ public class AdminServiceImpl implements IAdminService {
         response.setId(tag.getId());
         response.setName(tag.getName());
         response.setDescription(tag.getDescription());
-        response.setUsageCount(tag.getUsageCount());
+        response.setUsageCount(tag.getUsageCount().longValue());
         response.setIsDeleted(tag.getIsDeleted());
         response.setCreatedAt(tag.getCreatedAt());
         response.setUpdatedAt(tag.getUpdatedAt());
