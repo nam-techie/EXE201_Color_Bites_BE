@@ -15,12 +15,12 @@ import java.util.Optional;
 @Repository
 public interface ChallengeDefinitionRepository extends MongoRepository<ChallengeDefinition, String> {
     Optional<ChallengeDefinition> findById(String challegenId);
-    
+
     @Query("{'is_active': true}")
     List<ChallengeDefinition> findByIsActive();
     
     @Query("{'is_active': true}")
-    Page<ChallengeDefinition> findActiveChallenges(Pageable pageable);
+    List<ChallengeDefinition> findActiveChallenges(Boolean active);
     
     @Query("{'restaurant_id': ?0, 'is_active': true}")
     List<ChallengeDefinition> findByRestaurantId(String restaurantId);

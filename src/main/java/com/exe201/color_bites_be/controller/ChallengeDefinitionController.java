@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.controller;
 import com.exe201.color_bites_be.dto.request.CreateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.request.UpdateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeDetailResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.enums.ChallengeType;
 import com.exe201.color_bites_be.service.IChallengeDefinitionService;
@@ -29,11 +30,9 @@ public class ChallengeDefinitionController {
 
     @GetMapping
     @Operation(summary = "Lấy danh sách thử thách đang hoạt động", description = "Lấy tất cả thử thách đang hoạt động với phân trang")
-    public ResponseEntity<ResponseDto<Page<ChallengeDefinitionResponse>>> getActiveChallenges(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<ChallengeDefinitionResponse> challenges = challengeDefinitionService.readActiveChallenges(page, size);
-        return ResponseEntity.ok(ResponseDto.<Page<ChallengeDefinitionResponse>>builder()
+    public ResponseEntity<ResponseDto<List<ChallengeDetailResponse>>> getActiveChallenges() {
+        List<ChallengeDetailResponse> challenges = challengeDefinitionService.readActiveChallenges();
+        return ResponseEntity.ok(ResponseDto.<List<ChallengeDetailResponse>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Lấy danh sách thử thách đang hoạt động thành công")
                 .data(challenges)

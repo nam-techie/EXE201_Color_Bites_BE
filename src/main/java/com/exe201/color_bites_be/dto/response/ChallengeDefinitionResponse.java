@@ -18,7 +18,7 @@ public class ChallengeDefinitionResponse {
     private String description;
     private ChallengeType challengeType;
     private String restaurantId;
-    private String typeObjId; // Changed from foodTypeId to typeObj (JSON embedded)
+    private String typeObjId;
     private List<ImageObjectRequest> images; // JSON array embedded
     private Integer targetCount;
     private LocalDateTime startDate;
