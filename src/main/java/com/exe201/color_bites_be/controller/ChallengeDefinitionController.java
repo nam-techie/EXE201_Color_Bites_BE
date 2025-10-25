@@ -74,7 +74,7 @@ public class ChallengeDefinitionController {
 
 
     @PostMapping
-    @Operation(summary = "Tạo thử thách mới", description = "Tạo một thử thách mới (chỉ Admin/Partner)")
+    @Operation(summary = "Tạo thử thách mới", description = "Tạo một thử thách mới")
     public ResponseEntity<ResponseDto<ChallengeDefinitionResponse>> createChallenge(@Valid @RequestBody CreateChallengeDefinitionRequest request) {
         ChallengeDefinitionResponse challenge = challengeDefinitionService.createChallengeDefinition(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDto.<ChallengeDefinitionResponse>builder()

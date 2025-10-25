@@ -37,8 +37,8 @@ public class CreateChallengeDefinitionRequest {
     @Future(message = "Ngày bắt đầu phải trong tương lai")
     private LocalDateTime startDate;
     
-    @NotNull(message = "Ngày kết thúc không được để trống")
-    private Long endDate;
+    @NotNull(message = "Thời hạn không được để trống")
+    private Long durationDay;
     
     @Size(max = 500, message = "Mô tả phần thưởng không được quá 500 ký tự")
     private String rewardDescription;
