@@ -26,6 +26,15 @@ public class Tag {
     @Field("usage_count")
     private Integer usageCount;
 
+    @Field("description")
+    private String description;
+
+    @Field("is_deleted")
+    private Boolean isDeleted;
+
     @Field("created_at")
     private LocalDateTime createdAt;
+
+    @Field("updated_at")
+    private LocalDateTime updatedAt;
 } 

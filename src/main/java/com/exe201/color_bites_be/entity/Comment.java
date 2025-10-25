@@ -34,6 +34,9 @@ public class Comment {
     @Field("content")
     private String content;
 
+    @Field("reply_count")
+    private Integer replyCount;
+
     @Field("is_deleted")
     private Boolean isDeleted;
 
