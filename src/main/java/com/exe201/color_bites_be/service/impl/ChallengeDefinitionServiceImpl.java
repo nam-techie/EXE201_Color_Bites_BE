@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.service.impl;
 import com.exe201.color_bites_be.dto.request.CreateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.request.UpdateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeDetailResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.ChallengeDefinition;
 import com.exe201.color_bites_be.entity.UserInformation;
@@ -23,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,11 +88,21 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
     }
 
     @Override
-    public Page<ChallengeDefinitionResponse> readActiveChallenges(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ChallengeDefinition> challenges = challengeDefinitionRepository.findActiveChallenges(pageable);
-        
-        return challenges.map(this::buildChallengeDefinitionResponse);
+    public List<ChallengeDetailResponse> readActiveChallenges() {
+        List<ChallengeDefinition> challenges = challengeDefinitionRepository.findActiveChallenges(true);
+        List<ChallengeDetailResponse> challengeDetailResponseList = new ArrayList<>();
+        for(ChallengeDefinition challenge: challenges){
+            ChallengeDetailResponse challengeDetailResponse = new ChallengeDetailResponse();
+            challengeDetailResponse.setId(challenge.getId());
+            challengeDetailResponse.setTitle(challenge.getTitle());
+            challengeDetailResponse.setRestaurantId(challenge.getRestaurantId());
+            challengeDetailResponse.setTypeObjId(challenge.getTypeObjId());
+            challengeDetailResponse.setChallengeType(challenge.getChallengeType());
+            challengeDetailResponse.setStartDate(challenge.getStartDate());
+            challengeDetailResponse.setEndDate(challenge.getEndDate());
+            challengeDetailResponseList.add(challengeDetailResponse);
+        }
+        return challengeDetailResponseList;
     }
 
     @Override

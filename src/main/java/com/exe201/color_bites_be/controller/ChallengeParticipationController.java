@@ -79,16 +79,16 @@ public class ChallengeParticipationController {
                 .build());
     }
 
-    @GetMapping("/{challengeId}/participations")
-    @Operation(summary = "Lấy danh sách tham gia theo thử thách", description = "Lấy tất cả các lần tham gia của một thử thách cụ thể")
-    public ResponseEntity<ResponseDto<List<ChallengeParticipationResponse>>> getParticipationsByChallenge(@PathVariable String challengeId) {
-        List<ChallengeParticipationResponse> participations = participationService.readParticipationsByChallenge(challengeId);
-        return ResponseEntity.ok(ResponseDto.<List<ChallengeParticipationResponse>>builder()
-                .status(HttpStatus.OK.value())
-                .message("Lấy danh sách tham gia theo thử thách thành công")
-                .data(participations)
-                .build());
-    }
+//    @GetMapping("/{challengeId}/participations")
+//    @Operation(summary = "Lấy danh sách tham gia theo thử thách", description = "Lấy tất cả các lần tham gia của một thử thách cụ thể")
+//    public ResponseEntity<ResponseDto<List<ChallengeParticipationResponse>>> getParticipationsByChallenge(@PathVariable String challengeId) {
+//        List<ChallengeParticipationResponse> participations = participationService.readParticipationsByChallenge(challengeId);
+//        return ResponseEntity.ok(ResponseDto.<List<ChallengeParticipationResponse>>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("Lấy danh sách tham gia theo thử thách thành công")
+//                .data(participations)
+//                .build());
+//    }
 
     @GetMapping("/participations/status/{status}")
     @Operation(summary = "Lấy danh sách tham gia theo trạng thái", description = "Lấy tất cả các lần tham gia được lọc theo trạng thái")
@@ -101,48 +101,48 @@ public class ChallengeParticipationController {
                 .build());
     }
 
-    @GetMapping("/participations/{participationId}/progress")
-    @Operation(summary = "Lấy tiến độ tham gia", description = "Lấy chi tiết tiến độ của một lần tham gia thử thách")
-    public ResponseEntity<ResponseDto<ChallengeProgressResponse>> getParticipationProgress(@PathVariable String participationId) {
-        ChallengeProgressResponse progress = participationService.getParticipationProgress(participationId);
-        return ResponseEntity.ok(ResponseDto.<ChallengeProgressResponse>builder()
-                .status(HttpStatus.OK.value())
-                .message("Lấy tiến độ tham gia thành công")
-                .data(progress)
-                .build());
-    }
+//    @GetMapping("/participations/{participationId}/progress")
+//    @Operation(summary = "Lấy tiến độ tham gia", description = "Lấy chi tiết tiến độ của một lần tham gia thử thách")
+//    public ResponseEntity<ResponseDto<ChallengeProgressResponse>> getParticipationProgress(@PathVariable String participationId) {
+//        ChallengeProgressResponse progress = participationService.getParticipationProgress(participationId);
+//        return ResponseEntity.ok(ResponseDto.<ChallengeProgressResponse>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("Lấy tiến độ tham gia thành công")
+//                .data(progress)
+//                .build());
+//    }
 
-    @PutMapping("/participations/{participationId}/progress")
-    @Operation(summary = "Cập nhật tiến độ tham gia", description = "Cập nhật số lượng tiến độ cho một lần tham gia")
-    public ResponseEntity<ResponseDto<Void>> updateParticipationProgress(
-            @PathVariable String participationId, 
-            @RequestParam int progressCount) {
-        participationService.updateParticipationProgress(participationId, progressCount);
-        return ResponseEntity.ok(ResponseDto.<Void>builder()
-                .status(HttpStatus.OK.value())
-                .message("Cập nhật tiến độ tham gia thành công")
-                .build());
-    }
+//    @PutMapping("/participations/{participationId}/progress")
+//    @Operation(summary = "Cập nhật tiến độ tham gia", description = "Cập nhật số lượng tiến độ cho một lần tham gia")
+//    public ResponseEntity<ResponseDto<Void>> updateParticipationProgress(
+//            @PathVariable String participationId,
+//            @RequestParam int progressCount) {
+//        participationService.updateParticipationProgress(participationId, progressCount);
+//        return ResponseEntity.ok(ResponseDto.<Void>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("Cập nhật tiến độ tham gia thành công")
+//                .build());
+//    }
 
-    @PutMapping("/participations/{participationId}/complete")
-    @Operation(summary = "Hoàn thành tham gia", description = "Đánh dấu một lần tham gia là đã hoàn thành")
-    public ResponseEntity<ResponseDto<Void>> completeParticipation(@PathVariable String participationId) {
-        participationService.completeParticipation(participationId);
-        return ResponseEntity.ok(ResponseDto.<Void>builder()
-                .status(HttpStatus.OK.value())
-                .message("Hoàn thành tham gia thành công")
-                .build());
-    }
-
-    @PutMapping("/participations/{participationId}/fail")
-    @Operation(summary = "Thất bại tham gia", description = "Đánh dấu một lần tham gia là thất bại")
-    public ResponseEntity<ResponseDto<Void>> failParticipation(@PathVariable String participationId) {
-        participationService.failParticipation(participationId);
-        return ResponseEntity.ok(ResponseDto.<Void>builder()
-                .status(HttpStatus.OK.value())
-                .message("Đánh dấu thất bại tham gia thành công")
-                .build());
-    }
+//    @PutMapping("/participations/{participationId}/complete")
+//    @Operation(summary = "Hoàn thành tham gia", description = "Đánh dấu một lần tham gia là đã hoàn thành")
+//    public ResponseEntity<ResponseDto<Void>> completeParticipation(@PathVariable String participationId) {
+//        participationService.completeParticipation(participationId);
+//        return ResponseEntity.ok(ResponseDto.<Void>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("Hoàn thành tham gia thành công")
+//                .build());
+//    }
+//
+//    @PutMapping("/participations/{participationId}/fail")
+//    @Operation(summary = "Thất bại tham gia", description = "Đánh dấu một lần tham gia là thất bại")
+//    public ResponseEntity<ResponseDto<Void>> failParticipation(@PathVariable String participationId) {
+//        participationService.failParticipation(participationId);
+//        return ResponseEntity.ok(ResponseDto.<Void>builder()
+//                .status(HttpStatus.OK.value())
+//                .message("Đánh dấu thất bại tham gia thành công")
+//                .build());
+//    }
 }
 
 

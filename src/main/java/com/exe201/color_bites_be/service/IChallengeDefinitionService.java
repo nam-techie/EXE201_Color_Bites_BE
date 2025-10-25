@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.service;
 import com.exe201.color_bites_be.dto.request.CreateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.request.UpdateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeDetailResponse;
 import com.exe201.color_bites_be.enums.ChallengeType;
 import org.springframework.data.domain.Page;
 
@@ -14,7 +15,7 @@ public interface IChallengeDefinitionService {
     
     ChallengeDefinitionResponse readChallengeDefinitionById(String challengeId);
     
-    Page<ChallengeDefinitionResponse> readActiveChallenges(int page, int size);
+    List<ChallengeDetailResponse> readActiveChallenges();
     
     List<ChallengeDefinitionResponse> readChallengesByType(ChallengeType challengeType);
     

@@ -14,10 +14,9 @@ public class ChallengeParticipationResponse {
     private String accountId;
     private String challengeId;
     private ParticipationStatus status;
-    private Integer progressCount;
     private LocalDateTime completedAt;
     private LocalDateTime createdAt;
-    
+
     // Additional fields for display
     private String challengeTitle;
     private Integer targetCount;
