@@ -4,28 +4,28 @@ import com.exe201.color_bites_be.dto.request.CreateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.request.UpdateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
 import com.exe201.color_bites_be.dto.response.ChallengeDetailResponse;
-import com.exe201.color_bites_be.entity.Account;
-import com.exe201.color_bites_be.entity.ChallengeDefinition;
-import com.exe201.color_bites_be.entity.UserInformation;
+import com.exe201.color_bites_be.entity.*;
 import com.exe201.color_bites_be.enums.ChallengeType;
+import com.exe201.color_bites_be.enums.Role;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.exception.BadRequestException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.exception.NotFoundException;
-import com.exe201.color_bites_be.repository.ChallengeDefinitionRepository;
-import com.exe201.color_bites_be.repository.UserInformationRepository;
+import com.exe201.color_bites_be.repository.*;
 import com.exe201.color_bites_be.service.IChallengeDefinitionService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -38,6 +38,12 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
     private ModelMapper modelMapper;
     @Autowired
     private UserInformationRepository userInformationRepository;
+    @Autowired
+    private RestaurantRepository restaurantRepository;
+    @Autowired
+    private TypeObjectsRepository typeObjectsRepository;
+    @Autowired
+    private ChallengeParticipationRepository challengeParticipationRepository;
 
     @Override
     public ChallengeDefinitionResponse createChallengeDefinition(CreateChallengeDefinitionRequest request) {
@@ -46,10 +52,11 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
 
             UserInformation userInformation = userInformationRepository.findByAccountId(account.getId());
 
-            if(userInformation.getSubscriptionPlan() == SubcriptionPlan.FREE){
-                throw new BadRequestException("Bạn cần nâng cấp gói để sử dụng tính năng này");
+            if(account.getRole() == Role.USER){
+                if(userInformation.getSubscriptionPlan() == SubcriptionPlan.FREE){
+                    throw new BadRequestException("Bạn cần nâng cấp gói để sử dụng tính năng này");
+                }
             }
-
 
             // Validate challenge type specific requirements
             validateChallengeDefinitionRequest(request);
@@ -59,11 +66,11 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
             challengeDefinition.setDescription(request.getDescription());
             challengeDefinition.setChallengeType(request.getChallengeType());
             challengeDefinition.setRestaurantId(request.getRestaurantId());
-            challengeDefinition.setTypeObjId(request.getTypeObjId()); // JSON embedded type object
-            challengeDefinition.setImages(request.getImages()); // JSON embedded images
+            challengeDefinition.setTypeObjId(request.getTypeObjId());
+            challengeDefinition.setImages(request.getImages());
             challengeDefinition.setTargetCount(request.getTargetCount());
             challengeDefinition.setStartDate(request.getStartDate());
-            challengeDefinition.setEndDate((request.getStartDate().plusDays(request.getEndDate())));
+            challengeDefinition.setEndDate((request.getStartDate().plusDays(request.getDurationDay())));
             challengeDefinition.setRewardDescription(request.getRewardDescription());
             challengeDefinition.setCreatedBy(account.getId());
             challengeDefinition.setCreatedAt(LocalDateTime.now());
@@ -219,7 +226,7 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
             throw new BadRequestException("Thử thách THEME_COUNT cần có typeObj với key hợp lệ");
         }
         
-        if (request.getEndDate() < 0 && request.getEndDate() > 31) {
+        if (request.getDurationDay() < 0 && request.getDurationDay() > 31) {
             throw new BadRequestException("Trên 1 ngày và dưới 1 tháng");
         }
     }
@@ -242,7 +249,17 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
         response.setCreatedBy(challenge.getCreatedBy());
         response.setCreatedAt(challenge.getCreatedAt());
         response.setIsActive(challenge.getIsActive());
-        
+
+//        Restaurant restaurant = restaurantRepository.findByIdAndNotDeleted(challenge.getRestaurantId())
+//                .orElseThrow(() -> new NotFoundException("Không tìm thấy nhà hàng"));
+//        response.setRestaurantName(restaurant.getName());
+//
+//        TypeObjects obj = typeObjectsRepository.findById(challenge.getTypeObjId())
+//                .orElseThrow(() -> new NotFoundException("Không tìm thấy loại món ăn"));
+//        response.setTypeObjName(obj.getName());
+
+        List<ChallengeParticipation> challengeParticipations = challengeParticipationRepository.findByChallengeId(challenge.getId());
+        response.setParticipantCount(challengeParticipations.size());
         return response;
     }
 }

@@ -114,7 +114,6 @@ public class TypeObjectsController {
     @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @Operation(summary = "Lấy danh sách 10 loại món ăn", description = "Lấy danh sách 10 loại món ăn ngẫu nhiên")
     public ResponseEntity<ResponseDto<List<TypeObjects>>> getRandomTypeObjects() {
-        log.info("Getting all active TypeObjects");
 
         List<TypeObjects> response = typeObjectsService.getRandomFoods();
 

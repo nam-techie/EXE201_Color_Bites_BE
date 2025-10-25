@@ -31,6 +31,6 @@ public class ChallengeDefinitionResponse {
     // Additional fields for display
     private String restaurantName; // If restaurantId is provided
     private String typeObjName; // If typeObj is provided (replaces foodTypeName)
-    private Long participantCount; // Number of participants
+    private Integer participantCount; // Number of participants
 }
 
