@@ -13,12 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/challenges")
+@PreAuthorize("hasAuthority('USER')")
 @Tag(name = "ChallengeParticipationController", description = "API quản lý việc tham gia các thử thách")
 public class ChallengeParticipationController {
 

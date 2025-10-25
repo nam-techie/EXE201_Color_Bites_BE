@@ -1,7 +1,7 @@
 package com.exe201.color_bites_be.entity;
 
-import com.exe201.color_bites_be.model.TypeObject;
-import com.exe201.color_bites_be.model.ImageObject;
+import com.exe201.color_bites_be.dto.request.TypeObjectRequest;
+import com.exe201.color_bites_be.dto.request.ImageObjectRequest;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -23,7 +23,6 @@ import java.util.List;
 public class Restaurant {
 
     @Id
-    @Field("_id")
     private String id;
 
     @Field("name")
@@ -46,10 +45,10 @@ public class Restaurant {
     private String district;
 
     @Field("types")
-    private List<TypeObject> types; // JSON array embedded
+    private List<TypeObjectRequest> types; // JSON array embedded
 
     @Field("images")
-    private List<ImageObject> images; // JSON array embedded
+    private List<ImageObjectRequest> images; // JSON array embedded
 
     @Field("price")
     private String price; // Changed from avgPrice (Double) to price (String)

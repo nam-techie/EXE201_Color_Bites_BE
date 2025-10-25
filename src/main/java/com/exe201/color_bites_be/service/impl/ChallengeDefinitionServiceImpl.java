@@ -5,11 +5,14 @@ import com.exe201.color_bites_be.dto.request.UpdateChallengeDefinitionRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.ChallengeDefinition;
+import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.enums.ChallengeType;
+import com.exe201.color_bites_be.enums.SubcriptionPlan;
 import com.exe201.color_bites_be.exception.BadRequestException;
 import com.exe201.color_bites_be.exception.FuncErrorException;
 import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.repository.ChallengeDefinitionRepository;
+import com.exe201.color_bites_be.repository.UserInformationRepository;
 import com.exe201.color_bites_be.service.IChallengeDefinitionService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +34,21 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
 
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private UserInformationRepository userInformationRepository;
 
     @Override
     public ChallengeDefinitionResponse createChallengeDefinition(CreateChallengeDefinitionRequest request) {
         try {
             Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            
+
+            UserInformation userInformation = userInformationRepository.findByAccountId(account.getId());
+
+            if(userInformation.getSubscriptionPlan() == SubcriptionPlan.FREE){
+                throw new BadRequestException("Bạn cần nâng cấp gói để sử dụng tính năng này");
+            }
+
+
             // Validate challenge type specific requirements
             validateChallengeDefinitionRequest(request);
 
@@ -45,11 +57,11 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
             challengeDefinition.setDescription(request.getDescription());
             challengeDefinition.setChallengeType(request.getChallengeType());
             challengeDefinition.setRestaurantId(request.getRestaurantId());
-            challengeDefinition.setTypeObj(request.getTypeObj()); // JSON embedded type object
+            challengeDefinition.setTypeObjId(request.getTypeObjId()); // JSON embedded type object
             challengeDefinition.setImages(request.getImages()); // JSON embedded images
             challengeDefinition.setTargetCount(request.getTargetCount());
             challengeDefinition.setStartDate(request.getStartDate());
-            challengeDefinition.setEndDate(request.getEndDate());
+            challengeDefinition.setEndDate((request.getStartDate().plusDays(request.getEndDate())));
             challengeDefinition.setRewardDescription(request.getRewardDescription());
             challengeDefinition.setCreatedBy(account.getId());
             challengeDefinition.setCreatedAt(LocalDateTime.now());
@@ -124,8 +136,8 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
             if (request.getRestaurantId() != null) {
                 challenge.setRestaurantId(request.getRestaurantId());
             }
-            if (request.getTypeObj() != null) {
-                challenge.setTypeObj(request.getTypeObj()); // JSON embedded type object
+            if (request.getTypeObjId() != null) {
+                challenge.setTypeObjId(request.getTypeObjId()); // JSON embedded type object
             }
             if (request.getImages() != null) {
                 challenge.setImages(request.getImages()); // JSON embedded images
@@ -191,12 +203,12 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
         }
         
         if (request.getChallengeType() == ChallengeType.THEME_COUNT && 
-            (request.getTypeObj() == null || request.getTypeObj().getKey() == null || request.getTypeObj().getKey().trim().isEmpty())) {
+            (request.getTypeObjId() == null)){
             throw new BadRequestException("Thử thách THEME_COUNT cần có typeObj với key hợp lệ");
         }
         
-        if (request.getEndDate().isBefore(request.getStartDate())) {
-            throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
+        if (request.getEndDate() < 0 && request.getEndDate() > 31) {
+            throw new BadRequestException("Trên 1 ngày và dưới 1 tháng");
         }
     }
 
@@ -209,7 +221,7 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
         response.setDescription(challenge.getDescription());
         response.setChallengeType(challenge.getChallengeType());
         response.setRestaurantId(challenge.getRestaurantId());
-        response.setTypeObj(challenge.getTypeObj()); // JSON embedded type object
+        response.setTypeObjId(challenge.getTypeObjId()); // JSON embedded type object
         response.setImages(challenge.getImages()); // JSON embedded images
         response.setTargetCount(challenge.getTargetCount());
         response.setStartDate(challenge.getStartDate());

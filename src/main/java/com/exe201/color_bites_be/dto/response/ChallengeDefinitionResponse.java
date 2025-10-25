@@ -1,8 +1,8 @@
 package com.exe201.color_bites_be.dto.response;
 
 import com.exe201.color_bites_be.enums.ChallengeType;
-import com.exe201.color_bites_be.model.TypeObject;
-import com.exe201.color_bites_be.model.ImageObject;
+import com.exe201.color_bites_be.dto.request.TypeObjectRequest;
+import com.exe201.color_bites_be.dto.request.ImageObjectRequest;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,8 +18,8 @@ public class ChallengeDefinitionResponse {
     private String description;
     private ChallengeType challengeType;
     private String restaurantId;
-    private TypeObject typeObj; // Changed from foodTypeId to typeObj (JSON embedded)
-    private List<ImageObject> images; // JSON array embedded
+    private String typeObjId; // Changed from foodTypeId to typeObj (JSON embedded)
+    private List<ImageObjectRequest> images; // JSON array embedded
     private Integer targetCount;
     private LocalDateTime startDate;
     private LocalDateTime endDate;

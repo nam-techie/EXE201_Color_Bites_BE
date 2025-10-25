@@ -1,8 +1,8 @@
 package com.exe201.color_bites_be.entity;
 
 import com.exe201.color_bites_be.enums.ChallengeType;
-import com.exe201.color_bites_be.model.TypeObject;
-import com.exe201.color_bites_be.model.ImageObject;
+import com.exe201.color_bites_be.dto.request.TypeObjectRequest;
+import com.exe201.color_bites_be.dto.request.ImageObjectRequest;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -28,7 +28,6 @@ import java.util.List;
 public class ChallengeDefinition {
 
     @Id
-    @Field("_id")
     private String id;
 
     @Field("title")
@@ -45,10 +44,10 @@ public class ChallengeDefinition {
     private String restaurantId; // for PARTNER_LOCATION type
 
     @Field("type_obj")
-    private TypeObject typeObj; // JSON object embedded for THEME_COUNT type
+    private String typeObjId;
 
     @Field("images")
-    private List<ImageObject> images; // JSON array embedded
+    private List<ImageObjectRequest> images; // JSON array embedded
 
     @Field("target_count")
     private Integer targetCount;

@@ -10,9 +10,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChallengeDefinitionRepository extends MongoRepository<ChallengeDefinition, String> {
+    Optional<ChallengeDefinition> findById(String challegenId);
     
     @Query("{'is_active': true}")
     List<ChallengeDefinition> findByIsActive();

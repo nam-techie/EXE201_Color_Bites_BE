@@ -27,7 +27,7 @@ public interface TypeObjectsRepository extends MongoRepository<TypeObjects, Stri
     /**
      * Find by exact name
      */
-    Optional<TypeObjects> findByName(String name);
+    TypeObjects findByName(String name);
 
     /**
      * Find all active type objects
@@ -43,7 +43,8 @@ public interface TypeObjectsRepository extends MongoRepository<TypeObjects, Stri
      * Check if name exists (case-insensitive)
      */
     @Query("{'name': {$regex: ?0, $options: 'i'}}")
-    boolean existsByNameIgnoreCase(String name);
+    Boolean existsByNameIgnoreCase(String name);
+
 
     // ============================================
     // ADVANCED FILTERING & SEARCH METHODS

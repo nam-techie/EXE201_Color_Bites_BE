@@ -20,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/challenges")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'PARTNER', 'USER')")
 @Tag(name = "ChallengeDefinitionController", description = "API quản lý các định nghĩa thử thách")
 public class ChallengeDefinitionController {
 
@@ -74,7 +75,6 @@ public class ChallengeDefinitionController {
 
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Tạo thử thách mới", description = "Tạo một thử thách mới (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<ChallengeDefinitionResponse>> createChallenge(@Valid @RequestBody CreateChallengeDefinitionRequest request) {
         ChallengeDefinitionResponse challenge = challengeDefinitionService.createChallengeDefinition(request);
@@ -86,7 +86,6 @@ public class ChallengeDefinitionController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Cập nhật thử thách", description = "Cập nhật một thử thách đã tồn tại (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<ChallengeDefinitionResponse>> updateChallenge(
             @PathVariable String id, 
@@ -100,7 +99,6 @@ public class ChallengeDefinitionController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Xóa thử thách", description = "Xóa một thử thách (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<Void>> deleteChallenge(@PathVariable String id) {
         challengeDefinitionService.deleteChallengeDefinition(id);
@@ -111,7 +109,6 @@ public class ChallengeDefinitionController {
     }
 
     @PutMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Kích hoạt thử thách", description = "Kích hoạt một thử thách (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<Void>> activateChallenge(@PathVariable String id) {
         challengeDefinitionService.activateChallenge(id);
@@ -122,7 +119,6 @@ public class ChallengeDefinitionController {
     }
 
     @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Vô hiệu hóa thử thách", description = "Vô hiệu hóa một thử thách (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<Void>> deactivateChallenge(@PathVariable String id) {
         challengeDefinitionService.deactivateChallenge(id);

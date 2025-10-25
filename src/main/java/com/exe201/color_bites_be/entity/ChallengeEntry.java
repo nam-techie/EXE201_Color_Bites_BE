@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 public class ChallengeEntry {
 
     @Id
-    @Field("_id")
     private String id;
 
     @Field("participation_id")
