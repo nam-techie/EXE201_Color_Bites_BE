@@ -1,12 +1,9 @@
 package com.exe201.color_bites_be.dto.request;
 
 import com.exe201.color_bites_be.enums.ChallengeType;
-import com.exe201.color_bites_be.model.TypeObject;
-import com.exe201.color_bites_be.model.ImageObject;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,9 +25,9 @@ public class CreateChallengeDefinitionRequest {
     
     private String restaurantId; // Required for PARTNER_LOCATION
     
-    private TypeObject typeObj; // Required for THEME_COUNT - JSON object embedded
-    
-    private List<ImageObject> images; // JSON array embedded
+    private String typeObjId;
+
+    private List<ImageObjectRequest> images;
     
     @NotNull(message = "Số lượng mục tiêu không được để trống")
     @Min(value = 1, message = "Số lượng mục tiêu phải lớn hơn 0")
@@ -41,7 +38,7 @@ public class CreateChallengeDefinitionRequest {
     private LocalDateTime startDate;
     
     @NotNull(message = "Ngày kết thúc không được để trống")
-    private LocalDateTime endDate;
+    private Long endDate;
     
     @Size(max = 500, message = "Mô tả phần thưởng không được quá 500 ký tự")
     private String rewardDescription;

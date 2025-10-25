@@ -1,7 +1,7 @@
 package com.exe201.color_bites_be.dto.response;
 
-import com.exe201.color_bites_be.model.TypeObject;
-import com.exe201.color_bites_be.model.ImageObject;
+import com.exe201.color_bites_be.dto.request.TypeObjectRequest;
+import com.exe201.color_bites_be.dto.request.ImageObjectRequest;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,10 +24,10 @@ public class RestaurantResponse {
     private BigDecimal longitude;
 
     // Types instead of foodTypes - JSON embedded
-    private List<TypeObject> types;
+    private List<TypeObjectRequest> types;
 
     // Images - JSON embedded
-    private List<ImageObject> images;
+    private List<ImageObjectRequest> images;
 
     // Người tạo (tham chiếu đến accounts.id)
     private String createdById;

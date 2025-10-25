@@ -8,6 +8,7 @@ import com.exe201.color_bites_be.dto.response.TypeObjectResponse;
 import com.exe201.color_bites_be.entity.TypeObjects;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,7 +21,7 @@ public interface ITypeObjectsService {
     /**
      * Create new TypeObject
      */
-    TypeObjectResponse createTypeObject(CreateTypeObjectRequest request);
+    TypeObjectResponse createTypeObject(String name, MultipartFile file);
 
     /**
      * Get TypeObject by ID
@@ -65,7 +66,10 @@ public interface ITypeObjectsService {
     /**
      * Get TypeObject by name
      */
-    TypeObjectResponse getTypeObjectByName(String name);
+//    TypeObjectResponse getTypeObjectByName(String name);
+
+    List<TypeObjects> getRandomFoods();
+
 
     // ============================================
     // ADVANCED SEARCH & FILTERING METHODS

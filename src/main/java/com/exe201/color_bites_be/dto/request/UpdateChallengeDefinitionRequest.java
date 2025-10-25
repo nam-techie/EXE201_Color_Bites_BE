@@ -1,8 +1,6 @@
 package com.exe201.color_bites_be.dto.request;
 
 import com.exe201.color_bites_be.enums.ChallengeType;
-import com.exe201.color_bites_be.model.TypeObject;
-import com.exe201.color_bites_be.model.ImageObject;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -25,9 +23,9 @@ public class UpdateChallengeDefinitionRequest {
     
     private String restaurantId; // Required for PARTNER_LOCATION
     
-    private TypeObject typeObj; // Required for THEME_COUNT - JSON object embedded
+    private String typeObjId; // Required for THEME_COUNT - JSON object embedded
     
-    private List<ImageObject> images; // JSON array embedded
+    private List<ImageObjectRequest> images; // JSON array embedded
     
     @Min(value = 1, message = "Số lượng mục tiêu phải lớn hơn 0")
     private Integer targetCount;

@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 public class TypeObjects {
 
     @Id
-    @Field("_id")
     private String id;
 
     @Field("name")

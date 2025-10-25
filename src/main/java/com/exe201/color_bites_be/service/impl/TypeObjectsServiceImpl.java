@@ -4,25 +4,27 @@ import com.exe201.color_bites_be.dto.request.AdvancedSearchRequest;
 import com.exe201.color_bites_be.dto.request.BulkOperationRequest;
 import com.exe201.color_bites_be.dto.request.CreateTypeObjectRequest;
 import com.exe201.color_bites_be.dto.request.UpdateTypeObjectRequest;
+import com.exe201.color_bites_be.dto.response.CloudinaryResponse;
 import com.exe201.color_bites_be.dto.response.TypeObjectResponse;
 import com.exe201.color_bites_be.entity.TypeObjects;
 
 import com.exe201.color_bites_be.exception.ResourceNotFoundException;
 import com.exe201.color_bites_be.repository.TypeObjectsRepository;
 import com.exe201.color_bites_be.service.ITypeObjectsService;
+import com.exe201.color_bites_be.util.FileUpLoadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -36,24 +38,29 @@ public class TypeObjectsServiceImpl implements ITypeObjectsService {
 
     private final TypeObjectsRepository typeObjectsRepository;
 
+    @Autowired
+    CloudinaryServiceImpl cloudinaryService;
+
     @Override
-    public TypeObjectResponse createTypeObject(CreateTypeObjectRequest request) {
-        log.info("Creating new TypeObject with name: {}", request.getName());
-        
+    public TypeObjectResponse createTypeObject(String name, MultipartFile file) {
+        TypeObjects typeObjects = typeObjectsRepository.findByName(name);
         // Check if name already exists
-        if (typeObjectsRepository.existsByNameIgnoreCase(request.getName())) {
-            throw new IllegalArgumentException("Tên loại món ăn đã tồn tại: " + request.getName());
+        if (typeObjects != null) {
+            throw new IllegalArgumentException("Tên loại món ăn đã tồn tại: " + name);
         }
 
+        FileUpLoadUtil.assertAllowed(file, FileUpLoadUtil.IMAGE_PATTERN);
+        final String fileName = FileUpLoadUtil.getFileName(file.getOriginalFilename());
+        final CloudinaryResponse cloudinaryResponse = cloudinaryService.uploadFile(file, fileName);
+
         TypeObjects typeObject = new TypeObjects();
-        typeObject.setName(request.getName());
-        typeObject.setImageUrl(request.getImageUrl());
+        typeObject.setName(name);
+        typeObject.setImageUrl(cloudinaryResponse.getUrl());
         typeObject.setIsActive(true);
         typeObject.setCreatedAt(LocalDateTime.now());
         typeObject.setUpdatedAt(LocalDateTime.now());
 
         TypeObjects saved = typeObjectsRepository.save(typeObject);
-        log.info("Created TypeObject with ID: {}", saved.getId());
         
         return mapToResponse(saved);
     }
@@ -160,20 +167,44 @@ public class TypeObjectsServiceImpl implements ITypeObjectsService {
         return typeObjectsRepository.existsByNameIgnoreCase(name);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public TypeObjectResponse getTypeObjectByName(String name) {
-        log.info("Getting TypeObject by name: {}", name);
-        
-        TypeObjects typeObject = typeObjectsRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món ăn với tên: " + name));
-        
-        return mapToResponse(typeObject);
+//    @Override
+//    @Transactional(readOnly = true)
+//    public TypeObjectResponse getTypeObjectByName(String name) {
+//        log.info("Getting TypeObject by name: {}", name);
+//
+//        TypeObjects typeObject = typeObjectsRepository.findByName(name)
+//                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy loại món ăn với tên: " + name));
+//
+//        return mapToResponse(typeObject);
+//    }
+
+
+    public List<TypeObjects> getRandomFoods() {
+        List<TypeObjects> allFoods = typeObjectsRepository.findAll();
+
+        List<TypeObjects> activeFoods = new ArrayList<>();
+        for (TypeObjects food : allFoods) {
+            if (food.getIsActive()) {
+                activeFoods.add(food);
+            }
+        }
+        // Nếu có ít hơn hoặc đúng 10 món, trả luôn
+        if (activeFoods.size() <= 10) {
+            return activeFoods;
+        }
+
+        // Trộn ngẫu nhiên danh sách
+        Collections.shuffle(activeFoods);
+
+        // Lấy 10 phần tử đầu
+        List<TypeObjects> random10Foods = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            random10Foods.add(activeFoods.get(i));
+        }
+
+        return random10Foods;
     }
 
-    /**
-     * Map TypeObjects entity to TypeObjectResponse DTO
-     */
     private TypeObjectResponse mapToResponse(TypeObjects typeObject) {
         TypeObjectResponse response = new TypeObjectResponse();
         response.setId(typeObject.getId());
