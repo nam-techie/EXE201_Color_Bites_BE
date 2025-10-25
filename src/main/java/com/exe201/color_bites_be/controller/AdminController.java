@@ -4,6 +4,9 @@ import com.exe201.color_bites_be.dto.response.ListAccountResponse;
 import com.exe201.color_bites_be.dto.response.AdminPostResponse;
 import com.exe201.color_bites_be.dto.response.AdminRestaurantResponse;
 import com.exe201.color_bites_be.dto.response.AdminTransactionResponse;
+import com.exe201.color_bites_be.dto.response.AdminCommentResponse;
+import com.exe201.color_bites_be.dto.response.AdminTagResponse;
+import com.exe201.color_bites_be.dto.response.StatisticsResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,12 +124,136 @@ public class AdminController {
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy giao dịch theo trạng thái thành công", transactions);
     }
 
-    // ========== STATISTICS ==========
+    // ========== COMMENT MANAGEMENT ==========
+
+    @GetMapping("/comments")
+    public ResponseDto<Page<AdminCommentResponse>> getAllComments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<AdminCommentResponse> comments = adminService.getAllCommentsByAdmin(page, size);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách comment thành công", comments);
+    }
+
+    @GetMapping("/comments/{id}")
+    public ResponseDto<AdminCommentResponse> getCommentById(@PathVariable String id) {
+        AdminCommentResponse comment = adminService.getCommentByIdByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thông tin comment thành công", comment);
+    }
+
+    @DeleteMapping("/comments/{id}")
+    public ResponseDto<Void> deleteComment(@PathVariable String id) {
+        adminService.deleteCommentByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Xóa comment thành công", null);
+    }
+
+    @PutMapping("/comments/{id}/restore")
+    public ResponseDto<Void> restoreComment(@PathVariable String id) {
+        adminService.restoreCommentByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Khôi phục comment thành công", null);
+    }
+
+    @GetMapping("/comments/post/{postId}")
+    public ResponseDto<Page<AdminCommentResponse>> getCommentsByPost(
+            @PathVariable String postId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<AdminCommentResponse> comments = adminService.getCommentsByPostByAdmin(postId, page, size);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy comment theo bài viết thành công", comments);
+    }
+
+    @GetMapping("/comments/statistics")
+    public ResponseDto<Map<String, Object>> getCommentStatistics() {
+        Map<String, Object> statistics = adminService.getCommentStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê comment thành công", statistics);
+    }
+
+    // ========== TAG MANAGEMENT ==========
+
+    @GetMapping("/tags")
+    public ResponseDto<Page<AdminTagResponse>> getAllTags(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<AdminTagResponse> tags = adminService.getAllTagsByAdmin(page, size);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách tag thành công", tags);
+    }
+
+    @GetMapping("/tags/{id}")
+    public ResponseDto<AdminTagResponse> getTagById(@PathVariable String id) {
+        AdminTagResponse tag = adminService.getTagByIdByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thông tin tag thành công", tag);
+    }
+
+    @PostMapping("/tags")
+    public ResponseDto<AdminTagResponse> createTag(
+            @RequestParam String name,
+            @RequestParam(required = false) String description) {
+        AdminTagResponse tag = adminService.createTagByAdmin(name, description);
+        return new ResponseDto<>(HttpStatus.CREATED.value(), "Tạo tag thành công", tag);
+    }
+
+    @PutMapping("/tags/{id}")
+    public ResponseDto<AdminTagResponse> updateTag(
+            @PathVariable String id,
+            @RequestParam String name,
+            @RequestParam(required = false) String description) {
+        AdminTagResponse tag = adminService.updateTagByAdmin(id, name, description);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Cập nhật tag thành công", tag);
+    }
+
+    @DeleteMapping("/tags/{id}")
+    public ResponseDto<Void> deleteTag(@PathVariable String id) {
+        adminService.deleteTagByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Xóa tag thành công", null);
+    }
+
+    @GetMapping("/tags/statistics")
+    public ResponseDto<Map<String, Object>> getTagStatistics() {
+        Map<String, Object> statistics = adminService.getTagStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê tag thành công", statistics);
+    }
+
+    // ========== ADVANCED STATISTICS ==========
 
     @GetMapping("/statistics")
     public ResponseDto<Map<String, Object>> getSystemStatistics() {
         Map<String, Object> statistics = adminService.getSystemStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê hệ thống thành công", statistics);
+    }
+
+    @GetMapping("/statistics/users")
+    public ResponseDto<StatisticsResponse> getUserStatistics() {
+        StatisticsResponse statistics = adminService.getUserStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê users thành công", statistics);
+    }
+
+    @GetMapping("/statistics/posts")
+    public ResponseDto<StatisticsResponse> getPostStatistics() {
+        StatisticsResponse statistics = adminService.getPostStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê posts thành công", statistics);
+    }
+
+    @GetMapping("/statistics/restaurants")
+    public ResponseDto<StatisticsResponse> getRestaurantStatistics() {
+        StatisticsResponse statistics = adminService.getRestaurantStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê restaurants thành công", statistics);
+    }
+
+    @GetMapping("/statistics/revenue")
+    public ResponseDto<StatisticsResponse> getRevenueStatistics() {
+        StatisticsResponse statistics = adminService.getRevenueStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê doanh thu thành công", statistics);
+    }
+
+    @GetMapping("/statistics/engagement")
+    public ResponseDto<StatisticsResponse> getEngagementStatistics() {
+        StatisticsResponse statistics = adminService.getEngagementStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê tương tác thành công", statistics);
+    }
+
+    @GetMapping("/statistics/challenges")
+    public ResponseDto<StatisticsResponse> getChallengeStatistics() {
+        StatisticsResponse statistics = adminService.getChallengeStatistics();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê challenges thành công", statistics);
     }
 
 }
