@@ -34,8 +34,29 @@ public class RestaurantController {
     private IGeocodingService geocodingService;
 
     /**
-     * Tìm nhà hàng gần vị trí (PUBLIC - không cần auth)
+     * Get featured restaurants
      */
+    @GetMapping("/featured")
+    public ResponseDto<List<RestaurantResponse>> getFeaturedRestaurants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletResponse response) {
+        
+        try {
+            // TODO: Implement featured restaurants query in service
+            Page<RestaurantResponse> restaurants = restaurantService.readAllRestaurants(page, size);
+            
+            response.setHeader("X-Total-Count", String.valueOf(restaurants.getTotalElements()));
+            response.setHeader("X-Total-Pages", String.valueOf(restaurants.getTotalPages()));
+            
+            return ResponseDto.success(restaurants.getContent(), "Lấy danh sách nhà hàng nổi bật thành công");
+            
+        } catch (Exception e) {
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseDto.error("Lỗi khi lấy danh sách nhà hàng nổi bật: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/nearby")
     public ResponseDto<List<RestaurantResponse>> getNearbyRestaurants(
             @RequestParam double lat,

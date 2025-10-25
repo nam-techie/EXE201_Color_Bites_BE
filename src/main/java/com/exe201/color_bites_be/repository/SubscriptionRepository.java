@@ -1,7 +1,7 @@
 package com.exe201.color_bites_be.repository;
 
 import com.exe201.color_bites_be.entity.Subscription;
-import com.exe201.color_bites_be.entity.Subscription.SubscriptionStatus;
+import com.exe201.color_bites_be.enums.SubscriptionStatus;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;

@@ -4,6 +4,9 @@ import com.exe201.color_bites_be.dto.response.ListAccountResponse;
 import com.exe201.color_bites_be.dto.response.AdminPostResponse;
 import com.exe201.color_bites_be.dto.response.AdminRestaurantResponse;
 import com.exe201.color_bites_be.dto.response.AdminTransactionResponse;
+import com.exe201.color_bites_be.dto.response.AdminCommentResponse;
+import com.exe201.color_bites_be.dto.response.AdminTagResponse;
+import com.exe201.color_bites_be.dto.response.StatisticsResponse;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -93,10 +96,104 @@ public interface IAdminService {
      */
     Page<AdminTransactionResponse> getTransactionsByStatusByAdmin(String status, int page, int size);
     
-    // ========== STATISTICS ==========
+    // ========== COMMENT MANAGEMENT ==========
+    
+    /**
+     * Lấy danh sách tất cả comments (admin view)
+     */
+    Page<AdminCommentResponse> getAllCommentsByAdmin(int page, int size);
+    
+    /**
+     * Lấy comment theo ID (admin view)
+     */
+    AdminCommentResponse getCommentByIdByAdmin(String commentId);
+    
+    /**
+     * Xóa comment (admin)
+     */
+    void deleteCommentByAdmin(String commentId);
+    
+    /**
+     * Khôi phục comment đã xóa (admin)
+     */
+    void restoreCommentByAdmin(String commentId);
+    
+    /**
+     * Lấy comments theo post (admin view)
+     */
+    Page<AdminCommentResponse> getCommentsByPostByAdmin(String postId, int page, int size);
+    
+    /**
+     * Lấy thống kê comments
+     */
+    Map<String, Object> getCommentStatistics();
+    
+    // ========== TAG MANAGEMENT ==========
+    
+    /**
+     * Lấy danh sách tất cả tags (admin view)
+     */
+    Page<AdminTagResponse> getAllTagsByAdmin(int page, int size);
+    
+    /**
+     * Lấy tag theo ID (admin view)
+     */
+    AdminTagResponse getTagByIdByAdmin(String tagId);
+    
+    /**
+     * Tạo tag mới (admin)
+     */
+    AdminTagResponse createTagByAdmin(String name, String description);
+    
+    /**
+     * Cập nhật tag (admin)
+     */
+    AdminTagResponse updateTagByAdmin(String tagId, String name, String description);
+    
+    /**
+     * Xóa tag (admin)
+     */
+    void deleteTagByAdmin(String tagId);
+    
+    /**
+     * Lấy thống kê tags
+     */
+    Map<String, Object> getTagStatistics();
+    
+    // ========== ADVANCED STATISTICS ==========
     
     /**
      * Lấy thống kê tổng quan hệ thống
      */
     Map<String, Object> getSystemStatistics();
+    
+    /**
+     * Lấy thống kê users theo thời gian
+     */
+    StatisticsResponse getUserStatistics();
+    
+    /**
+     * Lấy thống kê posts theo thời gian
+     */
+    StatisticsResponse getPostStatistics();
+    
+    /**
+     * Lấy thống kê restaurants
+     */
+    StatisticsResponse getRestaurantStatistics();
+    
+    /**
+     * Lấy thống kê doanh thu
+     */
+    StatisticsResponse getRevenueStatistics();
+    
+    /**
+     * Lấy thống kê tương tác
+     */
+    StatisticsResponse getEngagementStatistics();
+    
+    /**
+     * Lấy thống kê challenges
+     */
+    StatisticsResponse getChallengeStatistics();
 }

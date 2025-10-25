@@ -70,7 +70,11 @@ public class SecurityConfig {
                                 "/api/restaurants/search",
                                 "/api/restaurants/reverse-geocode",
                                 "/api/otp/verify-register",
-                                "/api/otp/verify-reset-password"
+                                "/api/otp/verify-reset-password",
+                                // Health check endpoints for Azure App Service
+                                "/actuator/health",
+                                "/actuator/health/**",
+                                "/actuator/info"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -117,6 +121,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("deprecation")
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         // IAuthenticationService now extends UserDetailsService
