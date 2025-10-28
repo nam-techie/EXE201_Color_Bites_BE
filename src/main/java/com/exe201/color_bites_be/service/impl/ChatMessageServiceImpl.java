@@ -7,6 +7,7 @@ import com.exe201.color_bites_be.enums.Sender;
 import com.exe201.color_bites_be.mapper.ChatMessageMapper;
 import com.exe201.color_bites_be.repository.ChatMessageRepository;
 import com.exe201.color_bites_be.service.IChatMessageService;
+import io.github.cdimascio.dotenv.Dotenv;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,11 +27,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatMessageServiceImpl implements IChatMessageService {
 
-    @Value("${gemini.api.url}")
-    String geminiApiUrl;
+    private final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
-    @Value("${gemini.api.key}")
-    String geminiApiKey;
+    final String geminiApiUrl = dotenv.get("GEMINI_API_URL");
+
+
+    final String geminiApiKey = dotenv.get("GEMINI_API_KEY");
 
     final ChatMessageMapper chatMessageMapper;
 
