@@ -39,7 +39,7 @@ public class ChallengeParticipationServiceImpl implements IChallengeParticipatio
     private ModelMapper modelMapper;
 
     @Override
-    public ChallengeParticipationResponse joinChallenge(String challengeId, JoinChallengeRequest request) {
+    public ChallengeParticipationResponse joinChallenge(String challengeId) {
         try {
             Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             
@@ -82,17 +82,19 @@ public class ChallengeParticipationServiceImpl implements IChallengeParticipatio
     }
 
     @Override
-    public List<ChallengeParticipationResponse> readUserParticipations(String accountId) {
-        List<ChallengeParticipation> participations = participationRepository.findByAccountId(accountId);
+    public List<ChallengeParticipationResponse> readUserParticipations() {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<ChallengeParticipation> participations = participationRepository.findByAccountId(account.getId());
         return participations.stream()
                 .map(this::buildParticipationResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Page<ChallengeParticipationResponse> readUserParticipations(String accountId, int page, int size) {
+    public Page<ChallengeParticipationResponse> readUserParticipations(int page, int size) {
+        Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Pageable pageable = PageRequest.of(page, size);
-        Page<ChallengeParticipation> participations = participationRepository.findByAccountId(accountId, pageable);
+        Page<ChallengeParticipation> participations = participationRepository.findByAccountId(account.getId(),pageable);
         
         return participations.map(this::buildParticipationResponse);
     }
@@ -167,7 +169,7 @@ public class ChallengeParticipationServiceImpl implements IChallengeParticipatio
     private ChallengeParticipationResponse buildParticipationResponse(ChallengeParticipation participation) {
         ChallengeParticipationResponse response = modelMapper.map(participation, ChallengeParticipationResponse.class);
         
-        // TODO: Add additional fields like challengeTitle, targetCount, etc.
+
         
         return response;
     }

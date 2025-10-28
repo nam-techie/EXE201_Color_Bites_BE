@@ -16,6 +16,8 @@ public interface ChallengeParticipationRepository extends MongoRepository<Challe
     
     @Query("{'account_id': ?0}")
     List<ChallengeParticipation> findByAccountId(String accountId);
+
+    Long countChallengeParticipationByChallengeId(String challengeId);
     
     @Query("{'account_id': ?0}")
     Page<ChallengeParticipation> findByAccountId(String accountId, Pageable pageable);

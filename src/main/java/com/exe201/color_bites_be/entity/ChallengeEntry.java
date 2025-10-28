@@ -47,8 +47,8 @@ public class ChallengeEntry {
     @Indexed
     private EntryStatus status;
 
-    @Field("notes")
-    private String notes;
+    @Field("caption")
+    private String caption;
 
     @Field("created_at")
     @CreatedDate

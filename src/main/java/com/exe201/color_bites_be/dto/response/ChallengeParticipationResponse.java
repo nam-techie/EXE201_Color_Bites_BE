@@ -21,8 +21,6 @@ public class ChallengeParticipationResponse {
     private String challengeTitle;
     private Integer targetCount;
     private String challengeType;
-    private Long totalEntries; // Total entries submitted
-    private Long approvedEntries; // Approved entries count
 }
 
 

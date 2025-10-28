@@ -258,8 +258,10 @@ public class ChallengeDefinitionServiceImpl implements IChallengeDefinitionServi
 //                .orElseThrow(() -> new NotFoundException("Không tìm thấy loại món ăn"));
 //        response.setTypeObjName(obj.getName());
 
-        List<ChallengeParticipation> challengeParticipations = challengeParticipationRepository.findByChallengeId(challenge.getId());
-        response.setParticipantCount(challengeParticipations.size());
+//        List<ChallengeParticipation> challengeParticipations = challengeParticipationRepository.findByChallengeId(challenge.getId());
+//        response.setParticipantCount(challengeParticipations.size());
+        Long participationCount = challengeParticipationRepository.countChallengeParticipationByChallengeId(challenge.getId());
+        response.setParticipantCount(participationCount);
         return response;
     }
 }

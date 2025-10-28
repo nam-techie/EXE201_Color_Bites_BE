@@ -24,8 +24,8 @@ public class UpdateChallengeEntryRequest {
     @DecimalMax(value = "180.0", message = "Kinh độ phải từ -180 đến 180")
     private BigDecimal longitude;
     
-    @Size(max = 500, message = "Ghi chú không được quá 500 ký tự")
-    private String notes;
+    @Size(max = 500, message = "Caption không được quá 500 ký tự")
+    private String caption;
 }
 
 

@@ -26,12 +26,12 @@ public class ChallengeEntryController {
     @Autowired
     private IChallengeEntryService entryService;
 
-    @PostMapping("/participations/{participationId}/entries")
+    @PostMapping("/participations/{challengeId}/entries")
     @Operation(summary = "Nộp bài thử thách", description = "Nộp một bài tham gia thử thách")
     public ResponseEntity<ResponseDto<ChallengeEntryResponse>> submitEntry(
-            @PathVariable String participationId, 
+            @PathVariable String challengeId,
             @Valid @RequestBody SubmitChallengeEntryRequest request) {
-        ChallengeEntryResponse entry = entryService.submitEntry(participationId, request);
+        ChallengeEntryResponse entry = entryService.submitEntry(challengeId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDto.<ChallengeEntryResponse>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("Nộp bài thử thách thành công")
@@ -125,7 +125,7 @@ public class ChallengeEntryController {
     }
 
     @PutMapping("/entries/{entryId}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'PARTNER')")
     @Operation(summary = "Duyệt bài nộp", description = "Duyệt một bài nộp thử thách (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<ChallengeEntryResponse>> approveEntry(@PathVariable String entryId) {
         ChallengeEntryResponse entry = entryService.approveEntry(entryId);
@@ -137,7 +137,7 @@ public class ChallengeEntryController {
     }
 
     @PutMapping("/entries/{entryId}/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'PARTNER')")
     @Operation(summary = "Từ chối bài nộp", description = "Từ chối một bài nộp thử thách (chỉ Admin/Partner)")
     public ResponseEntity<ResponseDto<ChallengeEntryResponse>> rejectEntry(@PathVariable String entryId) {
         ChallengeEntryResponse entry = entryService.rejectEntry(entryId);

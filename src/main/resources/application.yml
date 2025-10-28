@@ -100,3 +100,8 @@ app:
 jwt:
   secret: ${JWT_SECRET:change-me-in-prod}
   expiration-ms: ${JWT_EXPIRATION_MS:604800000} # 7 ngày
+
+gemini:
+  api:
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=
+    key: AIzaSyD6NZaDv8ARQMp7tqKIEbukiirR2oEhnG4

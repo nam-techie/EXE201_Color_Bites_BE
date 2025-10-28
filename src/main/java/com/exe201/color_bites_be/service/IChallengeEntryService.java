@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface IChallengeEntryService {
     
-    ChallengeEntryResponse submitEntry(String participationId, SubmitChallengeEntryRequest request);
+    ChallengeEntryResponse submitEntry(String challengeId, SubmitChallengeEntryRequest request);
     
     ChallengeEntryResponse readEntryById(String entryId);
     

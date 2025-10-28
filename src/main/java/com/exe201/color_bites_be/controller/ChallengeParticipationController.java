@@ -30,9 +30,8 @@ public class ChallengeParticipationController {
     @PostMapping("/{challengeId}/join")
     @Operation(summary = "Tham gia thử thách", description = "Tham gia vào một thử thách")
     public ResponseEntity<ResponseDto<ChallengeParticipationResponse>> joinChallenge(
-            @PathVariable String challengeId, 
-            @Valid @RequestBody JoinChallengeRequest request) {
-        ChallengeParticipationResponse participation = participationService.joinChallenge(challengeId, request);
+            @PathVariable String challengeId) {
+        ChallengeParticipationResponse participation = participationService.joinChallenge(challengeId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ResponseDto.<ChallengeParticipationResponse>builder()
                 .status(HttpStatus.CREATED.value())
                 .message("Tham gia thử thách thành công")
@@ -54,9 +53,7 @@ public class ChallengeParticipationController {
     @GetMapping("/my-participations")
     @Operation(summary = "Lấy danh sách tham gia của tôi", description = "Lấy tất cả các lần tham gia thử thách của người dùng hiện tại")
     public ResponseEntity<ResponseDto<List<ChallengeParticipationResponse>>> getMyParticipations() {
-        // TODO: Lấy ID người dùng hiện tại từ security context
-        String currentUserId = "current-user-id"; // Giá trị tạm thời
-        List<ChallengeParticipationResponse> participations = participationService.readUserParticipations(currentUserId);
+        List<ChallengeParticipationResponse> participations = participationService.readUserParticipations();
         return ResponseEntity.ok(ResponseDto.<List<ChallengeParticipationResponse>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Lấy danh sách tham gia của tôi thành công")
@@ -69,9 +66,7 @@ public class ChallengeParticipationController {
     public ResponseEntity<ResponseDto<Page<ChallengeParticipationResponse>>> getMyParticipationsPaged(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        // TODO: Lấy ID người dùng hiện tại từ security context
-        String currentUserId = "current-user-id"; // Giá trị tạm thời
-        Page<ChallengeParticipationResponse> participations = participationService.readUserParticipations(currentUserId, page, size);
+        Page<ChallengeParticipationResponse> participations = participationService.readUserParticipations( page, size);
         return ResponseEntity.ok(ResponseDto.<Page<ChallengeParticipationResponse>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Lấy danh sách tham gia có phân trang thành công")

@@ -10,13 +10,13 @@ import java.util.List;
 
 public interface IChallengeParticipationService {
     
-    ChallengeParticipationResponse joinChallenge(String challengeId, JoinChallengeRequest request);
+    ChallengeParticipationResponse joinChallenge(String challengeId);
     
     ChallengeParticipationResponse readParticipationById(String participationId);
     
-    List<ChallengeParticipationResponse> readUserParticipations(String accountId);
+    List<ChallengeParticipationResponse> readUserParticipations();
     
-    Page<ChallengeParticipationResponse> readUserParticipations(String accountId, int page, int size);
+    Page<ChallengeParticipationResponse> readUserParticipations(int page, int size);
     
     List<ChallengeParticipationResponse> readParticipationsByChallenge(String challengeId);
     

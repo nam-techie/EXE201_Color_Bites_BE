@@ -3,6 +3,7 @@ package com.exe201.color_bites_be.service.impl;
 import com.exe201.color_bites_be.dto.request.SubmitChallengeEntryRequest;
 import com.exe201.color_bites_be.dto.request.UpdateChallengeEntryRequest;
 import com.exe201.color_bites_be.dto.response.ChallengeEntryResponse;
+import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.ChallengeEntry;
 import com.exe201.color_bites_be.entity.ChallengeParticipation;
 import com.exe201.color_bites_be.enums.EntryStatus;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,16 +36,19 @@ public class ChallengeEntryServiceImpl implements IChallengeEntryService {
 
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private ChallengeParticipationRepository challengeParticipationRepository;
 
     @Override
-    public ChallengeEntryResponse submitEntry(String participationId, SubmitChallengeEntryRequest request) {
+    public ChallengeEntryResponse submitEntry(String challengeId, SubmitChallengeEntryRequest request) {
         try {
+            Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             // Check if participation exists
-            ChallengeParticipation participation = participationRepository.findById(participationId)
-                    .orElseThrow(() -> new NotFoundException("Tham gia thử thách không tồn tại"));
+            ChallengeParticipation participation = participationRepository.findByAccountIdAndChallengeId(account.getId(), challengeId)
+                    .orElseThrow(() -> new NotFoundException("Người chơi chưa tham gia thử thách"));
 
             ChallengeEntry entry = modelMapper.map(request, ChallengeEntry.class);
-            entry.setParticipationId(participationId);
+            entry.setParticipationId(participation.getId());
             entry.setStatus(EntryStatus.PENDING);
             entry.setCreatedAt(LocalDateTime.now());
 
@@ -123,8 +128,8 @@ public class ChallengeEntryServiceImpl implements IChallengeEntryService {
             if (request.getLongitude() != null) {
                 entry.setLongitude(request.getLongitude());
             }
-            if (request.getNotes() != null) {
-                entry.setNotes(request.getNotes());
+            if (request.getCaption() != null) {
+                entry.setCaption(request.getCaption());
             }
 
             ChallengeEntry updatedEntry = entryRepository.save(entry);
@@ -142,6 +147,14 @@ public class ChallengeEntryServiceImpl implements IChallengeEntryService {
 
         entry.setStatus(EntryStatus.APPROVED);
         ChallengeEntry updatedEntry = entryRepository.save(entry);
+
+        ChallengeParticipation challengeParticipation = challengeParticipationRepository.findById(entry.getParticipationId())
+                .orElseThrow(()-> new NotFoundException("Người chơi không tồn tại trong thử thách này"));
+        if (challengeParticipation.getProgressCount() == null) {
+            challengeParticipation.setProgressCount(0);
+        }
+        challengeParticipation.setProgressCount(challengeParticipation.getProgressCount() + 1);
+        participationRepository.save(challengeParticipation);
         
         return buildEntryResponse(updatedEntry);
     }
@@ -181,11 +194,8 @@ public class ChallengeEntryServiceImpl implements IChallengeEntryService {
     }
 
     private ChallengeEntryResponse buildEntryResponse(ChallengeEntry entry) {
-        ChallengeEntryResponse response = modelMapper.map(entry, ChallengeEntryResponse.class);
         
-        // TODO: Add additional fields like restaurantName, challengeTitle, accountId
-        
-        return response;
+        return modelMapper.map(entry, ChallengeEntryResponse.class);
     }
 }
 

@@ -18,7 +18,7 @@ public class ChallengeEntryResponse {
     private BigDecimal latitude;
     private BigDecimal longitude;
     private EntryStatus status;
-    private String notes;
+    private String caption;
     private LocalDateTime createdAt;
     
     // Additional fields for display
