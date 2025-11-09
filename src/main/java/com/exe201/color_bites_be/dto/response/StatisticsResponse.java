@@ -5,8 +5,6 @@ import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.List;
 
 /**
  * DTO response cho statistics endpoints
@@ -43,20 +41,7 @@ public class StatisticsResponse {
     private Long totalMoodMaps;
     private Long totalQuizzes;
     
-    // Time-based data
-    private List<Map<String, Object>> userGrowthData;
-    private List<Map<String, Object>> postActivityData;
-    private List<Map<String, Object>> revenueData;
-    private List<Map<String, Object>> engagementData;
-    
-    // Top performers
-    private List<Map<String, Object>> topPosts;
-    private List<Map<String, Object>> topRestaurants;
-    private List<Map<String, Object>> topUsers;
-    private List<Map<String, Object>> popularTags;
-    
     // System health
     private LocalDateTime lastUpdated;
     private String systemStatus;
-    private Long activeSessions;
 }

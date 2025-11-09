@@ -6,7 +6,12 @@ import com.exe201.color_bites_be.dto.response.AdminRestaurantResponse;
 import com.exe201.color_bites_be.dto.response.AdminTransactionResponse;
 import com.exe201.color_bites_be.dto.response.AdminCommentResponse;
 import com.exe201.color_bites_be.dto.response.AdminTagResponse;
-import com.exe201.color_bites_be.dto.response.StatisticsResponse;
+import com.exe201.color_bites_be.dto.response.UserStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.PostStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.RestaurantStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.RevenueStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.EngagementStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -168,32 +173,32 @@ public interface IAdminService {
     Map<String, Object> getSystemStatistics();
     
     /**
-     * Lấy thống kê users theo thời gian
+     * Lấy thống kê users
      */
-    StatisticsResponse getUserStatistics();
+    UserStatisticsResponse getUserStatistics();
     
     /**
-     * Lấy thống kê posts theo thời gian
+     * Lấy thống kê posts
      */
-    StatisticsResponse getPostStatistics();
+    PostStatisticsResponse getPostStatistics();
     
     /**
      * Lấy thống kê restaurants
      */
-    StatisticsResponse getRestaurantStatistics();
+    RestaurantStatisticsResponse getRestaurantStatistics();
     
     /**
      * Lấy thống kê doanh thu
      */
-    StatisticsResponse getRevenueStatistics();
+    RevenueStatisticsResponse getRevenueStatistics();
     
     /**
      * Lấy thống kê tương tác
      */
-    StatisticsResponse getEngagementStatistics();
+    EngagementStatisticsResponse getEngagementStatistics();
     
     /**
      * Lấy thống kê challenges
      */
-    StatisticsResponse getChallengeStatistics();
+    ChallengeStatisticsResponse getChallengeStatistics();
 }

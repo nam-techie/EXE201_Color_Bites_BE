@@ -6,7 +6,12 @@ import com.exe201.color_bites_be.dto.response.AdminRestaurantResponse;
 import com.exe201.color_bites_be.dto.response.AdminTransactionResponse;
 import com.exe201.color_bites_be.dto.response.AdminCommentResponse;
 import com.exe201.color_bites_be.dto.response.AdminTagResponse;
-import com.exe201.color_bites_be.dto.response.StatisticsResponse;
+import com.exe201.color_bites_be.dto.response.UserStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.PostStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.RestaurantStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.RevenueStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.EngagementStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -221,38 +226,38 @@ public class AdminController {
     }
 
     @GetMapping("/statistics/users")
-    public ResponseDto<StatisticsResponse> getUserStatistics() {
-        StatisticsResponse statistics = adminService.getUserStatistics();
+    public ResponseDto<UserStatisticsResponse> getUserStatistics() {
+        UserStatisticsResponse statistics = adminService.getUserStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê users thành công", statistics);
     }
 
     @GetMapping("/statistics/posts")
-    public ResponseDto<StatisticsResponse> getPostStatistics() {
-        StatisticsResponse statistics = adminService.getPostStatistics();
+    public ResponseDto<PostStatisticsResponse> getPostStatistics() {
+        PostStatisticsResponse statistics = adminService.getPostStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê posts thành công", statistics);
     }
 
     @GetMapping("/statistics/restaurants")
-    public ResponseDto<StatisticsResponse> getRestaurantStatistics() {
-        StatisticsResponse statistics = adminService.getRestaurantStatistics();
+    public ResponseDto<RestaurantStatisticsResponse> getRestaurantStatistics() {
+        RestaurantStatisticsResponse statistics = adminService.getRestaurantStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê restaurants thành công", statistics);
     }
 
     @GetMapping("/statistics/revenue")
-    public ResponseDto<StatisticsResponse> getRevenueStatistics() {
-        StatisticsResponse statistics = adminService.getRevenueStatistics();
+    public ResponseDto<RevenueStatisticsResponse> getRevenueStatistics() {
+        RevenueStatisticsResponse statistics = adminService.getRevenueStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê doanh thu thành công", statistics);
     }
 
     @GetMapping("/statistics/engagement")
-    public ResponseDto<StatisticsResponse> getEngagementStatistics() {
-        StatisticsResponse statistics = adminService.getEngagementStatistics();
+    public ResponseDto<EngagementStatisticsResponse> getEngagementStatistics() {
+        EngagementStatisticsResponse statistics = adminService.getEngagementStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê tương tác thành công", statistics);
     }
 
     @GetMapping("/statistics/challenges")
-    public ResponseDto<StatisticsResponse> getChallengeStatistics() {
-        StatisticsResponse statistics = adminService.getChallengeStatistics();
+    public ResponseDto<ChallengeStatisticsResponse> getChallengeStatistics() {
+        ChallengeStatisticsResponse statistics = adminService.getChallengeStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê challenges thành công", statistics);
     }
 

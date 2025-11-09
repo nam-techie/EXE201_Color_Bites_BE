@@ -6,7 +6,12 @@ import com.exe201.color_bites_be.dto.response.AdminRestaurantResponse;
 import com.exe201.color_bites_be.dto.response.AdminTransactionResponse;
 import com.exe201.color_bites_be.dto.response.AdminCommentResponse;
 import com.exe201.color_bites_be.dto.response.AdminTagResponse;
-import com.exe201.color_bites_be.dto.response.StatisticsResponse;
+import com.exe201.color_bites_be.dto.response.UserStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.PostStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.RestaurantStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.RevenueStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.EngagementStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.entity.Post;
@@ -24,6 +29,11 @@ import com.exe201.color_bites_be.repository.TransactionRepository;
 import com.exe201.color_bites_be.repository.MoodRepository;
 import com.exe201.color_bites_be.repository.CommentRepository;
 import com.exe201.color_bites_be.repository.TagRepository;
+import com.exe201.color_bites_be.repository.ReactionRepository;
+import com.exe201.color_bites_be.repository.FavoriteRepository;
+import com.exe201.color_bites_be.repository.MoodMapRepository;
+import com.exe201.color_bites_be.repository.QuizRepository;
+import com.exe201.color_bites_be.repository.ChallengeDefinitionRepository;
 import com.exe201.color_bites_be.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,11 +41,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Implementation của IAdminService
@@ -67,6 +80,21 @@ public class AdminServiceImpl implements IAdminService {
     
     @Autowired
     TagRepository tagRepository;
+    
+    @Autowired
+    ReactionRepository reactionRepository;
+    
+    @Autowired
+    FavoriteRepository favoriteRepository;
+    
+    @Autowired
+    MoodMapRepository moodMapRepository;
+    
+    @Autowired
+    QuizRepository quizRepository;
+    
+    @Autowired
+    ChallengeDefinitionRepository challengeDefinitionRepository;
 
     @Override
     public List<ListAccountResponse> getAllUserByAdmin() {
@@ -363,77 +391,131 @@ public class AdminServiceImpl implements IAdminService {
     // ========== ADVANCED STATISTICS ==========
 
     @Override
-    public StatisticsResponse getUserStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public UserStatisticsResponse getUserStatistics() {
+        UserStatisticsResponse response = new UserStatisticsResponse();
         
         long totalUsers = accountRepository.count();
         long activeUsers = accountRepository.countByIsActive(true);
         
         response.setTotalUsers(totalUsers);
         response.setActiveUsers(activeUsers);
+        response.setLastUpdated(LocalDateTime.now());
+        response.setSystemStatus("ACTIVE");
         
         return response;
     }
 
     @Override
-    public StatisticsResponse getPostStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public PostStatisticsResponse getPostStatistics() {
+        PostStatisticsResponse response = new PostStatisticsResponse();
         
         long totalPosts = postRepository.count();
-        long deletedPosts = postRepository.countByIsDeleted(true);
-        long activePosts = totalPosts - deletedPosts;
         
         response.setTotalPosts(totalPosts);
+        response.setLastUpdated(LocalDateTime.now());
+        response.setSystemStatus("ACTIVE");
         
         return response;
     }
 
     @Override
-    public StatisticsResponse getRestaurantStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public RestaurantStatisticsResponse getRestaurantStatistics() {
+        RestaurantStatisticsResponse response = new RestaurantStatisticsResponse();
         
         long totalRestaurants = restaurantRepository.count();
-        long deletedRestaurants = restaurantRepository.countByIsDeleted(true);
-        long activeRestaurants = totalRestaurants - deletedRestaurants;
         
         response.setTotalRestaurants(totalRestaurants);
+        response.setLastUpdated(LocalDateTime.now());
+        response.setSystemStatus("ACTIVE");
         
         return response;
     }
 
     @Override
-    public StatisticsResponse getRevenueStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public RevenueStatisticsResponse getRevenueStatistics() {
+        RevenueStatisticsResponse response = new RevenueStatisticsResponse();
         
         long totalTransactions = transactionRepository.count();
         long successfulTransactions = transactionRepository.countByStatus(TransactionEnums.TxnStatus.SUCCESS);
         long failedTransactions = transactionRepository.countByStatus(TransactionEnums.TxnStatus.FAILED);
         long pendingTransactions = transactionRepository.countByStatus(TransactionEnums.TxnStatus.PENDING);
         
+        // Tính tổng doanh thu từ các transaction thành công
+        List<Transaction> successfulTxnList = transactionRepository.findAll()
+                .stream()
+                .filter(txn -> txn.getStatus() == TransactionEnums.TxnStatus.SUCCESS && txn.getAmount() != null)
+                .collect(Collectors.toList());
+        
+        double totalRevenue = successfulTxnList.stream()
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+        
+        // Tính doanh thu tháng này
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        double monthlyRevenue = successfulTxnList.stream()
+                .filter(txn -> txn.getCreatedAt() != null && txn.getCreatedAt().isAfter(startOfMonth))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+        
+        // Tính doanh thu hôm nay
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        double dailyRevenue = successfulTxnList.stream()
+                .filter(txn -> txn.getCreatedAt() != null && txn.getCreatedAt().isAfter(startOfDay))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+        
         response.setTotalTransactions(totalTransactions);
         response.setSuccessfulTransactions(successfulTransactions);
         response.setFailedTransactions(failedTransactions);
         response.setPendingTransactions(pendingTransactions);
+        response.setTotalRevenue(totalRevenue);
+        response.setMonthlyRevenue(monthlyRevenue);
+        response.setDailyRevenue(dailyRevenue);
+        response.setLastUpdated(LocalDateTime.now());
+        response.setSystemStatus("ACTIVE");
         
         return response;
     }
 
     @Override
-    public StatisticsResponse getEngagementStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public EngagementStatisticsResponse getEngagementStatistics() {
+        EngagementStatisticsResponse response = new EngagementStatisticsResponse();
         
         long totalComments = commentRepository.count();
+        long totalReactions = reactionRepository.count();
+        long totalFavorites = favoriteRepository.count();
+        long totalMoodMaps = moodMapRepository.count();
+        long totalQuizzes = quizRepository.count();
+        
+        // Tính average rating từ restaurants
+        List<Restaurant> restaurants = restaurantRepository.findAll();
+        double averageRating = restaurants.stream()
+                .filter(r -> r.getRating() != null)
+                .mapToDouble(Restaurant::getRating)
+                .average()
+                .orElse(0.0);
+        
         response.setTotalComments(totalComments);
+        response.setTotalReactions(totalReactions);
+        response.setTotalFavorites(totalFavorites);
+        response.setTotalMoodMaps(totalMoodMaps);
+        response.setTotalQuizzes(totalQuizzes);
+        response.setAverageRating(averageRating);
+        response.setLastUpdated(LocalDateTime.now());
+        response.setSystemStatus("ACTIVE");
         
         return response;
     }
 
     @Override
-    public StatisticsResponse getChallengeStatistics() {
-        StatisticsResponse response = new StatisticsResponse();
+    public ChallengeStatisticsResponse getChallengeStatistics() {
+        ChallengeStatisticsResponse response = new ChallengeStatisticsResponse();
         
-        // TODO: Implement challenge statistics when ChallengeRepository is available
-        response.setTotalChallenges(0L);
+        long totalChallenges = challengeDefinitionRepository.count();
+        
+        response.setTotalChallenges(totalChallenges);
+        response.setLastUpdated(LocalDateTime.now());
+        response.setSystemStatus("ACTIVE");
         
         return response;
     }
