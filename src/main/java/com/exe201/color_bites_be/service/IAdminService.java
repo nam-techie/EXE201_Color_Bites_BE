@@ -12,6 +12,9 @@ import com.exe201.color_bites_be.dto.response.RestaurantStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.RevenueStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.EngagementStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.AdminMoodResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.RevenueReportResponse;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -100,6 +103,11 @@ public interface IAdminService {
      * Lấy giao dịch theo trạng thái (admin view)
      */
     Page<AdminTransactionResponse> getTransactionsByStatusByAdmin(String status, int page, int size);
+    
+    /**
+     * Lấy toàn bộ giao dịch không phân trang (admin view)
+     */
+    List<AdminTransactionResponse> getAllTransactionsListByAdmin();
     
     // ========== COMMENT MANAGEMENT ==========
     
@@ -201,4 +209,38 @@ public interface IAdminService {
      * Lấy thống kê challenges
      */
     ChallengeStatisticsResponse getChallengeStatistics();
+    
+    /**
+     * Lấy báo cáo tổng doanh thu chi tiết
+     */
+    RevenueReportResponse getRevenueReport();
+    
+    /**
+     * Export báo cáo doanh thu ra CSV
+     */
+    byte[] exportRevenueReportToCsv();
+    
+    // ========== MOOD MANAGEMENT ==========
+    
+    /**
+     * Lấy danh sách tất cả moods (admin view)
+     */
+    List<AdminMoodResponse> getAllMoodsByAdmin();
+    
+    /**
+     * Lấy mood theo ID (admin view)
+     */
+    AdminMoodResponse getMoodByIdByAdmin(String moodId);
+    
+    // ========== CHALLENGE MANAGEMENT ==========
+    
+    /**
+     * Lấy danh sách tất cả challenges (admin view)
+     */
+    List<ChallengeDefinitionResponse> getAllChallengesByAdmin();
+    
+    /**
+     * Lấy challenge theo ID (admin view)
+     */
+    ChallengeDefinitionResponse getChallengeByIdByAdmin(String challengeId);
 }

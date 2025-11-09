@@ -12,11 +12,17 @@ import com.exe201.color_bites_be.dto.response.RestaurantStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.RevenueStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.EngagementStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.AdminMoodResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.RevenueReportResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -127,6 +133,12 @@ public class AdminController {
             @RequestParam(defaultValue = "10") int size) {
         Page<AdminTransactionResponse> transactions = adminService.getTransactionsByStatusByAdmin(status, page, size);
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy giao dịch theo trạng thái thành công", transactions);
+    }
+
+    @GetMapping("/transactions/all")
+    public ResponseDto<List<AdminTransactionResponse>> getAllTransactionsList() {
+        List<AdminTransactionResponse> transactions = adminService.getAllTransactionsListByAdmin();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy toàn bộ giao dịch thành công", transactions);
     }
 
     // ========== COMMENT MANAGEMENT ==========
@@ -259,6 +271,55 @@ public class AdminController {
     public ResponseDto<ChallengeStatisticsResponse> getChallengeStatistics() {
         ChallengeStatisticsResponse statistics = adminService.getChallengeStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê challenges thành công", statistics);
+    }
+
+    // ========== REVENUE REPORT ==========
+
+    @GetMapping("/revenue/report")
+    public ResponseDto<RevenueReportResponse> getRevenueReport() {
+        RevenueReportResponse report = adminService.getRevenueReport();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy báo cáo doanh thu thành công", report);
+    }
+
+    @GetMapping("/revenue/export-csv")
+    public ResponseEntity<byte[]> exportRevenueReportToCsv() {
+        byte[] csvData = adminService.exportRevenueReportToCsv();
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "bao_cao_doanh_thu_" + 
+            java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv");
+        headers.setContentLength(csvData.length);
+        
+        return new ResponseEntity<>(csvData, headers, HttpStatus.OK);
+    }
+
+    // ========== MOOD MANAGEMENT ==========
+
+    @GetMapping("/moods")
+    public ResponseDto<List<AdminMoodResponse>> getAllMoods() {
+        List<AdminMoodResponse> moods = adminService.getAllMoodsByAdmin();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách moods thành công", moods);
+    }
+
+    @GetMapping("/moods/{id}")
+    public ResponseDto<AdminMoodResponse> getMoodById(@PathVariable String id) {
+        AdminMoodResponse mood = adminService.getMoodByIdByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thông tin mood thành công", mood);
+    }
+
+    // ========== CHALLENGE MANAGEMENT ==========
+
+    @GetMapping("/challenges")
+    public ResponseDto<List<ChallengeDefinitionResponse>> getAllChallenges() {
+        List<ChallengeDefinitionResponse> challenges = adminService.getAllChallengesByAdmin();
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy danh sách challenges thành công", challenges);
+    }
+
+    @GetMapping("/challenges/{id}")
+    public ResponseDto<ChallengeDefinitionResponse> getChallengeById(@PathVariable String id) {
+        ChallengeDefinitionResponse challenge = adminService.getChallengeByIdByAdmin(id);
+        return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thông tin challenge thành công", challenge);
     }
 
 }

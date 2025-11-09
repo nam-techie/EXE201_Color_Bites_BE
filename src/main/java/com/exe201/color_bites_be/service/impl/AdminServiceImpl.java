@@ -12,14 +12,18 @@ import com.exe201.color_bites_be.dto.response.RestaurantStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.RevenueStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.EngagementStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
+import com.exe201.color_bites_be.dto.response.AdminMoodResponse;
+import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
+import com.exe201.color_bites_be.dto.response.RevenueReportResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.entity.Post;
 import com.exe201.color_bites_be.entity.Restaurant;
 import com.exe201.color_bites_be.entity.Transaction;
-import com.exe201.color_bites_be.entity.Mood;
 import com.exe201.color_bites_be.entity.Comment;
 import com.exe201.color_bites_be.entity.Tag;
+import com.exe201.color_bites_be.entity.Mood;
+import com.exe201.color_bites_be.entity.ChallengeDefinition;
 import com.exe201.color_bites_be.enums.TransactionEnums;
 import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.UserInformationRepository;
@@ -34,6 +38,7 @@ import com.exe201.color_bites_be.repository.FavoriteRepository;
 import com.exe201.color_bites_be.repository.MoodMapRepository;
 import com.exe201.color_bites_be.repository.QuizRepository;
 import com.exe201.color_bites_be.repository.ChallengeDefinitionRepository;
+import com.exe201.color_bites_be.repository.ChallengeParticipationRepository;
 import com.exe201.color_bites_be.service.IAdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,12 +48,17 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 /**
  * Implementation của IAdminService
@@ -95,6 +105,9 @@ public class AdminServiceImpl implements IAdminService {
     
     @Autowired
     ChallengeDefinitionRepository challengeDefinitionRepository;
+    
+    @Autowired
+    ChallengeParticipationRepository challengeParticipationRepository;
 
     @Override
     public List<ListAccountResponse> getAllUserByAdmin() {
@@ -231,6 +244,14 @@ public class AdminServiceImpl implements IAdminService {
             Page<Transaction> transactions = transactionRepository.findAll(pageable);
             return transactions.map(this::convertToAdminTransactionResponse);
         }
+    }
+
+    @Override
+    public List<AdminTransactionResponse> getAllTransactionsListByAdmin() {
+        List<Transaction> transactions = transactionRepository.findAll();
+        return transactions.stream()
+                .map(this::convertToAdminTransactionResponse)
+                .collect(Collectors.toList());
     }
 
     // ========== STATISTICS ==========
@@ -520,6 +541,204 @@ public class AdminServiceImpl implements IAdminService {
         return response;
     }
 
+    // ========== MOOD MANAGEMENT ==========
+
+    @Override
+    public List<AdminMoodResponse> getAllMoodsByAdmin() {
+        List<Mood> moods = moodRepository.findAll();
+        return moods.stream()
+                .map(this::convertToAdminMoodResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public AdminMoodResponse getMoodByIdByAdmin(String moodId) {
+        Mood mood = moodRepository.findById(moodId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy mood"));
+        return convertToAdminMoodResponse(mood);
+    }
+
+    // ========== CHALLENGE MANAGEMENT ==========
+
+    @Override
+    public List<ChallengeDefinitionResponse> getAllChallengesByAdmin() {
+        List<ChallengeDefinition> challenges = challengeDefinitionRepository.findAll();
+        return challenges.stream()
+                .map(this::convertToChallengeDefinitionResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ChallengeDefinitionResponse getChallengeByIdByAdmin(String challengeId) {
+        ChallengeDefinition challenge = challengeDefinitionRepository.findById(challengeId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy challenge"));
+        return convertToChallengeDefinitionResponse(challenge);
+    }
+
+    // ========== REVENUE REPORT ==========
+
+    @Override
+    public RevenueReportResponse getRevenueReport() {
+        RevenueReportResponse response = new RevenueReportResponse();
+        
+        // Lấy tất cả transactions thành công
+        List<Transaction> allTransactions = transactionRepository.findAll();
+        List<Transaction> successfulTransactions = allTransactions.stream()
+                .filter(txn -> txn.getStatus() == TransactionEnums.TxnStatus.SUCCESS && txn.getAmount() != null)
+                .collect(Collectors.toList());
+        
+        // Tính tổng doanh thu
+        double totalRevenue = successfulTransactions.stream()
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+        
+        // Tính doanh thu tháng này
+        LocalDateTime startOfMonth = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+        double monthlyRevenue = successfulTransactions.stream()
+                .filter(txn -> txn.getCreatedAt() != null && txn.getCreatedAt().isAfter(startOfMonth))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+        
+        // Tính doanh thu hôm nay
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        double dailyRevenue = successfulTransactions.stream()
+                .filter(txn -> txn.getCreatedAt() != null && txn.getCreatedAt().isAfter(startOfDay))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+        
+        // Tính doanh thu theo ngày (30 ngày gần nhất)
+        Map<String, Double> dailyRevenueMap = new HashMap<>();
+        Map<String, Long> dailyCountMap = new HashMap<>();
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        
+        for (Transaction txn : successfulTransactions) {
+            if (txn.getCreatedAt() != null) {
+                LocalDate txnDate = txn.getCreatedAt().toLocalDate();
+                if (txnDate.isAfter(thirtyDaysAgo) || txnDate.isEqual(thirtyDaysAgo)) {
+                    String dateKey = txnDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    dailyRevenueMap.put(dateKey, dailyRevenueMap.getOrDefault(dateKey, 0.0) + txn.getAmount());
+                    dailyCountMap.put(dateKey, dailyCountMap.getOrDefault(dateKey, 0L) + 1);
+                }
+            }
+        }
+        
+        List<RevenueReportResponse.DailyRevenue> dailyRevenues = dailyRevenueMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    RevenueReportResponse.DailyRevenue daily = new RevenueReportResponse.DailyRevenue();
+                    daily.setDate(entry.getKey());
+                    daily.setRevenue(entry.getValue());
+                    daily.setTransactionCount(dailyCountMap.getOrDefault(entry.getKey(), 0L));
+                    return daily;
+                })
+                .collect(Collectors.toList());
+        
+        // Tính doanh thu theo tháng (12 tháng gần nhất)
+        Map<String, Double> monthlyRevenueMap = new HashMap<>();
+        Map<String, Long> monthlyCountMap = new HashMap<>();
+        LocalDate twelveMonthsAgo = LocalDate.now().minusMonths(12);
+        
+        for (Transaction txn : successfulTransactions) {
+            if (txn.getCreatedAt() != null) {
+                LocalDate txnDate = txn.getCreatedAt().toLocalDate();
+                if (txnDate.isAfter(twelveMonthsAgo) || txnDate.isEqual(twelveMonthsAgo)) {
+                    String monthKey = txnDate.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+                    monthlyRevenueMap.put(monthKey, monthlyRevenueMap.getOrDefault(monthKey, 0.0) + txn.getAmount());
+                    monthlyCountMap.put(monthKey, monthlyCountMap.getOrDefault(monthKey, 0L) + 1);
+                }
+            }
+        }
+        
+        List<RevenueReportResponse.MonthlyRevenue> monthlyRevenues = monthlyRevenueMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    RevenueReportResponse.MonthlyRevenue monthly = new RevenueReportResponse.MonthlyRevenue();
+                    monthly.setMonth(entry.getKey());
+                    monthly.setRevenue(entry.getValue());
+                    monthly.setTransactionCount(monthlyCountMap.getOrDefault(entry.getKey(), 0L));
+                    return monthly;
+                })
+                .collect(Collectors.toList());
+        
+        // Đếm số lượng transactions
+        long totalTransactions = allTransactions.size();
+        long successfulCount = successfulTransactions.size();
+        long failedCount = allTransactions.stream()
+                .filter(txn -> txn.getStatus() == TransactionEnums.TxnStatus.FAILED)
+                .count();
+        long pendingCount = allTransactions.stream()
+                .filter(txn -> txn.getStatus() == TransactionEnums.TxnStatus.PENDING)
+                .count();
+        
+        response.setTotalRevenue(totalRevenue);
+        response.setMonthlyRevenue(monthlyRevenue);
+        response.setDailyRevenue(dailyRevenue);
+        response.setTotalTransactions(totalTransactions);
+        response.setSuccessfulTransactions(successfulCount);
+        response.setFailedTransactions(failedCount);
+        response.setPendingTransactions(pendingCount);
+        response.setDailyRevenues(dailyRevenues);
+        response.setMonthlyRevenues(monthlyRevenues);
+        response.setReportGeneratedAt(LocalDateTime.now());
+        
+        return response;
+    }
+
+    @Override
+    public byte[] exportRevenueReportToCsv() {
+        RevenueReportResponse report = getRevenueReport();
+        
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            
+            // Thêm BOM cho UTF-8 để Excel hiển thị đúng tiếng Việt
+            baos.write(0xEF);
+            baos.write(0xBB);
+            baos.write(0xBF);
+            
+            try (OutputStreamWriter writer = new OutputStreamWriter(baos, StandardCharsets.UTF_8)) {
+                // Header tổng quan
+                writer.write("BÁO CÁO TỔNG DOANH THU\n");
+                writer.write("Ngày tạo báo cáo: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")) + "\n\n");
+                
+                // Tổng quan
+                writer.write("=== TỔNG QUAN ===\n");
+                writer.write("Tổng doanh thu," + String.format("%.2f", report.getTotalRevenue()) + "\n");
+                writer.write("Doanh thu tháng này," + String.format("%.2f", report.getMonthlyRevenue()) + "\n");
+                writer.write("Doanh thu hôm nay," + String.format("%.2f", report.getDailyRevenue()) + "\n");
+                writer.write("Tổng số giao dịch," + report.getTotalTransactions() + "\n");
+                writer.write("Giao dịch thành công," + report.getSuccessfulTransactions() + "\n");
+                writer.write("Giao dịch thất bại," + report.getFailedTransactions() + "\n");
+                writer.write("Giao dịch đang chờ," + report.getPendingTransactions() + "\n\n");
+                
+                // Doanh thu theo ngày
+                writer.write("=== DOANH THU THEO NGÀY (30 NGÀY GẦN NHẤT) ===\n");
+                writer.write("Ngày,Doanh thu,Số giao dịch\n");
+                for (RevenueReportResponse.DailyRevenue daily : report.getDailyRevenues()) {
+                    writer.write(daily.getDate() + "," 
+                        + String.format("%.2f", daily.getRevenue()) + "," 
+                        + daily.getTransactionCount() + "\n");
+                }
+                writer.write("\n");
+                
+                // Doanh thu theo tháng
+                writer.write("=== DOANH THU THEO THÁNG (12 THÁNG GẦN NHẤT) ===\n");
+                writer.write("Tháng,Doanh thu,Số giao dịch\n");
+                for (RevenueReportResponse.MonthlyRevenue monthly : report.getMonthlyRevenues()) {
+                    writer.write(monthly.getMonth() + "," 
+                        + String.format("%.2f", monthly.getRevenue()) + "," 
+                        + monthly.getTransactionCount() + "\n");
+                }
+                
+                writer.flush();
+            }
+            
+            return baos.toByteArray();
+            
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi tạo file CSV: " + e.getMessage(), e);
+        }
+    }
+
     // ========== HELPER METHODS ==========
 
     private AdminPostResponse convertToAdminPostResponse(Post post) {
@@ -671,6 +890,50 @@ public class AdminServiceImpl implements IAdminService {
         // TODO: Implement postCount and restaurantCount when relationships are available
         response.setPostCount(0L);
         response.setRestaurantCount(0L);
+        
+        return response;
+    }
+
+    private AdminMoodResponse convertToAdminMoodResponse(Mood mood) {
+        AdminMoodResponse response = new AdminMoodResponse();
+        response.setId(mood.getId());
+        response.setName(mood.getName());
+        response.setEmoji(mood.getEmoji());
+        response.setCreatedAt(mood.getCreatedAt());
+        return response;
+    }
+
+    private ChallengeDefinitionResponse convertToChallengeDefinitionResponse(ChallengeDefinition challenge) {
+        ChallengeDefinitionResponse response = new ChallengeDefinitionResponse();
+        response.setId(challenge.getId());
+        response.setTitle(challenge.getTitle());
+        response.setDescription(challenge.getDescription());
+        response.setChallengeType(challenge.getChallengeType());
+        response.setRestaurantId(challenge.getRestaurantId());
+        response.setTypeObjId(challenge.getTypeObjId());
+        response.setImages(challenge.getImages());
+        response.setTargetCount(challenge.getTargetCount());
+        response.setStartDate(challenge.getStartDate());
+        response.setEndDate(challenge.getEndDate());
+        response.setRewardDescription(challenge.getRewardDescription());
+        response.setCreatedBy(challenge.getCreatedBy());
+        response.setCreatedAt(challenge.getCreatedAt());
+        response.setIsActive(challenge.getIsActive());
+        
+        // Đếm số người tham gia
+        Long participantCount = challengeParticipationRepository.countChallengeParticipationByChallengeId(challenge.getId());
+        response.setParticipantCount(participantCount != null ? participantCount : 0L);
+        
+        // Lấy tên restaurant nếu có
+        if (challenge.getRestaurantId() != null) {
+            Optional<Restaurant> restaurantOpt = restaurantRepository.findById(challenge.getRestaurantId());
+            if (restaurantOpt.isPresent()) {
+                response.setRestaurantName(restaurantOpt.get().getName());
+            }
+        }
+        
+        // TODO: Lấy typeObjName nếu cần (cần TypeObjectsRepository)
+        response.setTypeObjName(null);
         
         return response;
     }
