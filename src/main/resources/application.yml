@@ -92,7 +92,7 @@ app:
     nominatim-url: https://nominatim.openstreetmap.org
   seed-on-startup: ${SEED_ON_STARTUP:false}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://mumii.app,https://mumii-be.namtechie.id.vn}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,https://mumii.app,https://mumii-be.namtechie.id.vn,https://mumii-admin.namtechie.id.vn/}
 
 # ==============================
 # JWT Configuration
