@@ -51,13 +51,16 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
+    public ResponseDto<String> logout(@RequestHeader("Authorization") String token) {
         // Cắt bỏ tiền tố "Bearer " nếu token có tiền tố
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
         authenticationService.logout(token);
-        return ResponseEntity.ok("Đăng xuất thành công.");
+        return ResponseDto.<String>builder()
+                .status(HttpStatus.OK.value())
+                .message("Đăng xuất thành công")
+                .build();
     }
 
     @PostMapping("/forgot-password")

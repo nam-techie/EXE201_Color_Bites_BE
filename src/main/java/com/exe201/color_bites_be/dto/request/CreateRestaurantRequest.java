@@ -28,18 +28,17 @@ public class CreateRestaurantRequest {
     @Size(max = 500, message = "Mô tả không được quá 500 ký tự")
     private String description;
     
-    @NotBlank(message = "Loại nhà hàng không được để trống")
-    private String type;
-    
-    private List<String> moodTags;
+    @NotEmpty(message = "Phải chọn ít nhất một loại món ăn")
+    private List<TypeObjectRequest> types; // Changed from foodTypeIds to types
     
     @NotBlank(message = "Khu vực không được để trống")
-    private String region;
+    private String district; // Changed from region to district
+
+    private List<ImageObjectRequest> images; // Changed from imageUrls to images
     
-    private List<String> imageUrls;
-    
-    @DecimalMin(value = "0.0", message = "Giá trung bình phải lớn hơn hoặc bằng 0")
-    private Double avgPrice;
+    @NotBlank(message = "Giá không được để trống")
+    @Size(max = 100, message = "Giá không được quá 100 ký tự")
+    private String price; // Changed from avgPrice (Double) to price (String)
     
     @DecimalMin(value = "0.0", message = "Đánh giá phải từ 0.0")
     @DecimalMax(value = "5.0", message = "Đánh giá phải nhỏ hơn hoặc bằng 5.0")

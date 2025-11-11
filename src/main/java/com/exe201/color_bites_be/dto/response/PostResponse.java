@@ -1,5 +1,6 @@
 package com.exe201.color_bites_be.dto.response;
 
+import com.exe201.color_bites_be.enums.Visibility;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,6 +24,7 @@ public class PostResponse {
     private Integer commentCount;
     private List<TagResponse> tags;
     private Boolean isOwner; // Người xem có phải chủ bài viết không
+    private Visibility visibility;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

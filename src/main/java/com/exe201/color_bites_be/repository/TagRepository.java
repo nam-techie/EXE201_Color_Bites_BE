@@ -37,4 +37,7 @@ public interface TagRepository extends MongoRepository<Tag, String> {
     // Kiểm tra tag có tồn tại không (không phân biệt hoa thường)
     @Query(value = "{'name': {$regex: '^?0$', $options: 'i'}}", exists = true)
     boolean existsByNameIgnoreCase(String name);
+    
+    // Thêm method cho admin
+    long countByIsDeleted(boolean isDeleted);
 }

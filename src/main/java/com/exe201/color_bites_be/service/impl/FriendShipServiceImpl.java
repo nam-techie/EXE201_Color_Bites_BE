@@ -1,8 +1,10 @@
 package com.exe201.color_bites_be.service.impl;
 
+import com.exe201.color_bites_be.dto.response.ListFriendResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.Friendship;
 import com.exe201.color_bites_be.enums.FriendStatus;
+import com.exe201.color_bites_be.repository.AccountRepository;
 import com.exe201.color_bites_be.repository.FriendShipRepository;
 import com.exe201.color_bites_be.service.IFriendShipService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +12,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class FriendShipServiceImpl implements IFriendShipService {
+
+    @Autowired
+    private AccountRepository accountRepository;
 
     private String[] normalizePair(String me, String other) {
         return me.compareTo(other) < 0
@@ -105,7 +111,23 @@ public class FriendShipServiceImpl implements IFriendShipService {
     }
 
     @Override
-    public List<Friendship> getFriends(String userId) {
+    public List<ListFriendResponse> getFriends(String userId) {
+        List<Friendship> friendships = friendShipRepository.findByUserAOrUserBAndStatus(userId, userId,FriendStatus.ACCEPTED);
+        List<ListFriendResponse> result = new ArrayList<>();
+        for(Friendship fs : friendships) {
+            String friendId = userId.equals(fs.getUserA()) ? fs.getUserB() : fs.getUserA();
+            Account account = accountRepository.findAccountById(friendId);
+            ListFriendResponse response = new ListFriendResponse();
+            response.setAccountId(account.getId());
+            response.setUserName(account.getUserName());
+            response.setStatus(fs.getStatus());
+            result.add(response);
+        }
+        return result;
+    }
+
+    @Override
+    public List<Friendship> getFriendsByUserId(String userId) {
         return friendShipRepository.findByUserAOrUserBAndStatus(userId, userId, FriendStatus.ACCEPTED);
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import com.exe201.color_bites_be.enums.SubcriptionPlan;
+import com.exe201.color_bites_be.enums.SubscriptionStatus;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@CompoundIndex(name = "expires_at_accountId_status", def = "{'expiresAt': 1, 'accountId': 1, 'status': 1}")
+@CompoundIndex(name = "end_date_accountId_status", def = "{'endDate': 1, 'accountId': 1, 'status': 1}")
 public class Subscription {
     @Id
     private String id;
@@ -30,12 +31,12 @@ public class Subscription {
     private SubcriptionPlan plan; // enum SubscriptionPlan
 
     @Field("status")
-    private SubscriptionStatus status; // ACTIVE|EXPIRED|CANCELED
+    private SubscriptionStatus status;
 
-    @Field("starts_at")
+    @Field("start_date")
     private LocalDateTime startsAt;
 
-    @Field("expires_at")
+    @Field("end_date")
     private LocalDateTime expiresAt;
 
     @Field("created_at")
@@ -44,7 +45,4 @@ public class Subscription {
     @Field("updated_at")
     private LocalDateTime updatedAt;
 
-    public enum SubscriptionStatus {
-        ACTIVE, EXPIRED, CANCELED
-    }
 }

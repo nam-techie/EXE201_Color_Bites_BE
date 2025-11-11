@@ -1,5 +1,6 @@
 package com.exe201.color_bites_be.controller;
 
+import com.exe201.color_bites_be.dto.response.ListFriendResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.entity.Friendship;
 import com.exe201.color_bites_be.service.IFriendShipService;
@@ -42,8 +43,8 @@ public class FriendShipController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseDto<List<Friendship>> getFriends(@PathVariable String userId) {
-        List<Friendship> friends = friendShipService.getFriends(userId);
+    public ResponseDto<List<ListFriendResponse>> getFriends(@PathVariable String userId) {
+        List<ListFriendResponse> friends = friendShipService.getFriends(userId);
         return new ResponseDto<>(HttpStatus.OK.value(), "Danh sách bạn bè", friends);
     }
 

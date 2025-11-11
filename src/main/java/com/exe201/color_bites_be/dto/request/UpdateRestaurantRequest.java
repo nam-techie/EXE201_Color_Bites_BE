@@ -25,16 +25,14 @@ public class UpdateRestaurantRequest {
     @Size(max = 500, message = "Mô tả không được quá 500 ký tự")
     private String description;
     
-    private String type;
+    private List<TypeObjectRequest> types; // Changed from foodTypeIds to types
     
-    private List<String> moodTags;
+    private String district; // Changed from region to district
     
-    private String region;
+    private List<ImageObjectRequest> images; // Changed from imageUrls to images
     
-    private List<String> imageUrls;
-    
-    @DecimalMin(value = "0.0", message = "Giá trung bình phải lớn hơn hoặc bằng 0")
-    private Double avgPrice;
+    @Size(max = 100, message = "Giá không được quá 100 ký tự")
+    private String price; // Changed from avgPrice (Double) to price (String)
     
     @DecimalMin(value = "0.0", message = "Đánh giá phải từ 0.0")
     @DecimalMax(value = "5.0", message = "Đánh giá phải nhỏ hơn hoặc bằng 5.0")

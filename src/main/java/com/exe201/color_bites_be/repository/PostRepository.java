@@ -39,6 +39,20 @@ public interface PostRepository extends MongoRepository<Post, String> {
     @Query("{'moodId': ?0, 'isDeleted': {$ne: true}}")
     Page<Post> findByMoodIdAndNotDeleted(String moodId, Pageable pageable);
     
+    // Tìm bài viết có thể xem được theo quyền riêng tư
+    @Query("{'$and': [" +
+           "{'isDeleted': {$ne: true}}, " +
+           "{'$or': [" +
+           "{'visibility': 'PUBLIC'}, " +
+           "{'accountId': ?0}, " +
+           "{'$and': [" +
+           "{'visibility': 'FRIENDS'}, " +
+           "{'accountId': {$in: ?1}}" +
+           "]}" +
+           "]}" +
+           "]}")
+    Page<Post> findVisiblePosts(String currentUserId, java.util.List<String> friendIds, Pageable pageable);
+    
     // Đếm số bài viết của user
     @Query(value = "{'accountId': ?0, 'isDeleted': {$ne: true}}", count = true)
     long countByAccountIdAndNotDeleted(String accountId);

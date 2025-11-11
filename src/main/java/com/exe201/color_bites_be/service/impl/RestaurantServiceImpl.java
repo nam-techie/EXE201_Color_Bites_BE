@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,13 +44,6 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private UserInformationRepository userInformationRepository;
 
     @Autowired
-    private ModelMapper modelMapper;
-
-    // TODO: Remove circular dependency - inject FavoriteRepository directly
-    // @Autowired
-    // private IFavoriteService favoriteService;
-    
-    @Autowired
     private FavoriteRepository favoriteRepository;
 
     @Override
@@ -57,13 +51,34 @@ public class RestaurantServiceImpl implements IRestaurantService {
         try {
             Account account = (Account) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             
-            // Tạo restaurant entity
-            Restaurant restaurant = modelMapper.map(request, Restaurant.class);
-            restaurant.setCreatedBy(account.getId()); // Lưu user đã tạo
+            // Create restaurant entity
+            Restaurant restaurant = new Restaurant();
+            restaurant.setName(request.getName());
+            restaurant.setAddress(request.getAddress());
+            restaurant.setDistrict(request.getDistrict()); // Changed from region to district
+            restaurant.setPrice(request.getPrice()); // Changed from avgPrice to price (String)
+            restaurant.setRating(request.getRating());
+            restaurant.setFeatured(request.getFeatured() != null ? request.getFeatured() : false);
+            
+            // Handle coordinates
+            if (request.getCoordinates() != null && request.getCoordinates().length == 2) {
+                double longitude = request.getCoordinates()[0];
+                double latitude = request.getCoordinates()[1];
+                restaurant.setLongitude(BigDecimal.valueOf(longitude));
+                restaurant.setLatitude(BigDecimal.valueOf(latitude));
+                restaurant.setLocation(new GeoJsonPoint(longitude, latitude));
+            }
+            
+            // Set JSON embedded fields
+            restaurant.setTypes(request.getTypes()); // JSON embedded types
+            restaurant.setImages(request.getImages()); // JSON embedded images
+            
+            restaurant.setCreatedBy(account.getId());
             restaurant.setCreatedAt(LocalDateTime.now());
+            restaurant.setUpdatedAt(LocalDateTime.now());
             restaurant.setIsDeleted(false);
 
-            // Lưu restaurant
+            // Save restaurant
             Restaurant savedRestaurant = restaurantRepository.save(restaurant);
 
             return buildRestaurantResponse(savedRestaurant);
@@ -309,28 +324,30 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private RestaurantResponse buildRestaurantResponse(Restaurant restaurant) {
         RestaurantResponse response = new RestaurantResponse();
         
-        // Map các field sử dụng helper methods để ưu tiên field đúng
+        // Map basic fields
         response.setId(restaurant.getId());
-        response.setName(restaurant.getDisplayName());
-        response.setAddress(restaurant.getDisplayAddress());
-        response.setDistrict(restaurant.getDisplayDistrict());
-        response.setType(restaurant.getDisplayType());
-        response.setPrice(restaurant.getDisplayPrice());
-        response.setLatitude(restaurant.getDisplayLatitude());
-        response.setLongitude(restaurant.getDisplayLongitude());
+        response.setName(restaurant.getName());
+        response.setAddress(restaurant.getAddress());
+        response.setDistrict(restaurant.getDistrict()); // Changed from region to district
+        response.setPrice(restaurant.getPrice()); // Changed from avgPrice to price (String)
+        response.setRating(restaurant.getRating() != null ? BigDecimal.valueOf(restaurant.getRating()) : null);
+        response.setFeatured(restaurant.getFeatured());
+        response.setLatitude(restaurant.getLatitude());
+        response.setLongitude(restaurant.getLongitude());
         
-        // Các field khác
+        // Map JSON embedded fields
+        response.setTypes(restaurant.getTypes()); // JSON embedded types
+        response.setImages(restaurant.getImages()); // JSON embedded images
+        
+        // Map metadata fields
         response.setCreatedById(restaurant.getCreatedBy());
         response.setCreatedBy(restaurant.getCreatedBy());
         response.setCreatedAt(restaurant.getCreatedAt());
+        response.setUpdatedAt(restaurant.getUpdatedAt());
         response.setIsDeleted(restaurant.getIsDeleted());
         
-        // Nếu sau này cần thêm logic cho favorite/owner status, có thể check optional auth như sau:
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-        //     Account account = (Account) auth.getPrincipal();
-        //     // Check favorite status, owner status, etc.
-        // }
+        // TODO: Add favorite status and count if needed
+        // TODO: Add distance calculation if needed
 
         return response;
     }

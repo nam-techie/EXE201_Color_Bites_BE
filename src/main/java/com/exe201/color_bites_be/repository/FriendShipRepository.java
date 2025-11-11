@@ -11,4 +11,5 @@ public interface FriendShipRepository extends MongoRepository<Friendship, String
     Optional<Friendship> findByUserAAndUserB(String userA, String userB);
 
     List<Friendship> findByUserAOrUserBAndStatus(String userA, String userB, FriendStatus status);
+
 }

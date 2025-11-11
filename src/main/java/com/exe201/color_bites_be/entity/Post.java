@@ -1,5 +1,6 @@
 package com.exe201.color_bites_be.entity;
 
+import com.exe201.color_bites_be.enums.Visibility;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -30,6 +31,9 @@ public class Post {
     @Field("mood_id")
     private String moodId;
 
+    @Field("video_url")
+    private String videoUrl;
+
     @Field("reaction_count")
     private Integer reactionCount;
 
@@ -38,6 +42,9 @@ public class Post {
 
     @Field("is_deleted")
     private Boolean isDeleted;
+
+    @Field("visibility")
+    private Visibility visibility;
 
     @Field("created_at")
     private LocalDateTime createdAt;
