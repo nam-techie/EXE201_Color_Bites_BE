@@ -103,7 +103,8 @@ public class SecurityConfig {
                 "https://mumii-be.namtechie.id.vn/",
 //                "https://*.up.railway.app", // Railway wildcard domains
                 "http://localhost:8080",
-                "https://virtserver.swaggerhub.com"
+                "https://virtserver.swaggerhub.com",
+                "https://mumii-admin.namtechie.id.vn/"
         ));
         // Thêm PATCH và OPTIONS cho đầy đủ REST operations
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
