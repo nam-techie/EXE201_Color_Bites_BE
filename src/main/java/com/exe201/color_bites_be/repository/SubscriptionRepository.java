@@ -17,6 +17,9 @@ public interface SubscriptionRepository extends MongoRepository<Subscription, St
      * Tìm subscription active hiện tại của user
      */
     Optional<Subscription> findByAccountIdAndStatus(String accountId, SubscriptionStatus status);
+
+    @Query("{'account_id': ?0}")
+    Subscription findSubscriptionByAccountId(String accountId);
     
     /**
      * Tìm tất cả subscriptions của user

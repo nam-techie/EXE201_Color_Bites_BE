@@ -1,5 +1,7 @@
 package com.exe201.color_bites_be.controller;
 
+import com.exe201.color_bites_be.dto.response.*;
+import com.exe201.color_bites_be.exception.NotFoundException;
 import com.exe201.color_bites_be.dto.response.ListAccountResponse;
 import com.exe201.color_bites_be.dto.response.AdminPostResponse;
 import com.exe201.color_bites_be.dto.response.AdminRestaurantResponse;
@@ -17,6 +19,7 @@ import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
 import com.exe201.color_bites_be.dto.response.RevenueReportResponse;
 import com.exe201.color_bites_be.dto.response.ResponseDto;
 import com.exe201.color_bites_be.service.IAdminService;
+import com.exe201.color_bites_be.service.IUserInformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
@@ -36,6 +39,9 @@ public class AdminController {
     @Autowired
     IAdminService adminService;
 
+    @Autowired
+    private IUserInformationService userInformationService;
+
     @GetMapping("/user")
     public ResponseDto<List<ListAccountResponse>> getAllUserByAdmin(){
         List<ListAccountResponse> listAccountResponses = adminService.getAllUserByAdmin();
@@ -52,6 +58,19 @@ public class AdminController {
     public ResponseDto<Void> activeUser(@PathVariable String id) {
         adminService.activeUser(id);
         return new ResponseDto<>(HttpStatus.OK.value(), "Người dùng đã được kích hoạt", null);
+    }
+
+    @GetMapping("/viewDetailUser/{id}")
+    public ResponseDto<UserInformationResponse> getUserInformation(@PathVariable String id) {
+        try {
+            UserInformationResponse response = adminService.getUserInformation(id);
+            return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thông tin người dùng thành công", response);
+        } catch (NotFoundException e) {
+            return new ResponseDto<>(HttpStatus.NOT_FOUND.value(), e.getMessage(), null);
+        } catch (Exception e) {
+            return new ResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Đã xảy ra lỗi khi lấy thông tin người dùng", null);
+        }
     }
 
     // ========== POST MANAGEMENT ==========
@@ -238,38 +257,38 @@ public class AdminController {
     }
 
     @GetMapping("/statistics/users")
-    public ResponseDto<UserStatisticsResponse> getUserStatistics() {
-        UserStatisticsResponse statistics = adminService.getUserStatistics();
+    public ResponseDto<StatisticsResponse> getUserStatistics() {
+        StatisticsResponse statistics = adminService.getUserStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê users thành công", statistics);
     }
 
     @GetMapping("/statistics/posts")
-    public ResponseDto<PostStatisticsResponse> getPostStatistics() {
-        PostStatisticsResponse statistics = adminService.getPostStatistics();
+    public ResponseDto<StatisticsResponse> getPostStatistics() {
+        StatisticsResponse statistics = adminService.getPostStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê posts thành công", statistics);
     }
 
     @GetMapping("/statistics/restaurants")
-    public ResponseDto<RestaurantStatisticsResponse> getRestaurantStatistics() {
-        RestaurantStatisticsResponse statistics = adminService.getRestaurantStatistics();
+    public ResponseDto<StatisticsResponse> getRestaurantStatistics() {
+        StatisticsResponse statistics = adminService.getRestaurantStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê restaurants thành công", statistics);
     }
 
     @GetMapping("/statistics/revenue")
-    public ResponseDto<RevenueStatisticsResponse> getRevenueStatistics() {
-        RevenueStatisticsResponse statistics = adminService.getRevenueStatistics();
+    public ResponseDto<StatisticsResponse> getRevenueStatistics() {
+        StatisticsResponse statistics = adminService.getRevenueStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê doanh thu thành công", statistics);
     }
 
     @GetMapping("/statistics/engagement")
-    public ResponseDto<EngagementStatisticsResponse> getEngagementStatistics() {
-        EngagementStatisticsResponse statistics = adminService.getEngagementStatistics();
+    public ResponseDto<StatisticsResponse> getEngagementStatistics() {
+        StatisticsResponse statistics = adminService.getEngagementStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê tương tác thành công", statistics);
     }
 
     @GetMapping("/statistics/challenges")
-    public ResponseDto<ChallengeStatisticsResponse> getChallengeStatistics() {
-        ChallengeStatisticsResponse statistics = adminService.getChallengeStatistics();
+    public ResponseDto<StatisticsResponse> getChallengeStatistics() {
+        StatisticsResponse statistics = adminService.getChallengeStatistics();
         return new ResponseDto<>(HttpStatus.OK.value(), "Lấy thống kê challenges thành công", statistics);
     }
 
@@ -284,13 +303,13 @@ public class AdminController {
     @GetMapping("/revenue/export-csv")
     public ResponseEntity<byte[]> exportRevenueReportToCsv() {
         byte[] csvData = adminService.exportRevenueReportToCsv();
-        
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment", "bao_cao_doanh_thu_" + 
+        headers.setContentDispositionFormData("attachment", "bao_cao_doanh_thu_" +
             java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv");
         headers.setContentLength(csvData.length);
-        
+
         return new ResponseEntity<>(csvData, headers, HttpStatus.OK);
     }
 
