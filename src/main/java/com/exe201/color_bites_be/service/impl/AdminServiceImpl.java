@@ -15,6 +15,7 @@ import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.AdminMoodResponse;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
 import com.exe201.color_bites_be.dto.response.RevenueReportResponse;
+import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import com.exe201.color_bites_be.entity.Account;
 import com.exe201.color_bites_be.entity.UserInformation;
 import com.exe201.color_bites_be.entity.Post;
@@ -37,9 +38,11 @@ import com.exe201.color_bites_be.repository.ReactionRepository;
 import com.exe201.color_bites_be.repository.FavoriteRepository;
 import com.exe201.color_bites_be.repository.MoodMapRepository;
 import com.exe201.color_bites_be.repository.QuizRepository;
+import com.exe201.color_bites_be.repository.SubscriptionRepository;
 import com.exe201.color_bites_be.repository.ChallengeDefinitionRepository;
 import com.exe201.color_bites_be.repository.ChallengeParticipationRepository;
 import com.exe201.color_bites_be.service.IAdminService;
+import com.exe201.color_bites_be.enums.SubscriptionStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,6 +52,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +106,9 @@ public class AdminServiceImpl implements IAdminService {
     
     @Autowired
     QuizRepository quizRepository;
+
+    @Autowired
+    SubscriptionRepository subscriptionRepository;
     
     @Autowired
     ChallengeDefinitionRepository challengeDefinitionRepository;
@@ -147,6 +154,45 @@ public class AdminServiceImpl implements IAdminService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
         account.setIsActive(true);
         accountRepository.save(account);
+    }
+
+    @Override
+    public UserInformationResponse getUserInformation(String accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
+        UserInformation userInformation = userInformationRepository.findByAccountId(accountId);
+        if (userInformation == null) {
+            throw new RuntimeException("Thông tin người dùng không tồn tại");
+        }
+        UserInformationResponse response = new UserInformationResponse();
+        response.setId(userInformation.getId());
+        response.setAccountId(account.getId());
+        response.setUsername(account.getUserName());
+        response.setAvatarUrl(userInformation.getAvatarUrl());
+        response.setBio(userInformation.getBio());
+        response.setGender(userInformation.getGender() != null ? userInformation.getGender().name() : null);
+        response.setSubscriptionPlan(userInformation.getSubscriptionPlan() != null ? userInformation.getSubscriptionPlan().name() : null);
+        response.setCreatedAt(userInformation.getCreatedAt());
+        response.setUpdatedAt(userInformation.getUpdatedAt());
+
+        subscriptionRepository.findByAccountIdAndStatus(account.getId(), SubscriptionStatus.ACTIVE)
+                .ifPresentOrElse(sub -> {
+                    response.setSubscriptionStatus(SubscriptionStatus.ACTIVE.name());
+                    response.setSubscriptionStartsAt(sub.getStartsAt());
+                    response.setSubscriptionExpiresAt(sub.getExpiresAt());
+                    long remaining = 0;
+                    if (sub.getExpiresAt() != null) {
+                        remaining = Duration.between(LocalDateTime.now(), sub.getExpiresAt()).toDays();
+                        if (remaining < 0) remaining = 0;
+                    }
+                    response.setSubscriptionRemainingDays((int) remaining);
+                }, () -> {
+                    response.setSubscriptionStatus(SubscriptionStatus.EXPIRED.name());
+                    response.setSubscriptionStartsAt(null);
+                    response.setSubscriptionExpiresAt(null);
+                    response.setSubscriptionRemainingDays(0);
+                });
+        return response;
     }
 
     // ========== POST MANAGEMENT ==========

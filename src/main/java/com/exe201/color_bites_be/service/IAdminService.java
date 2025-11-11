@@ -15,6 +15,7 @@ import com.exe201.color_bites_be.dto.response.ChallengeStatisticsResponse;
 import com.exe201.color_bites_be.dto.response.AdminMoodResponse;
 import com.exe201.color_bites_be.dto.response.ChallengeDefinitionResponse;
 import com.exe201.color_bites_be.dto.response.RevenueReportResponse;
+import com.exe201.color_bites_be.dto.response.UserInformationResponse;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -42,6 +43,11 @@ public interface IAdminService {
      * Kích hoạt lại người dùng
      */
     void activeUser(String accountId);
+
+    /**
+     * Lấy thông tin người dùng theo accountId (admin xem chi tiết)
+     */
+    UserInformationResponse getUserInformation(String accountId);
     
     // ========== POST MANAGEMENT ==========
     
