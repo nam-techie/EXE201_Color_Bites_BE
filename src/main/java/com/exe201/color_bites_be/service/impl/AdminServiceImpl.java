@@ -165,7 +165,6 @@ public class AdminServiceImpl implements IAdminService {
             throw new RuntimeException("Thông tin người dùng không tồn tại");
         }
         UserInformationResponse response = new UserInformationResponse();
-        response.setId(userInformation.getId());
         response.setAccountId(account.getId());
         response.setUsername(account.getUserName());
         response.setAvatarUrl(userInformation.getAvatarUrl());
